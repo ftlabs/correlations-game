@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-
+require('dotenv').config( {silent : process.env.NODE_ENV === 'production'} );
 const app = require('../app');
 const debug = require('debug')('correlations-game:server');
 const http = require('http');
