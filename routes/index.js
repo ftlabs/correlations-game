@@ -5,11 +5,11 @@ const router = express.Router();
 const games = require('../bin/lib/game');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/start', (req, res, next) => {
+router.get('/start', (req, res) => {
 
 	games.new("1234")
 		.then(gameID => {
@@ -25,7 +25,30 @@ router.get('/start', (req, res, next) => {
 			res.status = err.status || 500;
 			res.json({
 				status : 'err',
-				message : err.message || "An error ocurred fulfilling that request"
+				message : err.message || 'An error ocurred fulfilling that request'
+			});
+		})
+	;
+
+});
+
+router.get('/question/:gameUUID', (req, res) => {
+
+	const gameUUID = req.params.gameUUID;
+
+	games.question(gameUUID)
+		.then(question => {
+			res.json({
+				status : "ok",
+				data : question
+			});
+		})
+		.catch(err => {
+			debug(err);
+			res.status = err.status || 500;
+			res.json({
+				status : 'err',
+				message : err.message || 'An error ocurred fulfilling that request'
 			});
 		})
 	;

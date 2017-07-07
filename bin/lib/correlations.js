@@ -24,7 +24,7 @@ function getAllOfTheIslandsInTheCorrelationsService(){
 
 function getListOfPeopleOnAPersonsIsland(personName){
 
-	return fetch(`https://${CORRELATION_SERVICE_HOST}/islandOf/people:${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/islandOf/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
 		.then(res => {
 			if(res.ok){
 				return res.json();
@@ -41,14 +41,18 @@ function getListOfPeopleOnAPersonsIsland(personName){
 }
 
 function getListOfPeopleByDistances(personName){
-
-	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/people:${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
+	debug(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`);
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
 		.then(res => {
 			if(res.ok){
 				return res.json();
 			} else {
 				throw res;
 			}
+		})
+		.then(data => {
+			debug(data);
+			return data.chainLengths;
 		})
 		.catch(err => {
 			debug(err); //Log the error here, catch it in the application

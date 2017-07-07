@@ -1,4 +1,4 @@
-const debug = require('debug')('bin:lib:correlations');
+const debug = require('debug')('bin:lib:game');
 const uuid = require('uuid').v4;
 
 const correlations_service = require('./correlations');
@@ -26,6 +26,7 @@ class Game{
 		this.state = 'new';
 		this.score = 0;
 		this.seedPerson = undefined;
+		this.nextAnswer = undefined;
 	}
 
 	selectRandomSeedPerson(){
@@ -34,7 +35,7 @@ class Game{
 				const biggestIsland = islands[0];
 				const topFive = Object.keys(biggestIsland).map(person => {
 						return {
-							name : person.replace('people:', ''),
+							name : person,
 							numberOfConnectionsToOthers : biggestIsland[person]
 						}
 					})
@@ -59,6 +60,10 @@ class Game{
 
 function createANewGame(userUUID){
 
+	if(userUUID === undefined){
+		return Promise.reject('No user UUID was passed to the function');
+	}
+
 	const newGame = new Game(userUUID);
 	runningGames[newGame.UUID] = newGame;
 
@@ -72,11 +77,47 @@ function createANewGame(userUUID){
 
 }
 
-function answerAQuestion(gameUUID){
+function getAQuestionToAnswer(gameUUID){
+
+	if(gameUUID === undefined){
+		return Promise.reject('No game UUID was passed to the function');
+	} else if(runningGames[gameUUID] === undefined){
+		return Promise.reject(`The game UUID '${gameUUID}' is not valid`);
+	}
+
+	return new Promise( (resolve, reject) => {
+
+		const selectedGame = runningGames[gameUUID];
+		debug(selectedGame);
+		correlations_service.calcChainLengthsFrom(selectedGame.seedPerson.name)
+			.then(data => {
+				debug(data);
+
+				selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+
+				let possibleAnswers = [selectedGame.nextAnswer, data[2].entities[Math.random() * data[2].entities.length | 0], data[3].entities[Math.random() * data[3].entities.length | 0]]
+
+				possibleAnswers = possibleAnswers.sort(function(){
+					return Math.random() > 0.5 ? 1 : -1;
+				});
+				
+				resolve({
+					seed : selectedGame.seedPerson.name,
+					options : {
+						a : possibleAnswers[0],
+						b : possibleAnswers[1],
+						c : possibleAnswers[2]
+					}
+				});
+			})
+		;
+
+
+	});
 
 }
 
-function getAQuestionToAnswer(gameUUID){
+function answerAQuestion(gameUUID){
 
 }
 
@@ -86,7 +127,7 @@ function getListOfHighScores(){
 
 module.exports = {
 	new : createANewGame,
-	answer : answerAQuestion,
 	question : getAQuestionToAnswer,
+	answer : answerAQuestion,
 	highScores : getListOfHighScores
 };
