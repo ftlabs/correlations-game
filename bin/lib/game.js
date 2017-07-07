@@ -69,7 +69,7 @@ function createANewGame(userUUID){
 
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
-			newGame.seedPerson = seedPerson;
+			newGame.seedPerson = seedPerson.name;
 			debug(newGame);
 			return newGame.UUID;
 		})
@@ -89,7 +89,17 @@ function getAQuestionToAnswer(gameUUID){
 
 		const selectedGame = runningGames[gameUUID];
 		debug(selectedGame);
-		correlations_service.calcChainLengthsFrom(selectedGame.seedPerson.name)
+
+		if(selectedGame.state === 'new'){
+			selectedGame.state = 'current';
+		}
+
+		if(selectedGame.state === 'finished'){
+			reject('This game has already been played to completion');
+			return;
+		}
+
+		correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 			.then(data => {
 				debug(data);
 
@@ -102,7 +112,7 @@ function getAQuestionToAnswer(gameUUID){
 				});
 				
 				resolve({
-					seed : selectedGame.seedPerson.name,
+					seed : selectedGame.seedPerson,
 					options : {
 						a : possibleAnswers[0],
 						b : possibleAnswers[1],
@@ -117,7 +127,26 @@ function getAQuestionToAnswer(gameUUID){
 
 }
 
-function answerAQuestion(gameUUID){
+function answerAQuestion(gameUUID, submittedAnswer){
+
+	if(gameUUID === undefined){
+		return Promise.reject('No game UUID was passed to the function');
+	} else if(runningGames[gameUUID] === undefined){
+		return Promise.reject(`The game UUID '${gameUUID}' is not valid`);
+	} else if(submittedAnswer === undefined){
+		return Promise.reject(`An answer was not passed to the function`);
+	}
+	
+	const selectedGame = runningGames[gameUUID];
+
+	if(submittedAnswer === selectedGame.nextAnswer){
+		selectedGame.distance += 1;
+		selectedGame.seedPerson = submittedAnswer;
+		return Promise.resolve(true);
+	} else {
+		selectedGame.state = 'finished';
+		return Promise.resolve(false);
+	}
 
 }
 

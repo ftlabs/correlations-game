@@ -55,4 +55,30 @@ router.get('/question/:gameUUID', (req, res) => {
 
 });
 
+router.get('/answer/:gameUUID/:submittedAnswer', (req, res) => {
+
+	const gameUUID = req.params.gameUUID;
+	const submittedAnswer = req.params.submittedAnswer;
+
+	games.answer(gameUUID, submittedAnswer)
+		.then(correct => {
+			
+			res.json({
+				status : 'ok',
+				correct
+			});
+
+		})
+		.catch(err => {
+			debug(err);
+			res.status = err.status || 500;
+			res.json({
+				status : 'err',
+				message : err.message || 'An error ocurred fulfilling that request'
+			});
+		})
+	;
+
+});
+
 module.exports = router;
