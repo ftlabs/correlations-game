@@ -1,6 +1,8 @@
 const debug = require('debug')('bin:lib:correlations');
 const uuid = require('uuid').v4;
 
+const correlations_service = require('./correlations');
+
 const runningGames = {};
 const highScores = [];
 
@@ -14,25 +16,59 @@ state = What is the current state of play?
 	- current - game is in progress
 	- finished - game has been completed
 distance - the furthest distance achieved from the original (seed) person on the island
-seedPerson - the person whose island we're starting on.
+seedPerson - the person to start the game with. Initially undefined, but should be set on creation on game start.
 */
 
-Class Game(){
+class Game{
 	constructor(userUUID) {
 		this.UUID = uuid();
 		this.player = userUUID;
 		this.state = 'new';
-		this.distance = 0;
-		this.seedPerson = 'Donald Trump'
+		this.score = 0;
+		this.seedPerson = undefined;
 	}
+
+	selectRandomSeedPerson(){
+		return correlations_service.allIslands()
+			.then(islands => {
+				const biggestIsland = islands[0];
+				const topFive = Object.keys(biggestIsland).map(person => {
+						return {
+							name : person.replace('people:', ''),
+							numberOfConnectionsToOthers : biggestIsland[person]
+						}
+					})
+					.sort( (a, b) => {
+						if(a.numberOfConnectionsToOthers >= b.numberOfConnectionsToOthers){
+							return -1
+						} else {
+							return 1;
+						}
+					})
+					.slice(0, 5)
+				;
+
+				debug(topFive);
+
+				return topFive[ Math.random() * 5 | 0 ];
+
+			})
+	}
+
 }
 
-function startANewGame(userUUID){
+function createANewGame(userUUID){
 
 	const newGame = new Game(userUUID);
 	runningGames[newGame.UUID] = newGame;
 
-	return newGame.UUID;
+	return newGame.selectRandomSeedPerson()
+		.then(seedPerson => {
+			newGame.seedPerson = seedPerson;
+			debug(newGame);
+			return newGame.UUID;
+		})
+	;
 
 }
 
@@ -49,7 +85,7 @@ function getListOfHighScores(){
 }
 
 module.exports = {
-	start : startANewGame,
+	new : createANewGame,
 	answer : answerAQuestion,
 	question : getAQuestionToAnswer,
 	highScores : getListOfHighScores
