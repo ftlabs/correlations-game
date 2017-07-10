@@ -48,7 +48,7 @@ router.get('/question/:gameUUID', (req, res) => {
 			res.status = err.status || 500;
 			res.json({
 				status : 'err',
-				message : err.message || 'An error ocurred fulfilling that request'
+				message : err === 'GAMEOVER' ? 'This game has already been played to completion' : err.message || 'An error ocurred fulfilling that request'
 			});
 		})
 	;

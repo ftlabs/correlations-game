@@ -96,7 +96,7 @@ function getAQuestionToAnswer(gameUUID){
 		}
 
 		if(selectedGame.state === 'finished'){
-			reject('This game has already been played to completion');
+			reject('GAMEOVER');
 			return;
 		}
 
