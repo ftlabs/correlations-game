@@ -7,7 +7,7 @@ const games = require('../bin/lib/game');
 router.get('/', (req, res) => {
 
 	res.render('index', {
-		userUUID : req.cookies['ftlabsCorrelationsUserUUID']
+		userUUID : res.locals.userUUID
 	});
 
 });

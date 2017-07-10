@@ -7,9 +7,12 @@ module.exports = (req, res, next) => {
 
 	if(req.cookies['ftlabsCorrelationsUserUUID'] === undefined){
 		const cookieOptions = { httpOnly : false, maxAge : 1000 * 60 * 60 * 24 * 10 }; // 10 day token
-		res.cookie('ftlabsCorrelationsUserUUID', uuid(), cookieOptions);
+		const generatedUserUUID = uuid();
+		res.cookie('ftlabsCorrelationsUserUUID', generatedUserUUID, cookieOptions);
+		res.locals.userUUID = generatedUserUUID;
 		next();
 	} else {
+		res.locals.userUUID = req.cookies['ftlabsCorrelationsUserUUID'];
 		next();
 	}
 
