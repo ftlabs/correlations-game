@@ -31,6 +31,14 @@ main{
 	box-shadow: 0 0 2px white;
 }
 
-main form.o-forms{
+main.green{
+	border-color: #00B359;
+}
+
+main.red{
+	border-color: #990F3D;
+}
+
+main form.o-form{
 	max-width: inherit;
 }
