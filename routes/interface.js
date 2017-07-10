@@ -2,6 +2,8 @@ const debug = require('debug')('correlations-game:routes:interface');
 const express = require('express');
 const router = express.Router();
 
+const uuid = require('uuid').v4;
+
 const games = require('../bin/lib/game');
 
 /* GET home page. */
@@ -11,7 +13,9 @@ router.get('/', function(req, res) {
 
 router.get('/start', (req, res) => {
 
-	games.new("1234")
+	const userUUID = req.cookies['ftlabsCorrelationsUserUUID'] || req.query.userUUID || uuid();
+
+	games.new(userUUID)
 		.then(gameID => {
 			res.json({
 				status : 'OK',

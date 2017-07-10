@@ -55,6 +55,7 @@ class Game{
 				return topFive[ Math.random() * 5 | 0 ];
 
 			})
+		;
 	}
 
 }
@@ -174,9 +175,31 @@ function getListOfHighScores(){
 
 }
 
+function checkIfAGameExistsForAGivenUUID(gameUUID){
+
+	debug(`Checking gameUUID ${gameUUID}`);
+
+	return new Promise( (resolve, reject) => {
+
+		if(gameUUID === undefined){
+			resolve(false);
+		} else if(runningGames[gameUUID] === undefined){
+			resolve(false);
+		} else if(runningGames[gameUUID].state === 'finished'){
+			resolve(false);
+		} else {
+			resolve(true);
+		}
+
+	});
+
+
+}
+
 module.exports = {
 	new : createANewGame,
 	question : getAQuestionToAnswer,
 	answer : answerAQuestion,
-	highScores : getListOfHighScores
+	highScores : getListOfHighScores,
+	check : checkIfAGameExistsForAGivenUUID
 };
