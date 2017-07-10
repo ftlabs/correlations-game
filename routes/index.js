@@ -1,4 +1,4 @@
-const debug = require('debug')();
+const debug = require('debug')('correlations-game:routes:index');
 const express = require('express');
 const router = express.Router();
 
@@ -62,12 +62,10 @@ router.get('/answer/:gameUUID/:submittedAnswer', (req, res) => {
 
 	games.answer(gameUUID, submittedAnswer)
 		.then(correct => {
-			
 			res.json({
 				status : 'ok',
 				correct
 			});
-
 		})
 		.catch(err => {
 			debug(err);

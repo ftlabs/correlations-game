@@ -27,6 +27,7 @@ class Game{
 		this.score = 0;
 		this.seedPerson = undefined;
 		this.nextAnswer = undefined;
+		this.answersReturned = undefined;
 	}
 
 	selectRandomSeedPerson(){
@@ -99,29 +100,47 @@ function getAQuestionToAnswer(gameUUID){
 			return;
 		}
 
-		correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
-			.then(data => {
-				debug(data);
+		if(selectedGame.answersReturned !== undefined){
+			resolve({
+				seed : selectedGame.seedPerson,
+				options : selectedGame.answersReturned
+			});
+		} else {
 
-				selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
+				.then(data => {
+					debug(data);
 
-				let possibleAnswers = [selectedGame.nextAnswer, data[2].entities[Math.random() * data[2].entities.length | 0], data[3].entities[Math.random() * data[3].entities.length | 0]]
+					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
 
-				possibleAnswers = possibleAnswers.sort(function(){
-					return Math.random() > 0.5 ? 1 : -1;
-				});
-				
-				resolve({
-					seed : selectedGame.seedPerson,
-					options : {
+					// Get the answer from the island 1 distance away, 
+					// then get a wrong answer from the island 2 distance,
+					// and then do the same 3 distance away.
+					// Then randomise the order they're sent in.
+					const possibleAnswers = [ 
+						selectedGame.nextAnswer,
+						data[2].entities[Math.random() * data[2].entities.length | 0],
+						data[3].entities[Math.random() * data[3].entities.length | 0]
+					].sort(function(){
+						return Math.random() > 0.5 ? 1 : -1;
+					});
+					
+					const answersToReturn = {
 						a : possibleAnswers[0],
 						b : possibleAnswers[1],
 						c : possibleAnswers[2]
-					}
-				});
-			})
-		;
+					};
 
+					selectedGame.answersReturned = answersToReturn;
+
+					resolve({
+						seed : selectedGame.seedPerson,
+						options : answersToReturn
+					});
+				})
+			;
+
+		}
 
 	});
 
@@ -142,6 +161,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 	if(submittedAnswer === selectedGame.nextAnswer){
 		selectedGame.distance += 1;
 		selectedGame.seedPerson = submittedAnswer;
+		selectedGame.answersReturned = undefined;
 		return Promise.resolve(true);
 	} else {
 		selectedGame.state = 'finished';
