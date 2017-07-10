@@ -24,7 +24,7 @@ class Game{
 		this.UUID = uuid();
 		this.player = userUUID;
 		this.state = 'new';
-		this.score = 0;
+		this.distance = 0;
 		this.seedPerson = undefined;
 		this.nextAnswer = undefined;
 		this.answersReturned = undefined;
@@ -166,12 +166,48 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		return Promise.resolve(true);
 	} else {
 		selectedGame.state = 'finished';
+
+		let scorePosition = -1;
+
+		for(let x = 0; x < highScores.length; x += 1){
+
+			if(selectedGame.distance > highScores[x].distance){
+				scorePosition = x;
+				break;
+			}
+
+		}
+
+		if(scorePosition !== -1){
+			highScores.splice(scorePosition, 0, selectedGame);
+
+			if(highScores.length > 10){
+				for(let y = highScores.length - 10; y > 0; y -= 1){
+					highScores.pop();
+				}
+			}
+
+		}
+
 		return Promise.resolve(false);
 	}
 
 }
 
 function getListOfHighScores(){
+
+	return new Promise( (resolve) => {
+
+		const sanitizedHighScores = highScores.map(score => {
+			return {
+				userUUID : score.userUUID,
+				score : score.distance
+			};
+		});
+
+		resolve(sanitizedHighScores);
+
+	});
 
 }
 

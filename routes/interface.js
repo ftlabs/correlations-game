@@ -83,4 +83,24 @@ router.get('/answer/:gameUUID/:submittedAnswer', (req, res) => {
 
 });
 
+router.get('/highscores', (req, res) => {
+
+	games.highScores()
+		.then(scores => {
+			res.json({
+				scores
+			});
+		})
+		.catch(err => {
+			debug(err);
+			res.status = err.status || 500;
+			res.json({
+				status : 'err',
+				message : 'Could not retrieve high scores'
+			});
+		})
+	;
+
+});
+
 module.exports = router;
