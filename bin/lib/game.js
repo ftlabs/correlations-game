@@ -191,7 +191,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		selectedGame.answersReturned = undefined;
 		return Promise.resolve({
 			correct : true,
-			score : selectedGame.score
+			score : selectedGame.distance
 		});
 	} else {
 		selectedGame.state = 'finished';
@@ -227,7 +227,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 		return Promise.resolve({
 			correct : false,
-			score : selectedGame.score
+			score : selectedGame.distance
 		});
 	}
 

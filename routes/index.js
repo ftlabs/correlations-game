@@ -79,8 +79,8 @@ router.post('/answer', (req, res) => {
 		res.redirect('/question');
 	} else {
 		games.answer(req.cookies['ftlabsCorrelationsGameUUID'], req.body.answer)
-			.then(answerWasCorrect => {
-				if(answerWasCorrect){
+			.then(result => {
+				if(result.correct === true){
 					res.redirect('/correct');
 				} else {
 					res.redirect('/incorrect');
