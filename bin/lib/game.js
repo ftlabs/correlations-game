@@ -8,7 +8,6 @@ const highScores = [];
 
 /* 
 Game class
-
 UUID = uuid for this game
 player = userUUID
 state = What is the current state of play?
@@ -17,6 +16,9 @@ state = What is the current state of play?
 	- finished - game has been completed
 distance - the furthest distance achieved from the original (seed) person on the island
 seedPerson - the person to start the game with. Initially undefined, but should be set on creation on game start.
+nextAnswer - the correct answer for the seed person given. Also the next seed person is question is answered correctly
+answersReturned - if the question has been requested more than once, the original set of answers (stored in this variable) will be returned instead of generating new ones for the seed person
+blacklist - each seed person is added to this list so they cannot be the seed person in future questions
 */
 
 class Game{
@@ -28,13 +30,14 @@ class Game{
 		this.seedPerson = undefined;
 		this.nextAnswer = undefined;
 		this.answersReturned = undefined;
+		this.blacklist = [];
 	}
 
 	selectRandomSeedPerson(){
 		return correlations_service.allIslands()
 			.then(islands => {
 				const biggestIsland = islands[0];
-				const topFive = Object.keys(biggestIsland).map(person => {
+				const mostConnectedIndividuals = Object.keys(biggestIsland).map(person => {
 						return {
 							name : person,
 							numberOfConnectionsToOthers : biggestIsland[person]
@@ -50,9 +53,9 @@ class Game{
 					.slice(0, 5)
 				;
 
-				debug(topFive);
+				debug(mostConnectedIndividuals);
 
-				return topFive[ Math.random() * 5 | 0 ];
+				return mostConnectedIndividuals[ Math.random() * mostConnectedIndividuals.length | 0 ];
 
 			})
 		;
