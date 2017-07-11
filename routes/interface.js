@@ -65,10 +65,10 @@ router.get('/answer/:gameUUID/:submittedAnswer', (req, res) => {
 	const submittedAnswer = req.params.submittedAnswer;
 
 	games.answer(gameUUID, submittedAnswer)
-		.then(correct => {
+		.then(data => {
 			res.json({
 				status : 'ok',
-				correct
+				data
 			});
 		})
 		.catch(err => {

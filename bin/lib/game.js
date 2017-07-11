@@ -188,7 +188,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		selectedGame.distance += 1;
 		selectedGame.seedPerson = submittedAnswer;
 		selectedGame.answersReturned = undefined;
-		return Promise.resolve(true);
+		return Promise.resolve({
+			correct : true,
+			score : selectedGame.score
+		});
 	} else {
 		selectedGame.state = 'finished';
 
@@ -221,7 +224,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		}
 
 
-		return Promise.resolve(false);
+		return Promise.resolve({
+			correct : false,
+			score : selectedGame.score
+		});
 	}
 
 }
