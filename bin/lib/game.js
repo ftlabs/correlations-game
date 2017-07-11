@@ -126,7 +126,11 @@ function getAQuestionToAnswer(gameUUID){
 
 					if(answersTried === numberOfAlternatives){
 						// The game is out of organic connections
-						resolve({limitReached : true});
+						resolve({
+							limitReached : true,
+							score : selectedGame.distance
+						});
+						selectedGame.state = 'finished';
 						return;
 					}
 
@@ -156,7 +160,8 @@ function getAQuestionToAnswer(gameUUID){
 
 					resolve({
 						seed : selectedGame.seedPerson,
-						options : answersToReturn
+						options : answersToReturn,
+						limitReached : false
 					});
 				})
 			;
@@ -258,6 +263,11 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	});
 
+}
+
+function getGameDetails(gameUUID){
+
+	return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
 
 }
 
@@ -266,5 +276,6 @@ module.exports = {
 	question : getAQuestionToAnswer,
 	answer : answerAQuestion,
 	highScores : getListOfHighScores,
-	check : checkIfAGameExistsForAGivenUUID
+	check : checkIfAGameExistsForAGivenUUID,
+	get : getGameDetails
 };

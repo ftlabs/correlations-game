@@ -8,7 +8,7 @@ const games = require('../bin/lib/game');
 
 /* GET home page. */
 router.get('/', function(req, res) {
-  res.render('index', { title: 'Express' });
+  res.end();
 });
 
 router.get('/start', (req, res) => {
