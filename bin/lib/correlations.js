@@ -4,9 +4,16 @@ const fetch = require('node-fetch');
 const CORRELATION_SERVICE_HOST = process.env.CORRELATION_SERVICE_HOST;
 const CORRELATIONS_SERVICE_TOKEN = process.env.CORRELATIONS_SERVICE_TOKEN;
 
-function getAllOfTheIslandsInTheCorrelationsService(){
+const REQUEST_HEADERS = {
+	method: 'GET',
+	headers: {
+		'Content-Type': 'application/json',
+		'token': CORRELATIONS_SERVICE_TOKEN
+	}
+};
 
-	return fetch(`https://${CORRELATION_SERVICE_HOST}/allIslands?token=${CORRELATIONS_SERVICE_TOKEN}`)
+function getAllOfTheIslandsInTheCorrelationsService(){
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/allIslands`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
 				return res.json();
@@ -24,7 +31,7 @@ function getAllOfTheIslandsInTheCorrelationsService(){
 
 function getListOfPeopleOnAPersonsIsland(personName){
 
-	return fetch(`https://${CORRELATION_SERVICE_HOST}/islandOf/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/islandOf/${ encodeURIComponent( personName ) }`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
 				return res.json();
@@ -41,8 +48,7 @@ function getListOfPeopleOnAPersonsIsland(personName){
 }
 
 function getListOfPeopleByDistances(personName){
-	debug(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`);
-	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }?token=${CORRELATIONS_SERVICE_TOKEN}`)
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
 				return res.json();
