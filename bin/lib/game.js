@@ -169,25 +169,32 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 		let scorePosition = -1;
 
-		for(let x = 0; x < highScores.length; x += 1){
+		if(highScores.length >= 1){
 
-			if(selectedGame.distance > highScores[x].distance){
-				scorePosition = x;
-				break;
-			}
+			for(let x = 0; x < highScores.length; x += 1){
 
-		}
-
-		if(scorePosition !== -1){
-			highScores.splice(scorePosition, 0, selectedGame);
-
-			if(highScores.length > 10){
-				for(let y = highScores.length - 10; y > 0; y -= 1){
-					highScores.pop();
+				if(selectedGame.distance > highScores[x].distance){
+					scorePosition = x;
+					break;
 				}
+
 			}
 
+			if(scorePosition !== -1){
+				highScores.splice(scorePosition, 0, selectedGame);
+
+				if(highScores.length > 10){
+					for(let y = highScores.length - 10; y > 0; y -= 1){
+						highScores.pop();
+					}
+				}
+
+			}
+
+		} else {
+			highScores.push(selectedGame);
 		}
+
 
 		return Promise.resolve(false);
 	}
@@ -197,6 +204,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 function getListOfHighScores(){
 
 	return new Promise( (resolve) => {
+
+		debug(highScores);
 
 		const sanitizedHighScores = highScores.map(score => {
 			return {
@@ -215,7 +224,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	debug(`Checking gameUUID ${gameUUID}`);
 
-	return new Promise( (resolve, reject) => {
+	return new Promise( (resolve) => {
 
 		if(gameUUID === undefined){
 			resolve(false);
