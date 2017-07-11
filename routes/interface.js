@@ -18,7 +18,7 @@ router.get('/start', (req, res) => {
 	games.new(userUUID)
 		.then(gameID => {
 			res.json({
-				status : 'OK',
+				status : 'ok',
 				data : {
 					gameID
 				}
