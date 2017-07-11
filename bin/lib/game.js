@@ -113,9 +113,26 @@ function getAQuestionToAnswer(gameUUID){
 
 			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 				.then(data => {
-					debug(data);
+
+					const numberOfAlternatives = data[1].entities.length;
+					let answersTried = 0;
 
 					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && answersTried !== numberOfAlternatives){
+						selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+						answersTried += 1;				
+					}
+
+					if(answersTried === numberOfAlternatives){
+						// The game is out of organic connections
+						resolve({limitReached : true});
+						return;
+					}
+
+					selectedGame.blacklist.push(selectedGame.nextAnswer);
+
+					debug(selectedGame.blacklist, selectedGame.nextAnswer);
 
 					// Get the answer from the island 1 distance away, 
 					// then get a wrong answer from the island 2 distance,

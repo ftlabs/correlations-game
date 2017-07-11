@@ -33,25 +33,29 @@ router.get('/question', (req, res) => {
 		})
 		.then(data => {
 
-			const preparedData = {};
+			if(data.limitReached === true){
+				res.render('winner');
+			} else {
+				const preparedData = {};
 
-			preparedData.seed = {
-				value : data.seed,
-				printValue : data.seed.replace('people:', '')
-			};
-
-			preparedData.options = {};
-
-			Object.keys(data.options).forEach(key => {
-				preparedData.options[key] = {
-					value : data.options[key],
-					printValue : data.options[key].replace('people:', '')
+				preparedData.seed = {
+					value : data.seed,
+					printValue : data.seed.replace('people:', '')
 				};
-			});
 
-			debug(preparedData);
+				preparedData.options = {};
 
-			res.render('question', preparedData);
+				Object.keys(data.options).forEach(key => {
+					preparedData.options[key] = {
+						value : data.options[key],
+						printValue : data.options[key].replace('people:', '')
+					};
+				});
+
+				debug(preparedData);
+
+				res.render('question', preparedData);
+			}
 
 		})
 		.catch(err => {
