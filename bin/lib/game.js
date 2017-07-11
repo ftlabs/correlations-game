@@ -75,6 +75,7 @@ function createANewGame(userUUID){
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
+			newGame.blacklist.push(seedPerson.name);
 			debug(newGame);
 			return newGame.UUID;
 		})
