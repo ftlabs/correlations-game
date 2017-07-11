@@ -8,7 +8,6 @@ const highScores = [];
 
 /* 
 Game class
-
 UUID = uuid for this game
 player = userUUID
 state = What is the current state of play?
@@ -17,6 +16,9 @@ state = What is the current state of play?
 	- finished - game has been completed
 distance - the furthest distance achieved from the original (seed) person on the island
 seedPerson - the person to start the game with. Initially undefined, but should be set on creation on game start.
+nextAnswer - the correct answer for the seed person given. Also the next seed person is question is answered correctly
+answersReturned - if the question has been requested more than once, the original set of answers (stored in this variable) will be returned instead of generating new ones for the seed person
+blacklist - each seed person is added to this list so they cannot be the seed person in future questions
 */
 
 class Game{
@@ -28,13 +30,14 @@ class Game{
 		this.seedPerson = undefined;
 		this.nextAnswer = undefined;
 		this.answersReturned = undefined;
+		this.blacklist = [];
 	}
 
 	selectRandomSeedPerson(){
 		return correlations_service.allIslands()
 			.then(islands => {
 				const biggestIsland = islands[0];
-				const topFive = Object.keys(biggestIsland).map(person => {
+				const mostConnectedIndividuals = Object.keys(biggestIsland).map(person => {
 						return {
 							name : person,
 							numberOfConnectionsToOthers : biggestIsland[person]
@@ -50,9 +53,9 @@ class Game{
 					.slice(0, 5)
 				;
 
-				debug(topFive);
+				debug(mostConnectedIndividuals);
 
-				return topFive[ Math.random() * 5 | 0 ];
+				return mostConnectedIndividuals[ Math.random() * mostConnectedIndividuals.length | 0 ];
 
 			})
 		;
@@ -72,6 +75,7 @@ function createANewGame(userUUID){
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
+			newGame.blacklist.push(seedPerson.name);
 			debug(newGame);
 			return newGame.UUID;
 		})
@@ -110,9 +114,30 @@ function getAQuestionToAnswer(gameUUID){
 
 			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 				.then(data => {
-					debug(data);
+
+					const numberOfAlternatives = data[1].entities.length;
+					let answersTried = 0;
 
 					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && answersTried !== numberOfAlternatives){
+						selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+						answersTried += 1;				
+					}
+
+					if(answersTried === numberOfAlternatives){
+						// The game is out of organic connections
+						resolve({
+							limitReached : true,
+							score : selectedGame.distance
+						});
+						selectedGame.state = 'finished';
+						return;
+					}
+
+					selectedGame.blacklist.push(selectedGame.nextAnswer);
+
+					debug(selectedGame.blacklist, selectedGame.nextAnswer);
 
 					// Get the answer from the island 1 distance away, 
 					// then get a wrong answer from the island 2 distance,
@@ -136,7 +161,8 @@ function getAQuestionToAnswer(gameUUID){
 
 					resolve({
 						seed : selectedGame.seedPerson,
-						options : answersToReturn
+						options : answersToReturn,
+						limitReached : false
 					});
 				})
 			;
@@ -163,7 +189,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		selectedGame.distance += 1;
 		selectedGame.seedPerson = submittedAnswer;
 		selectedGame.answersReturned = undefined;
-		return Promise.resolve(true);
+		return Promise.resolve({
+			correct : true,
+			score : selectedGame.score
+		});
 	} else {
 		selectedGame.state = 'finished';
 
@@ -196,7 +225,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		}
 
 
-		return Promise.resolve(false);
+		return Promise.resolve({
+			correct : false,
+			score : selectedGame.score
+		});
 	}
 
 }
@@ -238,6 +270,11 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	});
 
+}
+
+function getGameDetails(gameUUID){
+
+	return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
 
 }
 
@@ -246,5 +283,6 @@ module.exports = {
 	question : getAQuestionToAnswer,
 	answer : answerAQuestion,
 	highScores : getListOfHighScores,
-	check : checkIfAGameExistsForAGivenUUID
+	check : checkIfAGameExistsForAGivenUUID,
+	get : getGameDetails
 };

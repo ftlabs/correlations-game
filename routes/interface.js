@@ -8,7 +8,7 @@ const games = require('../bin/lib/game');
 
 /* GET home page. */
 router.get('/', function(req, res) {
-  res.render('index', { title: 'Express' });
+  res.end();
 });
 
 router.get('/start', (req, res) => {
@@ -65,10 +65,10 @@ router.get('/answer/:gameUUID/:submittedAnswer', (req, res) => {
 	const submittedAnswer = req.params.submittedAnswer;
 
 	games.answer(gameUUID, submittedAnswer)
-		.then(correct => {
+		.then(data => {
 			res.json({
 				status : 'ok',
-				correct
+				data
 			});
 		})
 		.catch(err => {
