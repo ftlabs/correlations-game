@@ -48,7 +48,7 @@ router.post('/googlehome', (req, res) => {
 				};
 			});
 
-			answer = JSON.stringify(preparedData);
+			answer = preparedData;
 			formatQuestion(answer, ans => {
 				resolve.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			})
