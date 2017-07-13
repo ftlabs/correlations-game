@@ -17,6 +17,7 @@ router.post('/googlehome', (req, res) => {
 	games.check(SESSION)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
+			console.log('PROGRESS');
 			return games.question(SESSION);
 		} else {
 			return games.new(SESSION)
@@ -48,10 +49,9 @@ router.post('/googlehome', (req, res) => {
 				};
 			});
 
-			answer = preparedData;
-			formatQuestion(answer, ans => {
+			formatQuestion(preparedData, ans => {
 				resolve.send(JSON.stringify({'speech': ans, 'displayText': ans}));
-			})
+			});
 		}
 
 	});
@@ -73,10 +73,8 @@ router.post('/googlehome', (req, res) => {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
-	console.log(JSON.stringify(options));
-
 	Object.keys(options.options).forEach(key => {
-		answerFormat += options.options[key].printValue + '\n';
+		answerFormat += options.options[key].printValue + '-';
 	});
 
 	callback(answerFormat);
