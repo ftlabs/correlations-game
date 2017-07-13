@@ -73,10 +73,11 @@ router.post('/googlehome', (req, res) => {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
-	Array.from(options.options).forEach(key => {
-		answerFormat += options.options[key].printValue + '\n';
-	});
-	
+	console.log(JSON.stringify(options));
+	for(let i = 0; i < options.options.length; ++i) {
+		answerFormat += options.options[i].printValue + '\n';
+	}
+
 	callback(answerFormat);
 }
 
