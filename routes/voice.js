@@ -71,8 +71,9 @@ router.post('/googlehome', (req, res) => {
 
 });
 
-function formatQuestion(text, callback) {
-	callback(text);
+function formatQuestion(options, callback) {
+	const answerFormat = 'Who was recently mentioned in an article with ' + text.seedPrintValue + '\n';
+	callback(answerFormat);
 }
 
 module.exports = router;
