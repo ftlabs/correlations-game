@@ -17,9 +17,9 @@ router.post('/googlehome', (req, res) => {
 	games.check(SESSION)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
-			console.log('PROGRESS', games.question(SESSION));
+			return games.question(SESSION);
 		} else {
-			games.new(SESSION)
+			return games.new(SESSION)
 				.then(gameUUID => {
 					return gameUUID;
 				})
