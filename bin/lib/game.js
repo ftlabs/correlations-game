@@ -23,7 +23,7 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 
 class Game{
 	constructor(userUUID) {
-		this.UUID = uuid();
+		this.UUID = userUUID;
 		this.player = userUUID;
 		this.state = 'new';
 		this.distance = 0;
