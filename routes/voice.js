@@ -23,7 +23,7 @@ router.post('/googlehome', (req, res) => {
 				.then(gameUUID => {
 					return gameUUID;
 				})
-				.then(gameUUID => console.log(games.question(gameUUID)))
+				.then(gameUUID => games.question(gameUUID))
 			;
 		}
 	})
