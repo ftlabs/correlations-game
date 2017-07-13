@@ -72,7 +72,7 @@ router.post('/googlehome', (req, res) => {
 });
 
 function formatQuestion(options, callback) {
-	const answerFormat = 'Who was recently mentioned in an article with ' + text.seedPrintValue + '\n';
+	const answerFormat = 'Who was recently mentioned in an article with ' + options.seedPrintValue + '\n';
 	callback(answerFormat);
 }
 
