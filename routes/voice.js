@@ -71,7 +71,7 @@ router.post('/googlehome', (req, res) => {
 		break;
 
 		default:
-			answer = 'Sorry I didn\'t quite catch that...'
+			answer = JSON.stringify(expectedAnswers);
 	}
 
 	res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
