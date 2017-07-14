@@ -10,9 +10,6 @@ router.post('/googlehome', (req, res) => {
 	let answer;
 
 	res.setHeader('Content-Type', 'application/json');
-	console.log(req.body);
-
-	const resolve = res;
 
 	games.check(SESSION)
 	.then(gameIsInProgress => {
@@ -31,7 +28,7 @@ router.post('/googlehome', (req, res) => {
 	.then(data => {
 		if(data.limitReached === true){
 			answer = 'winner';
-			resolve.send(JSON.stringify({'speech': answer, 'displayText': answer}));
+			res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
 		} else {
 			const preparedData = {};
 
@@ -50,7 +47,7 @@ router.post('/googlehome', (req, res) => {
 			});
 
 			formatQuestion(preparedData, ans => {
-				resolve.send(JSON.stringify({'speech': ans, 'displayText': ans}));
+				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
 		}
 
@@ -74,7 +71,7 @@ router.post('/googlehome', (req, res) => {
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
 	Object.keys(options.options).forEach(key => {
-		answerFormat += options.options[key].printValue + '-';
+		answerFormat += ' - ' + options.options[key].printValue;
 	});
 
 	callback(answerFormat);
