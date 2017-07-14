@@ -15,7 +15,7 @@ router.post('/googlehome', (req, res) => {
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
 			return startGame(SESSION, ans => {
-				res.send(JSON.stringify({'speech': 'start' + ans, 'displayText': ans}));
+				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			})
 		break;
 
@@ -23,7 +23,9 @@ router.post('/googlehome', (req, res) => {
 		case expectedAnswers[1]:
 		case expectedAnswers[2]:
 			answer = 'You said ' + USER_INPUT;
-			checkAnswer(SESSION, 'people:' + USER_INPUT, callback);
+			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
+				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
+			});
 		break;
 
 		default:
