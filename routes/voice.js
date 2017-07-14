@@ -16,7 +16,7 @@ router.post('/googlehome', (req, res) => {
 		case 'start':
 			return startGame(SESSION, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
-			})
+			});
 		break;
 
 		case expectedAnswers[0]:
@@ -82,7 +82,9 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 	.then(result => {
 		if(result.correct === true){
-			callback('correct');
+			callback(startGame(session, ans => {
+				return ans;
+			}));
 		} else {
 			callback('wrong');
 		}
