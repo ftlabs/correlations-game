@@ -65,6 +65,8 @@ router.post('/googlehome', (req, res) => {
 		break;
 
 		case expectedAnswers[0]:
+		case expectedAnswers[1]:
+		case expectedAnswers[2]:
 			answer = 'You said' + USER_INPUT;
 		break;
 
@@ -124,7 +126,7 @@ function formatQuestion(options, callback) {
 	expectedAnswers = [];
 	Object.keys(options.options).forEach(key => {
 		answerFormat += ' - ' + options.options[key].printValue;
-		expectedAnswers.push(options.options[key].printValue);
+		expectedAnswers.push(options.options[key].printValue.toLowerCase());
 	});
 
 	callback(answerFormat);
