@@ -79,13 +79,13 @@ router.post('/googlehome', (req, res) => {
 });
 
 function startGame(session, callback) {
-	games.check(SESSION)
+	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
 			console.log('PROGRESS');
-			return games.question(SESSION);
+			return games.question(session);
 		} else {
-			return games.new(SESSION)
+			return games.new(session)
 				.then(gameUUID => {
 					return gameUUID;
 				})
@@ -95,9 +95,7 @@ function startGame(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
-			answer = 'winner';
-			// res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
-			callback(answer);
+			callback('winner');
 		} else {
 			const preparedData = {};
 
