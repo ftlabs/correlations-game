@@ -82,9 +82,9 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 	.then(result => {
 		if(result.correct === true){
-			callback(startGame(session, ans => {
-				return ans;
-			}));
+			startGame(session, ans => {
+				callback(ans);
+			});
 		} else {
 			callback('wrong');
 		}
