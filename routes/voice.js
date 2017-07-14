@@ -12,66 +12,22 @@ router.post('/googlehome', (req, res) => {
 
 	res.setHeader('Content-Type', 'application/json');
 
-	// games.check(SESSION)
-	// .then(gameIsInProgress => {
-	// 	if(gameIsInProgress){
-	// 		console.log('PROGRESS');
-	// 		return games.question(SESSION);
-	// 	} else {
-	// 		return games.new(SESSION)
-	// 			.then(gameUUID => {
-	// 				return gameUUID;
-	// 			})
-	// 			.then(gameUUID => games.question(gameUUID))
-	// 		;
-	// 	}
-	// })
-	// .then(data => {
-	// 	if(data.limitReached === true){
-	// 		answer = 'winner';
-	// 		res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
-	// 	} else {
-	// 		const preparedData = {};
-
-	// 		preparedData.seed = {
-	// 			value : data.seed,
-	// 			printValue : data.seed.replace('people:', '')
-	// 		};
-
-	// 		preparedData.options = {};
-
-	// 		Object.keys(data.options).forEach(key => {
-	// 			preparedData.options[key] = {
-	// 				value : data.options[key],
-	// 				printValue : data.options[key].replace('people:', '')
-	// 			};
-	// 		});
-
-	// 		formatQuestion(preparedData, ans => {
-	// 			res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
-	// 		});
-	// 	}
-
-	// });
-
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
 			return startGame(SESSION, ans => {
 				res.send(JSON.stringify({'speech': 'start' + ans, 'displayText': ans}));
 			})
-			// return getQuestion(USER_INPUT, ans => {
-			// 	res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
-			// });
 		break;
 
 		case expectedAnswers[0]:
 		case expectedAnswers[1]:
 		case expectedAnswers[2]:
-			answer = 'You said' + USER_INPUT;
+			answer = 'You said ' + USER_INPUT;
+			checkAnswer(SESSION, 'people:' + USER_INPUT, callback);
 		break;
 
 		default:
-			answer = JSON.stringify(expectedAnswers);
+			answer = 'Sorry, I\'m not quite sure what you meant';
 	}
 
 	res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
@@ -114,9 +70,19 @@ function startGame(session, callback) {
 			});
 
 			formatQuestion(preparedData, ans => {
-				// res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 				callback(ans);
 			});
+		}
+	});
+}
+
+function checkAnswer(session, answer, callback) {
+	games.answer(session, answer)
+	.then(result => {
+		if(result.correct === true){
+			callback('correct');
+		} else {
+			callback('wrong');
 		}
 	});
 }
