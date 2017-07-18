@@ -31,7 +31,7 @@ router.post('/googlehome', (req, res) => {
 
 		case 'help':
 			not_understood_count = 0;
-			//TODO: return instructions
+			answer = "Add instructions here";
 			//?TODO: handle in a different intent?
 		break;
 
@@ -112,7 +112,7 @@ function checkAnswer(session, answer, callback) {
 		} else {
 			expectedAnswers = [];
 			callback('Sorry, that is incorrect. The correct answer was ' + result.expected);
-			//TODO: (reset game sessionid?);
+			//TODO: (reset game sessionid? or score?);
 		}
 	});
 }

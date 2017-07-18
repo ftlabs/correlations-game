@@ -228,7 +228,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		return Promise.resolve({
 			correct : false,
 			score : selectedGame.distance,
-			expected: selectedGame.nextAnswer
+			expected: selectedGame.nextAnswer.replace('people:', '')
 		});
 	}
 
