@@ -91,7 +91,7 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 	.then(result => {
 		if(result.correct === true){
-			startGame(session, ans => {
+			getQuestion(session, ans => {
 				callback('Correct. ' + ans);
 			});
 		} else {
