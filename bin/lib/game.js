@@ -227,7 +227,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 		return Promise.resolve({
 			correct : false,
-			score : selectedGame.distance
+			score : selectedGame.distance,
+			expected: selectedGame.nextAnswer
 		});
 	}
 

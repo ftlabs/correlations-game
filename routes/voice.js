@@ -4,6 +4,8 @@ const router = express.Router();
 
 const games = require('../bin/lib/game');
 let expectedAnswers = [];
+const not_understood_limit = 3;
+let not_understood_count = 0;
 
 router.post('/googlehome', (req, res) => {
 	const USER_INPUT = req.body.result.resolvedQuery;
@@ -14,31 +16,44 @@ router.post('/googlehome', (req, res) => {
 
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
+			not_understood_count = 0;
 			return getQuestion(SESSION, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
 		break;
 
 		case 'repeat':
+			not_understood_count = 0;
 			return getQuestion(SESSION, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
 		break;
 
 		case 'help':
+			not_understood_count = 0;
 			//TODO: return instructions
+			//?TODO: handle in a different intent?
 		break;
 
 		case expectedAnswers[0]:
 		case expectedAnswers[1]:
 		case expectedAnswers[2]:
+			not_understood_count = 0;
 			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
 		break;
 
 		default:
-			answer = 'Sorry, I\'m not quite sure what you meant';
+			if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
+				answer = 'Sorry, I\'m not quite sure what you mean. The possible answers were:';
+
+				for(let i = 0; i < expectedAnswers.length; ++i) {
+					answer += '- ' + expectedAnswers[i];
+				}
+			} else {
+				answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
+			}
 	}
 
 	res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
@@ -96,8 +111,8 @@ function checkAnswer(session, answer, callback) {
 			});
 		} else {
 			expectedAnswers = [];
-			callback('Sorry, that is incorrect.' + JSON.stringify(result));
-			//TODO: add correct answer (reset game sessionid?);
+			callback('Sorry, that is incorrect. The correct answer was ' + result.expected);
+			//TODO: (reset game sessionid?);
 		}
 	});
 }
