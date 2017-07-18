@@ -96,7 +96,7 @@ function checkAnswer(session, answer, callback) {
 			});
 		} else {
 			expectedAnswers = [];
-			callback('Sorry, that is incorrect.');
+			callback('Sorry, that is incorrect.' + JSON.stringify(result));
 			//TODO: add correct answer (reset game sessionid?);
 		}
 	});
