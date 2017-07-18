@@ -14,15 +14,24 @@ router.post('/googlehome', (req, res) => {
 
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
-			return startGame(SESSION, ans => {
+			return getQuestion(SESSION, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
+		break;
+
+		case 'repeat':
+			return getQuestion(SESSION, ans => {
+				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
+			});
+		break;
+
+		case 'help':
+			//TODO: return instructions
 		break;
 
 		case expectedAnswers[0]:
 		case expectedAnswers[1]:
 		case expectedAnswers[2]:
-			answer = 'You said ' + USER_INPUT;
 			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
 				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
 			});
@@ -36,7 +45,7 @@ router.post('/googlehome', (req, res) => {
 
 });
 
-function startGame(session, callback) {
+function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
@@ -59,7 +68,7 @@ function startGame(session, callback) {
 
 			preparedData.seed = {
 				value : data.seed,
-				printValue : data.seed.replace('people:', '')
+				printValue : data.seed.replace('people:', '').replace('.', '').replace('-', ' ')
 			};
 
 			preparedData.options = {};
@@ -67,7 +76,7 @@ function startGame(session, callback) {
 			Object.keys(data.options).forEach(key => {
 				preparedData.options[key] = {
 					value : data.options[key],
-					printValue : data.options[key].replace('people:', '')
+					printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
 				};
 			});
 
@@ -83,10 +92,12 @@ function checkAnswer(session, answer, callback) {
 	.then(result => {
 		if(result.correct === true){
 			startGame(session, ans => {
-				callback(ans);
+				callback('Correct. ' + ans);
 			});
 		} else {
-			callback('wrong');
+			expectedAnswers = [];
+			callback('Sorry, that is incorrect.');
+			//TODO: add correct answer (reset game sessionid?);
 		}
 	});
 }
