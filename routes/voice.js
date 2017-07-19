@@ -19,7 +19,7 @@ router.post('/googlehome', (req, res) => {
 		case 'repeat':
 			not_understood_count = 0;
 			return getQuestion(SESSION, ans => {
-				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
+				res.json({'speech': ans, 'displayText': ans});
 			});
 		break;
 
@@ -34,7 +34,7 @@ router.post('/googlehome', (req, res) => {
 		case expectedAnswers[2]:
 			not_understood_count = 0;
 			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
-				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
+				res.json({'speech': ans, 'displayText': ans});
 			});
 		break;
 
@@ -50,7 +50,7 @@ router.post('/googlehome', (req, res) => {
 			}
 	}
 
-	res.send(JSON.stringify({'speech': answer, 'displayText': answer}));
+	res.json({'speech': answer, 'displayText': aswer}));
 
 });
 
