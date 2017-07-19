@@ -134,16 +134,20 @@ function getCountState(sessionID){
 }
 
 function setCountState(sessionID, count) {
+	if(activeSessions[sessionID] === undefined) {
+		activeSessions[sessionID] = {};
+	}
+
 	return new Promise( (resolve) => {
 		const activeSession = activeSessions[sessionID]
-		if( activeSession === undefined || activeSession.count === undefined){
-			activeSessions[sessionID]['count'] = 0;
+		if(activeSession.count === undefined){
+			activeSession.count = 0;
 		} else {
 			activeSession.count = (count === null)?activeSession.count:count;
 		}
 
 		resolve({
-			count : activeSessions[sessionID]['count']
+			count : activeSession.count
 		});
 
 	});
