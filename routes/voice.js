@@ -14,8 +14,10 @@ router.post('/googlehome', (req, res) => {
 	let answer;
 	
 	// activeSessions[SESSION]['count'] = 0;
+	setCountState(SESSION, null);
 
 	console.log('TEST', getCountState(SESSION));
+
 
 	res.setHeader('Content-Type', 'application/json');
 
@@ -65,7 +67,6 @@ function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
-			console.log('PROGRESS');
 			return games.question(session);
 		} else {
 			return games.new(session)
@@ -130,6 +131,22 @@ function formatQuestion(options, callback) {
 
 function getCountState(sessionID){
 	return Promise.resolve( Object.assign({}, activeSessions[sessionID]) );
+}
+
+function setCountState(sessionID, count) {
+	return new Promise( (resolve) => {
+		const activeSession = activeSessions[sessionID]
+		if( activeSession === undefined || activeSession.count === undefined){
+			activeSessions[sessionID]['count'] = 0;
+		} else {
+			activeSession.count = (count === null)?activeSession.count:count;
+		}
+
+		resolve({
+			count : activeSessions[sessionID]['count']
+		});
+
+	});
 }
 
 module.exports = router;
