@@ -5,11 +5,11 @@ const router = express.Router();
 const games = require('../bin/lib/game');
 let expectedAnswers = [];
 const not_understood_limit = 3;
-let not_understood_count = 0;
 
 router.post('/googlehome', (req, res) => {
 	const USER_INPUT = req.body.result.resolvedQuery;
-	const SESSION = req.body.sessionId;
+	const SESSION = req.body.sessionId;	
+	let not_understood_count = 0;
 	let answer;
 
 	res.setHeader('Content-Type', 'application/json');
@@ -45,6 +45,8 @@ router.post('/googlehome', (req, res) => {
 				for(let i = 0; i < expectedAnswers.length; ++i) {
 					answer += '- ' + expectedAnswers[i];
 				}
+				
+				++not_understood_count;
 			} else {
 				answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
 			}
@@ -106,7 +108,6 @@ function checkAnswer(session, answer, callback) {
 		} else {
 			expectedAnswers = [];
 			callback('Sorry, that is incorrect. The correct answer was ' + result.expected);
-			//TODO: (reset game sessionid? or score?);
 		}
 	});
 }
