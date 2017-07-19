@@ -18,7 +18,7 @@ router.post('/googlehome', (req, res) => {
 
 	// let not_understood_count = getCountState(SESSION).count
 
-	console.log('TEST', getCountState(SESSION).count);
+	console.log('TEST', getCountState(SESSION));
 
 
 	res.setHeader('Content-Type', 'application/json');
@@ -133,6 +133,7 @@ function formatQuestion(options, callback) {
 }
 
 function getCountState(sessionID){
+	console.log('GET COUNT', activeSessions[sessionID]);
 	return Promise.resolve( Object.assign({}, activeSessions[sessionID]) );
 }
 
