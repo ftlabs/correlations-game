@@ -50,7 +50,7 @@ router.post('/googlehome', (req, res) => {
 			}
 	}
 
-	res.json({'speech': answer, 'displayText': aswer}));
+	res.json({'speech': answer, 'displayText': answer});
 
 });
 
