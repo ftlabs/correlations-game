@@ -13,7 +13,7 @@ router.post('/googlehome', (req, res) => {
 	const SESSION = req.body.sessionId;
 	let answer;
 
-	if(Object.keys(obj).length(getCountState(SESSION)).length === 0  && obj.constructor === Object) {
+	if(Object.keys(getCountState(SESSION)).length === 0  && obj.constructor === Object) {
 		activeSessions[SESSION].count = 0;
 	}
 
