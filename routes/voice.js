@@ -46,7 +46,7 @@ router.post('/googlehome', (req, res) => {
 
 		default:
 			if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
-				answer = 'Sorry, I\'m not quite sure what you mean. The possible answers were:';
+				answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
 				for(let i = 0; i < expectedAnswers.length; ++i) {
 					answer += '- ' + expectedAnswers[i];
