@@ -16,12 +16,6 @@ router.post('/googlehome', (req, res) => {
 
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
-			not_understood_count = 0;
-			return getQuestion(SESSION, ans => {
-				res.send(JSON.stringify({'speech': ans, 'displayText': ans}));
-			});
-		break;
-
 		case 'repeat':
 			not_understood_count = 0;
 			return getQuestion(SESSION, ans => {
