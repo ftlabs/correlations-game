@@ -16,7 +16,9 @@ router.post('/googlehome', (req, res) => {
 	// activeSessions[SESSION]['count'] = 0;
 	setCountState(SESSION, null);
 
-	console.log('TEST', getCountState(SESSION));
+	// let not_understood_count = getCountState(SESSION).count
+
+	console.log('TEST', getCountState(SESSION).count);
 
 
 	res.setHeader('Content-Type', 'application/json');
@@ -24,14 +26,14 @@ router.post('/googlehome', (req, res) => {
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
 		case 'repeat':
-			not_understood_count = 0;
+			setCountState(SESSION, 0);
 			return getQuestion(SESSION, ans => {
 				res.json({'speech': ans, 'displayText': ans});
 			});
 		break;
 
 		case 'help':
-			not_understood_count = 0;
+			setCountState(SESSION, 0);
 			answer = "Add instructions here";
 			//?TODO: handle in a different intent?
 		break;
@@ -39,7 +41,7 @@ router.post('/googlehome', (req, res) => {
 		case expectedAnswers[0]:
 		case expectedAnswers[1]:
 		case expectedAnswers[2]:
-			not_understood_count = 0;
+			setCountState(SESSION, 0);
 			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
 				res.json({'speech': ans, 'displayText': ans});
 			});
@@ -54,6 +56,7 @@ router.post('/googlehome', (req, res) => {
 				}
 
 				++not_understood_count;
+				setCountState(SESSION, not_understood_count);
 			} else {
 				answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
 			}
