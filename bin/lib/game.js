@@ -185,7 +185,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 	
 	const selectedGame = runningGames[gameUUID];
 
-	if(submittedAnswer === selectedGame.nextAnswer){
+	if(submittedAnswer.toLowerCase() === selectedGame.nextAnswer.toLowerCase()){
 		selectedGame.distance += 1;
 		selectedGame.seedPerson = submittedAnswer;
 		selectedGame.answersReturned = undefined;
