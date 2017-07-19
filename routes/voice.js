@@ -13,7 +13,11 @@ router.post('/googlehome', (req, res) => {
 	const SESSION = req.body.sessionId;
 	let answer;
 
-	console.log('COUNT STATE', getCountState(SESSION));
+	if(Object.keys(obj).length(getCountState(SESSION)).length === 0  && obj.constructor === Object) {
+		activeSessions[SESSION].count = 0;
+	}
+
+	console.log(getCountState(SESSION));
 
 	res.setHeader('Content-Type', 'application/json');
 
