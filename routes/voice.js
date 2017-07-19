@@ -134,7 +134,7 @@ function formatQuestion(options, callback) {
 
 function getCountState(sessionID){
 	console.log('GET COUNT', activeSessions[sessionID]);
-	return Promise.resolve( Object.assign({}, activeSessions[sessionID]) );
+	return Promise.resolve( activeSessions[sessionID] );
 }
 
 function setCountState(sessionID, count) {
