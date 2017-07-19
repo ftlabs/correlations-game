@@ -75,7 +75,7 @@ function createANewGame(userUUID){
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
-			newGame.blacklist.push(seedPerson.name);
+			newGame.blacklist.push(seedPerson.name.toLowerCase());
 			debug(newGame);
 			return newGame.UUID;
 		})
@@ -120,7 +120,7 @@ function getAQuestionToAnswer(gameUUID){
 
 					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
 
-					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && answersTried !== numberOfAlternatives){
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1 && answersTried !== numberOfAlternatives){
 						selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
 						answersTried += 1;				
 					}
@@ -135,9 +135,9 @@ function getAQuestionToAnswer(gameUUID){
 						return;
 					}
 
-					selectedGame.blacklist.push(selectedGame.nextAnswer);
+					selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
 
-					debug(selectedGame.blacklist, selectedGame.nextAnswer);
+					debug(selectedGame.blacklist, selectedGame.nextAnswer.toLowerCase());
 
 					// Get the answer from the island 1 distance away, 
 					// then get a wrong answer from the island 2 distance,
