@@ -3,14 +3,17 @@ const express = require('express');
 const router = express.Router();
 
 const games = require('../bin/lib/game');
+const activeSessions = {};
 let expectedAnswers = [];
 const not_understood_limit = 3;
+let not_understood_count = 0;
 
 router.post('/googlehome', (req, res) => {
 	const USER_INPUT = req.body.result.resolvedQuery;
-	const SESSION = req.body.sessionId;	
-	let not_understood_count = 0;
+	const SESSION = req.body.sessionId;
 	let answer;
+
+	console.log('COUNT STATE', getCountState(SESSION));
 
 	res.setHeader('Content-Type', 'application/json');
 
@@ -45,7 +48,7 @@ router.post('/googlehome', (req, res) => {
 				for(let i = 0; i < expectedAnswers.length; ++i) {
 					answer += '- ' + expectedAnswers[i];
 				}
-				
+
 				++not_understood_count;
 			} else {
 				answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
@@ -121,6 +124,10 @@ function formatQuestion(options, callback) {
 	});
 
 	callback(answerFormat);
+}
+
+function getCountState(sessionID){
+	return Promise.resolve( Object.assign({}, activeSessions[sessionID]) );
 }
 
 module.exports = router;
