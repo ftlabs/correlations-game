@@ -13,7 +13,7 @@ router.post('/googlehome', (req, res) => {
 	const SESSION = req.body.sessionId;
 	let answer;
 	
-	activeSessions[SESSION].count = 0;
+	activeSessions[SESSION]['count'] = 0;
 
 	console.log(getCountState(SESSION));
 
