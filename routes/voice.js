@@ -6,20 +6,14 @@ const games = require('../bin/lib/game');
 const activeSessions = {};
 let expectedAnswers = [];
 const not_understood_limit = 3;
-let not_understood_count = 0;
 
 router.post('/googlehome', (req, res) => {
 	const USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 	let answer;
-	
-	// activeSessions[SESSION]['count'] = 0;
 	setCountState(SESSION, null);
 
-	// let not_understood_count = getCountState(SESSION).count
-
-	console.log('TEST', getCountState(SESSION));
-
+	let not_understood_count = activeSessions[SESSION].count;
 
 	res.setHeader('Content-Type', 'application/json');
 
@@ -133,7 +127,6 @@ function formatQuestion(options, callback) {
 }
 
 function getCountState(sessionID){
-	console.log('GET COUNT', activeSessions[sessionID]);
 	return Promise.resolve( activeSessions[sessionID] );
 }
 
