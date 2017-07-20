@@ -24,7 +24,7 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 
 class Game{
 	constructor(userUUID) {
-		this.UUID = uuid();
+		this.UUID = userUUID;
 		this.player = userUUID;
 		this.state = 'new';
 		this.distance = 0;
@@ -54,7 +54,7 @@ class Game{
 					.slice(0, 5)
 				;
 
-				debug(mostConnectedIndividuals);
+				debug('MOST CONNECTED', mostConnectedIndividuals);
 
 				return mostConnectedIndividuals[ Math.random() * mostConnectedIndividuals.length | 0 ];
 
@@ -76,8 +76,8 @@ function createANewGame(userUUID){
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
-			newGame.blacklist.push(seedPerson.name);
-			debug(newGame);
+			newGame.blacklist.push(seedPerson.name.toLowerCase());
+			debug('NEW GAME SEED:: ', newGame);
 			return newGame.UUID;
 		})
 	;
@@ -116,19 +116,21 @@ function getAQuestionToAnswer(gameUUID){
 			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 				.then(data => {
 
-					data[1].entities = barnier.filter( data[1].entities );
+					const possibleAlternatives = barnier.filter( data[1].entities );
+					selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
 
-					const numberOfAlternatives = data[1].entities.length;
-					let answersTried = 0;
+					debug('First instance of nextAnswer', selectedGame.nextAnswer);
+					debug('The possible alternatives are', possibleAlternatives);
 
-					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
 
-					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && answersTried !== numberOfAlternatives){
-						selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
-						answersTried += 1;				
-					}
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && possibleAlternatives.length >= 0){
+						debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
+						selectedGame.nextAnswer = possibleAlternatives.pop();
+						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
+          }
 
-					if(answersTried === numberOfAlternatives){
+
+					if(selectedGame.nextAnswer === undefined){
 						// The game is out of organic connections
 						resolve({
 							limitReached : true,
@@ -138,9 +140,9 @@ function getAQuestionToAnswer(gameUUID){
 						return;
 					}
 
-					selectedGame.blacklist.push(selectedGame.nextAnswer);
+					selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
 
-					debug(selectedGame.blacklist, selectedGame.nextAnswer);
+					debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
 
 					// Get the answer from the island 1 distance away, 
 					// then get a wrong answer from the island 2 distance,
@@ -153,7 +155,7 @@ function getAQuestionToAnswer(gameUUID){
 					].sort(function(){
 						return Math.random() > 0.5 ? 1 : -1;
 					});
-					
+
 					const answersToReturn = {
 						a : possibleAnswers[0],
 						b : possibleAnswers[1],
@@ -161,6 +163,8 @@ function getAQuestionToAnswer(gameUUID){
 					};
 
 					selectedGame.answersReturned = answersToReturn;
+
+					debug('SELECTEDGAME', selectedGame);
 
 					resolve({
 						seed : selectedGame.seedPerson,
@@ -188,9 +192,9 @@ function answerAQuestion(gameUUID, submittedAnswer){
 	
 	const selectedGame = runningGames[gameUUID];
 
-	if(submittedAnswer === selectedGame.nextAnswer){
+	if(submittedAnswer.toLowerCase() === selectedGame.nextAnswer.toLowerCase()){
 		selectedGame.distance += 1;
-		selectedGame.seedPerson = submittedAnswer;
+		selectedGame.seedPerson = selectedGame.nextAnswer;
 		selectedGame.answersReturned = undefined;
 		return Promise.resolve({
 			correct : true,
@@ -230,7 +234,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 		return Promise.resolve({
 			correct : false,
-			score : selectedGame.distance
+			score : selectedGame.distance,
+			expected: selectedGame.nextAnswer.replace('people:', '')
 		});
 	}
 
@@ -240,7 +245,7 @@ function getListOfHighScores(){
 
 	return new Promise( (resolve) => {
 
-		debug(highScores);
+		debug(`HIGH SCORES ${highScores}`);
 
 		const sanitizedHighScores = highScores.map(score => {
 			return {
