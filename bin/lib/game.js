@@ -122,13 +122,11 @@ function getAQuestionToAnswer(gameUUID){
 					debug('First instance of nextAnswer', selectedGame.nextAnswer);
 					debug('The possible alternatives are', possibleAlternatives);
 
-
-					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && possibleAlternatives.length >= 0){
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1 && possibleAlternatives.length >= 0){
 						debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
 						selectedGame.nextAnswer = possibleAlternatives.pop();
 						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
 					}
-
 
 					if(selectedGame.nextAnswer === undefined){
 						// The game is out of organic connections
