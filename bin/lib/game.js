@@ -127,7 +127,7 @@ function getAQuestionToAnswer(gameUUID){
 						debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
 						selectedGame.nextAnswer = possibleAlternatives.pop();
 						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
-          }
+					}
 
 
 					if(selectedGame.nextAnswer === undefined){
