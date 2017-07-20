@@ -53,7 +53,7 @@ class Game{
 					.slice(0, 5)
 				;
 
-				debug(mostConnectedIndividuals);
+				debug('MOST CONNECTED', mostConnectedIndividuals);
 
 				return mostConnectedIndividuals[ Math.random() * mostConnectedIndividuals.length | 0 ];
 
@@ -76,7 +76,7 @@ function createANewGame(userUUID){
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
 			newGame.blacklist.push(seedPerson.name.toLowerCase());
-			debug(newGame);
+			debug(`NEW GAME SEED:: ${newGame}`);
 			return newGame.UUID;
 		})
 	;
@@ -137,7 +137,7 @@ function getAQuestionToAnswer(gameUUID){
 
 					selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
 
-					debug(selectedGame.blacklist, selectedGame.nextAnswer.toLowerCase());
+					debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
 
 					// Get the answer from the island 1 distance away, 
 					// then get a wrong answer from the island 2 distance,
@@ -238,7 +238,7 @@ function getListOfHighScores(){
 
 	return new Promise( (resolve) => {
 
-		debug(highScores);
+		debug(`HIGH SCORES ${highScores}`);
 
 		const sanitizedHighScores = highScores.map(score => {
 			return {
