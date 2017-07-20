@@ -15,9 +15,9 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	console.log('DETAILS', games.getGameDetails(SESSION));
-
-
+	let expected = checkExpectedInput(SESSION);
+	console.log('TEST', expected);
+	
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
 		case 'repeat':
@@ -60,6 +60,17 @@ router.post('/googlehome', (req, res) => {
 	res.json({'speech': answer, 'displayText': answer});
 
 });
+
+function checkExpectedInput(session) {
+	games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			return game.getGameDetails(session);
+		} else {
+			return [];
+		}
+	});
+}
 
 function getQuestion(session, callback) {
 	games.check(session)
