@@ -14,14 +14,8 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	// let expected = checkExpectedInput(SESSION);
-	// console.log('TEST', checkExpectedInput(SESSION));
-
 	checkExpectedInput(SESSION)
 		.then(answers => {
-
-			debug('rolfcopter', answers);
-
 			const expectedAnswers = Object.keys(answers).map(key => {
 				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 			});
@@ -32,7 +26,6 @@ router.post('/googlehome', (req, res) => {
 					setCountState(SESSION, 0);
 					return getQuestion(SESSION, ans => {
 						res.json({'speech': ans, 'displayText': ans});
-						games.get(SESSION).then(data => console.log('DATA2', data));
 					});
 				break;
 
@@ -45,6 +38,12 @@ router.post('/googlehome', (req, res) => {
 				case expectedAnswers[0]:
 				case expectedAnswers[1]:
 				case expectedAnswers[2]:
+				case '1':
+				case 'one':
+				case '2':
+				case 'two':
+				case '3':
+				case 'three':
 					setCountState(SESSION, 0);
 					return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
 						res.json({'speech': ans, 'displayText': ans});
@@ -56,7 +55,7 @@ router.post('/googlehome', (req, res) => {
 						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
 						for(let i = 0; i < expectedAnswers.length; ++i) {
-							answer += '- ' + expectedAnswers[i];
+							answer += (i + 1) + ' ' + expectedAnswers[i];
 						}
 
 						++not_understood_count;
@@ -68,7 +67,7 @@ router.post('/googlehome', (req, res) => {
 			
 			res.json({'speech': answer, 'displayText': answer});
 
-		})
+		});
 
 });
 
@@ -98,11 +97,9 @@ function getQuestion(session, callback) {
 		}
 	})
 	.then(data => {
-		debug(`THIS IS DATA! ${JSON.stringify(data)}`);
 		if(data.limitReached === true){
 			callback('winner');
 		} else {
-			debug('getQuestion data:', data);
 			const preparedData = {};
 
 			preparedData.seed = {
@@ -119,8 +116,6 @@ function getQuestion(session, callback) {
 				};
 			});
 
-			debug('preparedData', preparedData);
-			
 			formatQuestion(preparedData, ans => {
 				callback(ans);
 			});
@@ -143,8 +138,10 @@ function checkAnswer(session, answer, callback) {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
+	let answerCount = 1;
 	Object.keys(options.options).forEach(key => {
-		answerFormat += ' - ' + options.options[key].printValue;
+		answerFormat += answerCount +' ' + options.options[key].printValue;
+		++answerCount;
 	});
 
 	callback(answerFormat);
