@@ -65,7 +65,7 @@ function checkExpectedInput(session) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			return game.getGameDetails(session);
+			return games.getGameDetails(session);
 		} else {
 			return [];
 		}
