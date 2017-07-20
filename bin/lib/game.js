@@ -76,7 +76,7 @@ function createANewGame(userUUID){
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
 			newGame.blacklist.push(seedPerson.name.toLowerCase());
-			debug(`NEW GAME SEED:: ${newGame}`);
+			debug('NEW GAME SEED:: ', newGame);
 			return newGame.UUID;
 		})
 	;
