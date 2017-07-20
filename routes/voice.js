@@ -4,7 +4,7 @@ const router = express.Router();
 
 const games = require('../bin/lib/game');
 const activeSessions = {};
-// let expectedAnswers = [];
+let expectedAnswers = [];
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
