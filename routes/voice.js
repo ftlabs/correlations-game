@@ -4,7 +4,6 @@ const router = express.Router();
 
 const games = require('../bin/lib/game');
 const activeSessions = {};
-let expectedAnswers = [];
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
@@ -23,7 +22,7 @@ router.post('/googlehome', (req, res) => {
 
 			debug('rolfcopter', answers);
 
-			expectedAnswers = Object.keys(answers).map(key => {
+			const expectedAnswers = Object.keys(answers).map(key => {
 				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 			});
 
@@ -137,7 +136,6 @@ function checkAnswer(session, answer, callback) {
 				callback('Correct. ' + ans);
 			});
 		} else {
-			expectedAnswers = [];
 			callback('Sorry, that is incorrect. The correct answer was ' + result.expected);
 		}
 	});
@@ -145,10 +143,8 @@ function checkAnswer(session, answer, callback) {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
-	expectedAnswers = [];
 	Object.keys(options.options).forEach(key => {
 		answerFormat += ' - ' + options.options[key].printValue;
-		//expectedAnswers.push(options.options[key].printValue.toLowerCase());
 	});
 
 	callback(answerFormat);
