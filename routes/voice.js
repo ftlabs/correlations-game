@@ -16,7 +16,7 @@ router.post('/googlehome', (req, res) => {
 	let not_understood_count = activeSessions[SESSION].count;
 
 	// let expected = checkExpectedInput(SESSION);
-	console.log('TEST', checkExpectedInput(SESSION));
+	// console.log('TEST', checkExpectedInput(SESSION));
 
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
@@ -24,6 +24,7 @@ router.post('/googlehome', (req, res) => {
 			setCountState(SESSION, 0);
 			return getQuestion(SESSION, ans => {
 				res.json({'speech': ans, 'displayText': ans});
+				games.get(SESSION).then(data => console.log('DATA2', data));
 			});
 		break;
 
