@@ -15,7 +15,7 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	console.log('DETAILS', getGameDetails(SESSION));
+	console.log('DETAILS', games.getGameDetails(SESSION));
 
 
 	switch(USER_INPUT.toLowerCase()) {
