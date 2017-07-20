@@ -4,7 +4,7 @@ const router = express.Router();
 
 const games = require('../bin/lib/game');
 const activeSessions = {};
-let expectedAnswers = [];
+// let expectedAnswers = [];
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
@@ -15,7 +15,8 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	res.setHeader('Content-Type', 'application/json');
+	console.log('DETAILS', getGameDetails(SESSION));
+
 
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
