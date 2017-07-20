@@ -143,10 +143,6 @@ function formatQuestion(options, callback) {
 	callback(answerFormat);
 }
 
-function getCountState(sessionID){
-	return Promise.resolve( activeSessions[sessionID] );
-}
-
 function setCountState(sessionID, count) {
 	if(activeSessions[sessionID] === undefined) {
 		activeSessions[sessionID] = {};
