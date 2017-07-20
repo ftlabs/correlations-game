@@ -2,6 +2,7 @@ const debug = require('debug')('bin:lib:game');
 const uuid = require('uuid').v4;
 
 const correlations_service = require('./correlations');
+const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
 const runningGames = {};
 const highScores = [];
@@ -36,8 +37,8 @@ class Game{
 	selectRandomSeedPerson(){
 		return correlations_service.allIslands()
 			.then(islands => {
-				const biggestIsland = islands[0];
-				const mostConnectedIndividuals = Object.keys(biggestIsland).map(person => {
+				const biggestIsland = barnier.filter( Object.keys(islands[0]) );
+				const mostConnectedIndividuals = biggestIsland.map(person => {
 						return {
 							name : person,
 							numberOfConnectionsToOthers : biggestIsland[person]
@@ -115,7 +116,7 @@ function getAQuestionToAnswer(gameUUID){
 			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 				.then(data => {
 
-					const possibleAlternatives = [...data[1].entities];
+					const possibleAlternatives = barnier.filter( data[1].entities );
 					selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
 
 					debug('First instance of nextAnswer', selectedGame.nextAnswer);
@@ -127,6 +128,7 @@ function getAQuestionToAnswer(gameUUID){
 						selectedGame.nextAnswer = possibleAlternatives.pop();
 						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
           }
+
 
 					if(selectedGame.nextAnswer === undefined){
 						// The game is out of organic connections
