@@ -66,7 +66,6 @@ router.get('/question', (req, res) => {
 			});
 		})
 
-
 });
 
 router.post('/answer', (req, res) => {

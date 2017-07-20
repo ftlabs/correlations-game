@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', userUUIDMiddleware, require('./routes/index'));
+app.use('/voice', require('./routes/voice'));
 app.use('/interface', require('./routes/interface'));
 
 // catch 404 and forward to error handler
