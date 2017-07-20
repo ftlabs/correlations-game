@@ -15,8 +15,8 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	let expected = checkExpectedInput(SESSION);
-	console.log('TEST', expected);
+	// let expected = checkExpectedInput(SESSION);
+	// console.log('TEST', expected);
 	
 	switch(USER_INPUT.toLowerCase()) {
 		case 'start':
