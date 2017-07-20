@@ -115,17 +115,20 @@ function getAQuestionToAnswer(gameUUID){
 			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
 				.then(data => {
 
-					const numberOfAlternatives = data[1].entities.length;
-					let answersTried = 0;
+					const possibleAlternatives = [...data[1].entities];
+					selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
 
-					selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
+					debug('First instance of nextAnswer', selectedGame.nextAnswer);
+					debug('The possible alternatives are', possibleAlternatives);
 
-					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1 && answersTried !== numberOfAlternatives){
-						selectedGame.nextAnswer = data[1].entities[Math.random() * data[1].entities.length | 0];
-						answersTried += 1;				
-					}
 
-					if(answersTried === numberOfAlternatives){
+					while(selectedGame.blacklist.indexOf(selectedGame.nextAnswer) > -1 && possibleAlternatives.length >= 0){
+						debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
+						selectedGame.nextAnswer = possibleAlternatives.pop();
+						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
+          }
+
+					if(selectedGame.nextAnswer === undefined){
 						// The game is out of organic connections
 						resolve({
 							limitReached : true,
