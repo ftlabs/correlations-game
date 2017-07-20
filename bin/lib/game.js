@@ -189,7 +189,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 	if(submittedAnswer.toLowerCase() === selectedGame.nextAnswer.toLowerCase()){
 		selectedGame.distance += 1;
-		selectedGame.seedPerson = submittedAnswer;
+		selectedGame.seedPerson = selectedGame.nextAnswer;
 		selectedGame.answersReturned = undefined;
 		return Promise.resolve({
 			correct : true,
