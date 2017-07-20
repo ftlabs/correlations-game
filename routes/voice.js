@@ -7,24 +7,27 @@ const activeSessions = {};
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
-	const USER_INPUT = req.body.result.resolvedQuery;
+	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 	let answer;
 	setCountState(SESSION, null);
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	// let expected = checkExpectedInput(SESSION);
-	// console.log('TEST', checkExpectedInput(SESSION));
 
 	checkExpectedInput(SESSION)
 		.then(answers => {
-
-			debug('rolfcopter', answers);
-
 			const expectedAnswers = Object.keys(answers).map(key => {
 				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 			});
+
+			if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+				USER_INPUT = expectedAnswers[0];
+			} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+				USER_INPUT = expectedAnswers[1];
+			} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+				USER_INPUT = expectedAnswers[2];
+			}
 
 			switch(USER_INPUT.toLowerCase()) {
 				case 'start':
@@ -32,7 +35,6 @@ router.post('/googlehome', (req, res) => {
 					setCountState(SESSION, 0);
 					return getQuestion(SESSION, ans => {
 						res.json({'speech': ans, 'displayText': ans});
-						games.get(SESSION).then(data => console.log('DATA2', data));
 					});
 				break;
 
@@ -56,7 +58,7 @@ router.post('/googlehome', (req, res) => {
 						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
 						for(let i = 0; i < expectedAnswers.length; ++i) {
-							answer += '- ' + expectedAnswers[i];
+							answer += (i + 1) + ' ' + expectedAnswers[i] + ' ';
 						}
 
 						++not_understood_count;
@@ -68,7 +70,7 @@ router.post('/googlehome', (req, res) => {
 			
 			res.json({'speech': answer, 'displayText': answer});
 
-		})
+		});
 
 });
 
@@ -98,11 +100,9 @@ function getQuestion(session, callback) {
 		}
 	})
 	.then(data => {
-		debug(`THIS IS DATA! ${JSON.stringify(data)}`);
 		if(data.limitReached === true){
 			callback('winner');
 		} else {
-			debug('getQuestion data:', data);
 			const preparedData = {};
 
 			preparedData.seed = {
@@ -119,8 +119,6 @@ function getQuestion(session, callback) {
 				};
 			});
 
-			debug('preparedData', preparedData);
-			
 			formatQuestion(preparedData, ans => {
 				callback(ans);
 			});
@@ -143,8 +141,10 @@ function checkAnswer(session, answer, callback) {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
+	let answerCount = 1;
 	Object.keys(options.options).forEach(key => {
-		answerFormat += ' - ' + options.options[key].printValue;
+		answerFormat += answerCount +' ' + options.options[key].printValue + ' ';
+		++answerCount;
 	});
 
 	callback(answerFormat);
