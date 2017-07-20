@@ -23,7 +23,7 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 
 class Game{
 	constructor(userUUID) {
-		this.UUID = uuid();
+		this.UUID = userUUID;
 		this.player = userUUID;
 		this.state = 'new';
 		this.distance = 0;
@@ -185,7 +185,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 	
 	const selectedGame = runningGames[gameUUID];
 
-	if(submittedAnswer === selectedGame.nextAnswer){
+	if(submittedAnswer.toLowerCase() === selectedGame.nextAnswer.toLowerCase()){
 		selectedGame.distance += 1;
 		selectedGame.seedPerson = submittedAnswer;
 		selectedGame.answersReturned = undefined;
@@ -227,7 +227,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 		return Promise.resolve({
 			correct : false,
-			score : selectedGame.distance
+			score : selectedGame.distance,
+			expected: selectedGame.nextAnswer.replace('people:', '')
 		});
 	}
 
