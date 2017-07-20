@@ -159,6 +159,8 @@ function getAQuestionToAnswer(gameUUID){
 
 					selectedGame.answersReturned = answersToReturn;
 
+					debug('SELECTEDGAME', selectedGame);
+
 					resolve({
 						seed : selectedGame.seedPerson,
 						options : answersToReturn,
