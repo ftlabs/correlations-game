@@ -7,18 +7,27 @@ const activeSessions = {};
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
-	const USER_INPUT = req.body.result.resolvedQuery;
+	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 	let answer;
 	setCountState(SESSION, null);
 
 	let not_understood_count = activeSessions[SESSION].count;
 
+
 	checkExpectedInput(SESSION)
 		.then(answers => {
 			const expectedAnswers = Object.keys(answers).map(key => {
 				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 			});
+
+			if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+				USER_INPUT = expectedAnswers[0];
+			} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+				USER_INPUT = expectedAnswers[1];
+			} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+				USER_INPUT = expectedAnswers[2];
+			}
 
 			switch(USER_INPUT.toLowerCase()) {
 				case 'start':
@@ -38,12 +47,6 @@ router.post('/googlehome', (req, res) => {
 				case expectedAnswers[0]:
 				case expectedAnswers[1]:
 				case expectedAnswers[2]:
-				case '1':
-				case 'one':
-				case '2':
-				case 'two':
-				case '3':
-				case 'three':
 					setCountState(SESSION, 0);
 					return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
 						res.json({'speech': ans, 'displayText': ans});
@@ -55,7 +58,7 @@ router.post('/googlehome', (req, res) => {
 						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
 						for(let i = 0; i < expectedAnswers.length; ++i) {
-							answer += (i + 1) + ' ' + expectedAnswers[i];
+							answer += (i + 1) + ' ' + expectedAnswers[i] + ' ';
 						}
 
 						++not_understood_count;
@@ -140,7 +143,7 @@ function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
 	let answerCount = 1;
 	Object.keys(options.options).forEach(key => {
-		answerFormat += answerCount +' ' + options.options[key].printValue;
+		answerFormat += answerCount +' ' + options.options[key].printValue + ' ';
 		++answerCount;
 	});
 
