@@ -18,55 +18,66 @@ router.post('/googlehome', (req, res) => {
 	// let expected = checkExpectedInput(SESSION);
 	// console.log('TEST', checkExpectedInput(SESSION));
 
-	switch(USER_INPUT.toLowerCase()) {
-		case 'start':
-		case 'repeat':
-			setCountState(SESSION, 0);
-			return getQuestion(SESSION, ans => {
-				res.json({'speech': ans, 'displayText': ans});
-				games.get(SESSION).then(data => console.log('DATA2', data));
+	checkExpectedInput(SESSION)
+		.then(answers => {
+
+			debug('rolfcopter', answers);
+
+			expectedAnswers = Object.keys(answers).map(key => {
+				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 			});
-		break;
 
-		case 'help':
-			setCountState(SESSION, 0);
-			answer = "Add instructions here";
-			//?TODO: handle in a different intent?
-		break;
+			switch(USER_INPUT.toLowerCase()) {
+				case 'start':
+				case 'repeat':
+					setCountState(SESSION, 0);
+					return getQuestion(SESSION, ans => {
+						res.json({'speech': ans, 'displayText': ans});
+						games.get(SESSION).then(data => console.log('DATA2', data));
+					});
+				break;
 
-		case expectedAnswers[0]:
-		case expectedAnswers[1]:
-		case expectedAnswers[2]:
-			setCountState(SESSION, 0);
-			return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
-				res.json({'speech': ans, 'displayText': ans});
-			});
-		break;
+				case 'help':
+					setCountState(SESSION, 0);
+					answer = "Add instructions here";
+					//?TODO: handle in a different intent?
+				break;
 
-		default:
-			if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
-				answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
+				case expectedAnswers[0]:
+				case expectedAnswers[1]:
+				case expectedAnswers[2]:
+					setCountState(SESSION, 0);
+					return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
+						res.json({'speech': ans, 'displayText': ans});
+					});
+				break;
 
-				for(let i = 0; i < expectedAnswers.length; ++i) {
-					answer += '- ' + expectedAnswers[i];
-				}
+				default:
+					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
+						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
-				++not_understood_count;
-				setCountState(SESSION, not_understood_count);
-			} else {
-				answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
+						for(let i = 0; i < expectedAnswers.length; ++i) {
+							answer += '- ' + expectedAnswers[i];
+						}
+
+						++not_understood_count;
+						setCountState(SESSION, not_understood_count);
+					} else {
+						answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
+					}
 			}
-	}
+			
+			res.json({'speech': answer, 'displayText': answer});
 
-	res.json({'speech': answer, 'displayText': answer});
+		})
 
 });
 
 function checkExpectedInput(session) {
-	games.check(session)
+	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			return games.get(session);
+			return games.get(session).then(data => data.answersReturned);
 		} else {
 			return [];
 		}
@@ -137,7 +148,7 @@ function formatQuestion(options, callback) {
 	expectedAnswers = [];
 	Object.keys(options.options).forEach(key => {
 		answerFormat += ' - ' + options.options[key].printValue;
-		expectedAnswers.push(options.options[key].printValue.toLowerCase());
+		//expectedAnswers.push(options.options[key].printValue.toLowerCase());
 	});
 
 	callback(answerFormat);
