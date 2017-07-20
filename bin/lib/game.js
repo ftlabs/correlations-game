@@ -150,7 +150,7 @@ function getAQuestionToAnswer(gameUUID){
 					].sort(function(){
 						return Math.random() > 0.5 ? 1 : -1;
 					});
-					
+
 					const answersToReturn = {
 						a : possibleAnswers[0],
 						b : possibleAnswers[1],

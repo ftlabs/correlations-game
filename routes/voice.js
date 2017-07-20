@@ -78,6 +78,7 @@ function getQuestion(session, callback) {
 		if(data.limitReached === true){
 			callback('winner');
 		} else {
+			debug('getQuestion data:', data);
 			const preparedData = {};
 
 			preparedData.seed = {
@@ -94,6 +95,8 @@ function getQuestion(session, callback) {
 				};
 			});
 
+			debug('preparedData', preparedData);
+			
 			formatQuestion(preparedData, ans => {
 				callback(ans);
 			});
