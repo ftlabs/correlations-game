@@ -87,7 +87,7 @@ function getQuestion(session, callback) {
 		}
 	})
 	.then(data => {
-		debug(`THIS IS DATA! ${data}`);
+		debug(`THIS IS DATA! ${JSON.stringify(data)}`);
 		if(data.limitReached === true){
 			callback('winner');
 		} else {
