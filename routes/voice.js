@@ -142,7 +142,7 @@ function checkAnswer(session, answer, callback) {
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
 
-	Object.keys(options.options).forEach(key, index => {
+	Object.keys(options.options).forEach((key, index) => {
 		answerFormat += (index + 1) + ') ' + options.options[key].printValue + ' ';
 		++answerCount;
 	});
