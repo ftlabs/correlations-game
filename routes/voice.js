@@ -14,7 +14,6 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-
 	checkExpectedInput(SESSION)
 		.then(answers => {
 			const expectedAnswers = Object.keys(answers).map(key => {
@@ -144,7 +143,6 @@ function formatQuestion(options, callback) {
 
 	Object.keys(options.options).forEach((key, index) => {
 		answerFormat += (index + 1) + ') ' + options.options[key].printValue + ' ';
-		++answerCount;
 	});
 
 	callback(answerFormat);
