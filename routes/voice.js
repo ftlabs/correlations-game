@@ -14,7 +14,6 @@ router.post('/googlehome', (req, res) => {
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-
 	checkExpectedInput(SESSION)
 		.then(answers => {
 			const expectedAnswers = Object.keys(answers).map(key => {
@@ -58,7 +57,7 @@ router.post('/googlehome', (req, res) => {
 						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
 						for(let i = 0; i < expectedAnswers.length; ++i) {
-							answer += (i + 1) + ' ' + expectedAnswers[i] + ' ';
+							answer += (i + 1) + ') ' + expectedAnswers[i] + ' ';
 						}
 
 						++not_understood_count;
@@ -141,10 +140,9 @@ function checkAnswer(session, answer, callback) {
 
 function formatQuestion(options, callback) {
 	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
-	let answerCount = 1;
-	Object.keys(options.options).forEach(key => {
-		answerFormat += answerCount +' ' + options.options[key].printValue + ' ';
-		++answerCount;
+
+	Object.keys(options.options).forEach((key, index) => {
+		answerFormat += (index + 1) + ') ' + options.options[key].printValue + '. ';
 	});
 
 	callback(answerFormat);
