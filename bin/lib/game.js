@@ -1,6 +1,7 @@
 const debug = require('debug')('bin:lib:game');
 const uuid = require('uuid').v4;
 
+const database = require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
@@ -24,7 +25,7 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 
 class Game{
 	constructor(userUUID) {
-		this.UUID = userUUID;
+		this.uuid = userUUID;
 		this.player = userUUID;
 		this.state = 'new';
 		this.distance = 0;
@@ -71,14 +72,23 @@ function createANewGame(userUUID){
 	}
 
 	const newGame = new Game(userUUID);
-	runningGames[newGame.UUID] = newGame;
 
 	return newGame.selectRandomSeedPerson()
 		.then(seedPerson => {
 			newGame.seedPerson = seedPerson.name;
 			newGame.blacklist.push(seedPerson.name.toLowerCase());
 			debug('NEW GAME SEED:: ', newGame);
-			return newGame.UUID;
+		})
+		.then(function(){
+			return database.write(newGame, process.env.GAME_TABLE)
+				.then(function(){
+					return newGame.uuid;
+				})
+				.catch(err => {
+					debug('Unable to store game instance in database:', err);
+					throw err;
+				})
+			;
 		})
 	;
 
@@ -86,100 +96,129 @@ function createANewGame(userUUID){
 
 function getAQuestionToAnswer(gameUUID){
 
+	debug(gameUUID);
+
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
-	} else if(runningGames[gameUUID] === undefined){
-		return Promise.reject(`The game UUID '${gameUUID}' is not valid`);
 	}
 
-	return new Promise( (resolve, reject) => {
+	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
+		.then(data => {
+			if(data.Item === undefined){
+				throw `The game UUID '${gameUUID}' is not valid`;
+			}
 
-		const selectedGame = runningGames[gameUUID];
-		debug(selectedGame);
+			return new Promise( (resolve, reject) => {
 
-		if(selectedGame.state === 'new'){
-			selectedGame.state = 'current';
-		}
+				const selectedGame = data.Item;
+				debug(selectedGame);
 
-		if(selectedGame.state === 'finished'){
-			reject('GAMEOVER');
-			return;
-		}
+				if(selectedGame.state === 'new'){
+					selectedGame.state = 'current';
+				}
 
-		if(selectedGame.answersReturned !== undefined){
-			resolve({
-				seed : selectedGame.seedPerson,
-				options : selectedGame.answersReturned
-			});
-		} else {
+				if(selectedGame.state === 'finished'){
+					reject('GAMEOVER');
+					return;
+				}
 
-			correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
-				.then(data => {
-
-					const possibleAlternatives = barnier.filter( data[1].entities );
-					selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
-
-					debug('First instance of nextAnswer', selectedGame.nextAnswer);
-					debug('The possible alternatives are', possibleAlternatives);
-					
-					while(possibleAlternatives.length >= 0 && selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1){
-						debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
-						selectedGame.nextAnswer = possibleAlternatives.pop();
-						debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
-						
-						if(selectedGame.nextAnswer === undefined){
-							break;	
-						}
-
-					}
-
-					if(selectedGame.nextAnswer === undefined){
-						// The game is out of organic connections
-						resolve({
-							limitReached : true,
-							score : selectedGame.distance
-						});
-						selectedGame.state = 'finished';
-						return;
-					}
-
-					selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
-
-					debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
-
-					// Get the answer from the island 1 distance away, 
-					// then get a wrong answer from the island 2 distance,
-					// and then do the same 3 distance away.
-					// Then randomise the order they're sent in.
-					const possibleAnswers = [ 
-						selectedGame.nextAnswer,
-						data[2].entities[Math.random() * data[2].entities.length | 0],
-						data[3].entities[Math.random() * data[3].entities.length | 0]
-					].sort(function(){
-						return Math.random() > 0.5 ? 1 : -1;
-					});
-
-					const answersToReturn = {
-						a : possibleAnswers[0],
-						b : possibleAnswers[1],
-						c : possibleAnswers[2]
-					};
-
-					selectedGame.answersReturned = answersToReturn;
-
-					debug('SELECTEDGAME', selectedGame);
-
+				if(selectedGame.answersReturned !== undefined){
 					resolve({
 						seed : selectedGame.seedPerson,
-						options : answersToReturn,
-						limitReached : false
+						options : selectedGame.answersReturned
 					});
-				})
-			;
+				} else {
 
-		}
+					correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
+						.then(data => {
 
-	});
+							const possibleAlternatives = barnier.filter( data[1].entities );
+							selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
+
+							debug('First instance of nextAnswer', selectedGame.nextAnswer);
+							debug('The possible alternatives are', possibleAlternatives);
+							
+							while(possibleAlternatives.length >= 0 && selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1){
+								debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
+								selectedGame.nextAnswer = possibleAlternatives.pop();
+								debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
+								
+								if(selectedGame.nextAnswer === undefined){
+									break;	
+								}
+
+							}
+
+							if(selectedGame.nextAnswer === undefined){
+								// The game is out of organic connections
+								selectedGame.state = 'finished';
+								database.write(selectedGame, process.env.GAME_TABLE)
+									.then(function(){
+										debug(`Game state (${selectedGame.uuid}) successfully updated on completion.`);
+										resolve({
+											limitReached : true,
+											score : selectedGame.distance
+										});	
+									})
+									.catch(err => {
+										debug(`Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
+										throw err;
+									});
+								;
+							} else {
+
+								selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
+
+								debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
+
+								// Get the answer from the island 1 distance away, 
+								// then get a wrong answer from the island 2 distance,
+								// and then do the same 3 distance away.
+								// Then randomise the order they're sent in.
+								const possibleAnswers = [ 
+									selectedGame.nextAnswer,
+									data[2].entities[Math.random() * data[2].entities.length | 0],
+									data[3].entities[Math.random() * data[3].entities.length | 0]
+								].sort(function(){
+									return Math.random() > 0.5 ? 1 : -1;
+								});
+
+								const answersToReturn = {
+									a : possibleAnswers[0],
+									b : possibleAnswers[1],
+									c : possibleAnswers[2]
+								};
+
+								selectedGame.answersReturned = answersToReturn;
+
+								debug('SELECTEDGAME', selectedGame);
+
+								database.write(selectedGame, process.env.GAME_TABLE)
+									.then(function(){
+										debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
+										resolve({
+											seed : selectedGame.seedPerson,
+											options : answersToReturn,
+											limitReached : false
+										});
+									})
+									.catch(err => {
+										debug(`Unable to save game state whilst returning answers`, err);
+										throw err;
+									})
+								;
+							}
+
+						})
+					;
+
+				}
+
+			});
+
+		})
+	;
+
 
 }
 
@@ -187,60 +226,90 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
-	} else if(runningGames[gameUUID] === undefined){
-		return Promise.reject(`The game UUID '${gameUUID}' is not valid`);
 	} else if(submittedAnswer === undefined){
 		return Promise.reject(`An answer was not passed to the function`);
 	}
 	
-	const selectedGame = runningGames[gameUUID];
-
-	if(submittedAnswer.replace('.', '').replace('-', ' ').toLowerCase() === selectedGame.nextAnswer.replace('.', '').replace('-', ' ').toLowerCase()){
-		selectedGame.distance += 1;
-		selectedGame.seedPerson = selectedGame.nextAnswer;
-		selectedGame.answersReturned = undefined;
-		return Promise.resolve({
-			correct : true,
-			score : selectedGame.distance
-		});
-	} else {
-		selectedGame.state = 'finished';
-
-		let scorePosition = -1;
-
-		if(highScores.length >= 1){
-
-			for(let x = 0; x < highScores.length; x += 1){
-
-				if(selectedGame.distance > highScores[x].distance){
-					scorePosition = x;
-					break;
-				}
-
+	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
+		.then(data => {
+			if(data.Item === undefined){
+				throw `The game UUID '${gameUUID}' is not valid`;
 			}
 
-			if(scorePosition !== -1){
-				highScores.splice(scorePosition, 0, selectedGame);
+			return new Promise( (resolve) => {
 
-				if(highScores.length > 10){
-					for(let y = highScores.length - 10; y > 0; y -= 1){
-						highScores.pop();
+				const selectedGame = data.Item;
+
+				if(submittedAnswer.replace('.', '').replace('-', ' ').toLowerCase() === selectedGame.nextAnswer.replace('.', '').replace('-', ' ').toLowerCase()){
+					
+					selectedGame.distance += 1;
+					selectedGame.seedPerson = selectedGame.nextAnswer;
+					selectedGame.answersReturned = undefined;
+
+					database.write(selectedGame, process.env.GAME_TABLE)
+						.then(function(){
+							resolve({
+								correct : true,
+								score : selectedGame.distance
+							});
+						})
+						.catch(err => {
+							debug(`Unable to save game state (${selectedGame.uuid}) on correct answering of question`, err);
+							throw err;
+						})
+					;
+
+				} else {
+					selectedGame.state = 'finished';
+
+					let scorePosition = -1;
+
+					if(highScores.length >= 1){
+
+						for(let x = 0; x < highScores.length; x += 1){
+
+							if(selectedGame.distance > highScores[x].distance){
+								scorePosition = x;
+								break;
+							}
+
+						}
+
+						if(scorePosition !== -1){
+							highScores.splice(scorePosition, 0, selectedGame);
+
+							if(highScores.length > 10){
+								for(let y = highScores.length - 10; y > 0; y -= 1){
+									highScores.pop();
+								}
+							}
+
+						}
+
+					} else {
+						highScores.push(selectedGame);
 					}
+
+					database.write(selectedGame, process.env.GAME_TABLE)
+						.then(function(){
+							resolve({
+								correct : false,
+								score : selectedGame.distance,
+								expected: selectedGame.nextAnswer.replace('people:', '')
+							});
+						})
+						.catch(err => {
+							debug(`Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);							
+							throw err;
+						})
+					;
+				
 				}
 
-			}
+			} );
 
-		} else {
-			highScores.push(selectedGame);
-		}
-
-
-		return Promise.resolve({
-			correct : false,
-			score : selectedGame.distance,
-			expected: selectedGame.nextAnswer.replace('people:', '')
-		});
-	}
+		})
+	;
 
 }
 
@@ -271,12 +340,22 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 		if(gameUUID === undefined){
 			resolve(false);
-		} else if(runningGames[gameUUID] === undefined){
-			resolve(false);
-		} else if(runningGames[gameUUID].state === 'finished'){
-			resolve(false);
 		} else {
-			resolve(true);
+			database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
+				.then(data => {
+					if(data.Item === undefined){
+						resolve(false);
+					} else if(data.Item.state === 'finished'){
+						resolve(false);
+					} else {
+						resolve(true);
+					}
+				})
+				.catch(err => {
+					debug(`Unable to check if game (${gameUUID}) exists`, err);
+					throw err;
+				})
+			;
 		}
 
 	});
@@ -285,8 +364,18 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 function getGameDetails(gameUUID){
 
-	return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
+	if(gameUUID === undefined){
+		throw 'No gameUUID was passed to the function';
+	}
 
+	// return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
+	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
+		.then(data => data.Item)
+		.catch(err => {
+			debug(`Unable to read entry for game ${gameUUID}`, err);
+			throw err;
+		})
+	;
 }
 
 module.exports = {
