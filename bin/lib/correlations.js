@@ -68,8 +68,25 @@ function getListOfPeopleByDistances(personName){
 
 }
 
+function getAChainBetweenTwoPeopleAndIncludeTheArticles(personOne, personTwo){
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainWithArticlesBetween/${ encodeURIComponent( personOne ) }/${ encodeURIComponent( personTwo ) }`, REQUEST_HEADERS)
+		.then(res => {
+			if(res.ok){
+				return res.json();
+			} else {
+				throw res;
+			}
+		})
+		.catch(err => {
+			debug(err); //Log the error here, catch it in the application
+			throw err;
+		})
+	;
+}
+
 module.exports = {
 	allIslands : getAllOfTheIslandsInTheCorrelationsService,
 	islandOf : getListOfPeopleOnAPersonsIsland,
-	calcChainLengthsFrom : getListOfPeopleByDistances
+	calcChainLengthsFrom : getListOfPeopleByDistances,
+	calcChainWithArticlesBetween : getAChainBetweenTwoPeopleAndIncludeTheArticles
 };
