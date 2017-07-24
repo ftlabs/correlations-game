@@ -193,17 +193,29 @@ function getAQuestionToAnswer(gameUUID){
 
 								debug('SELECTEDGAME', selectedGame);
 
-								database.write(selectedGame, process.env.GAME_TABLE)
-									.then(function(){
-										debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
-										resolve({
-											seed : selectedGame.seedPerson,
-											options : answersToReturn,
-											limitReached : false
-										});
+								correlations_service.calcChainWithArticlesBetween(selectedGame.seedPerson, selectedGame.nextAnswer)
+									.then(data => {
+
+										selectedGame.linkingArticles = data.articlesPerLink[0];
+
+										database.write(selectedGame, process.env.GAME_TABLE)
+											.then(function(){
+												debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
+												resolve({
+													seed : selectedGame.seedPerson,
+													options : answersToReturn,
+													limitReached : false
+												});
+											})
+											.catch(err => {
+												debug(`Unable to save game state whilst returning answers`, err);
+												throw err;
+											})
+										;
+
 									})
 									.catch(err => {
-										debug(`Unable to save game state whilst returning answers`, err);
+										debug(`Unable to articles between ${selectedGame.seedPerson} and ${selectedGame.nextAnswer}`, err);
 										throw err;
 									})
 								;
@@ -250,7 +262,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						.then(function(){
 							resolve({
 								correct : true,
-								score : selectedGame.distance
+								score : selectedGame.distance,
+								linkingArticles : selectedGame.linkingArticles
 							});
 						})
 						.catch(err => {
@@ -295,7 +308,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 							resolve({
 								correct : false,
 								score : selectedGame.distance,
-								expected: selectedGame.nextAnswer.replace('people:', '')
+								expected: selectedGame.nextAnswer.replace('people:', ''),
+								linkingArticles : selectedGame.linkingArticles
 							});
 						})
 						.catch(err => {
