@@ -130,7 +130,7 @@ function checkAnswer(session, answer, callback) {
 	.then(result => {
 		if(result.correct === true){
 			getQuestion(session, ans => {
-				callback('Correct. They were connected in the FT article:' + result.linkingArticles[0].title + '.' + ans);
+				callback('Correct. They were connected in the FT article:' + result.linkingArticles[0].title + '...' + ans);
 			});
 		} else {
 			callback('Sorry, that is incorrect. The correct answer was ' + result.expected + '. They were connected in the FT article:' +  result.linkingArticles[0].title + '.');
