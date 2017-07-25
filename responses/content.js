@@ -33,16 +33,16 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 
 }
 
-function askThePlayerAQuestion(personName, possibilities){
+function askThePlayerAQuestion(data){
 
-	const phrase = `Who was recently mentioned in an article with ${personName}?`;
+	const phrase = `Who was recently mentioned in an article with ${data.seed.printValue}?`;
 	let displayText = phrase;
 	let ssml = `<speak>${phrase}`;
 	console.log('DEBUG possibilities', possibilities);
-	
+
 	Object.keys(possibilities).forEach((key, index) => {
-		displayText += (index + 1) + ') ' + possibilities[key].printValue + '. ';
-		ssml += '<break time="1s"/>' + (index + 1) + ') ' + possibilities[key].printValue + '. ';
+		displayText += (index + 1) + ') ' + data.options[key].printValue + '. ';
+		ssml += '<break time="1s"/>' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 	});
 
 	ssml += '</speak>';

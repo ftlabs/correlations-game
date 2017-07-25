@@ -125,7 +125,7 @@ function getQuestion(session, callback) {
 
 			console.log('DEBUG GET QUESTION', data.options);
 	
-			callback(responses.askQuestion(preparedData.seed.printValue, data.options));
+			callback(responses.askQuestion(preparedData));
 	
 		}
 	});
