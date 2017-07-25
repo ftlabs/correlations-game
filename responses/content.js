@@ -40,7 +40,7 @@ function askThePlayerAQuestion(data){
 	let ssml = `<speak>${phrase}`;
 	console.log('DEBUG possibilities', possibilities);
 
-	Object.keys(possibilities).forEach((key, index) => {
+	Object.keys(data.options).forEach((key, index) => {
 		displayText += (index + 1) + ') ' + data.options[key].printValue + '. ';
 		ssml += '<break time="1s"/>' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 	});
