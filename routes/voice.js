@@ -54,20 +54,15 @@ router.post('/googlehome', (req, res) => {
 				break;
 
 				default:
-
 					let answer;
 
-					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
-						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
-
-						for(let i = 0; i < expectedAnswers.length; ++i) {
-							answer += (i + 1) + ') ' + expectedAnswers[i] + ' ';
-						}
+					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
+						answer = response.misunderstood(true, USER_INPUT, expectedAnswers);
 
 						++not_understood_count;
 						setCountState(SESSION, not_understood_count);
 					} else {
-						answer = responses.misunderstood();
+						answer = responses.misunderstood(false);
 					}
 
 					res.json(answer);

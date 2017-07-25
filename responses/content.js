@@ -1,8 +1,17 @@
 const debug = require('debug')('responses:content');
 
-function inputWasNotUnderstood(){
+function inputWasNotUnderstood(isRepeating, input = null, options = null){
+	let phrase;
 
-	const phrase = `Sorry, I'm not quite sure what you mean. Say "help" for instructions.`;
+	if(isRepeating) {
+		phrase = `Sorry, I heard ${input}. The possible answers were:`;
+		for(let i = 0; i < options.length; ++i) {
+			phrase += `${(i + 1)} + ') ' + ${options[i]} `;
+		}
+
+	} else {
+		phrase = `Sorry, I'm not quite sure what you mean. Say "help" for instructions.`;
+	}
 
 	return {
 		displayText : phrase,
