@@ -34,9 +34,8 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 }
 
 function askThePlayerAQuestion(data){
-
 	const phrase = `Who was recently mentioned in an article with ${data.seed.printValue}?`;
-	let displayText = phrase;
+	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 
 	Object.keys(data.options).forEach((key, index) => {

@@ -132,9 +132,12 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
-				callback(responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session, obj => {
-					return obj.displayText;
-				})));
+				// callback(responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session, obj => {
+				// 	return obj.displayText;
+				// })));
+				getQuestion(session, obj => {
+					callback(responses.correctAnswer(result.linkingArticles[0].title, obj.displayText);
+				});
 			} else {
 				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
 			}
