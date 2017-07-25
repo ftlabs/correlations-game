@@ -39,7 +39,7 @@ function askThePlayerAQuestion(data){
 	let displayText = phrase;
 	let ssml = `<speak>${phrase}`;
 
-	Object.keys(data.option).forEach((key, index) => {
+	Object.keys(data.options).forEach((key, index) => {
 		displayText += (index + 1) + ') ' + data.options[key].printValue + '. ';
 		ssml += '<break time="1s"/>' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 	});
