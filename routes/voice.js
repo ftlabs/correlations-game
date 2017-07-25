@@ -136,7 +136,7 @@ function checkAnswer(session, answer, callback) {
 				// 	return obj.displayText;
 				// })));
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0].title, obj.displayText);
+					callback(responses.correctAnswer(result.linkingArticles[0].title, obj.displayText));
 				});
 			} else {
 				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
