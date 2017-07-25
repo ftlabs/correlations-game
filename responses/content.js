@@ -36,7 +36,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 function askThePlayerAQuestion(personName, possibilities){
 
 	const phrase = `Who was recently mentioned in an article with ${personName}?`;
-	let displayText = phrase + '\n';
+	let displayText = phrase;
 	let ssml = `<speak>${phrase}`;
 
 	Object.keys(possibilities).forEach((key, index) => {
@@ -45,6 +45,9 @@ function askThePlayerAQuestion(personName, possibilities){
 	});
 
 	ssml += '</speak>';
+
+	console.log('DEBUG text', displayText);
+	console.log('DEBUG ssml', ssml);
 
 	return {
 		displayText: displayText,

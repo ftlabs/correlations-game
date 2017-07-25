@@ -119,6 +119,8 @@ function getQuestion(session) {
 					printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
 				};
 			});
+
+			console.log('DEBUG GET QUESTION', responses.askQuestion(preparedData.seed.printValue, data.options));
 	
 			return responses.askQuestion(preparedData.seed.printValue, data.options);
 	
