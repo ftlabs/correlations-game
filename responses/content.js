@@ -38,17 +38,13 @@ function askThePlayerAQuestion(data){
 	const phrase = `Who was recently mentioned in an article with ${data.seed.printValue}?`;
 	let displayText = phrase;
 	let ssml = `<speak>${phrase}`;
-	console.log('DEBUG possibilities', possibilities);
 
-	Object.keys(data.options).forEach((key, index) => {
+	Object.keys(data.option).forEach((key, index) => {
 		displayText += (index + 1) + ') ' + data.options[key].printValue + '. ';
 		ssml += '<break time="1s"/>' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 	});
 
 	ssml += '</speak>';
-
-	console.log('DEBUG text', displayText);
-	console.log('DEBUG ssml', ssml);
 
 	return {
 		displayText: displayText,
