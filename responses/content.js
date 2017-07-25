@@ -6,7 +6,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 	if(isRepeating) {
 		phrase = `Sorry, I heard ${input}. The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
-			phrase += `${(i + 1)} + ') ' ${options[i]}. `;
+			phrase += `${(i + 1)}) ${options[i]}. `;
 		}
 
 	} else {
