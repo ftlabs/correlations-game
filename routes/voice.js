@@ -33,6 +33,9 @@ router.post('/googlehome', (req, res) => {
 				case 'repeat':
 					setCountState(SESSION, 0);
 					res.json(getQuestion(SESSION));
+					getQuestion(SESSION, obj => {
+						res.json(obj);
+					});
 				break;
 
 				case 'help':
@@ -86,7 +89,7 @@ function getExpectedAnswers(session) {
 	});
 }
 
-function getQuestion(session) {
+function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
@@ -122,7 +125,7 @@ function getQuestion(session) {
 
 			console.log('DEBUG GET QUESTION', responses.askQuestion(preparedData.seed.printValue, data.options));
 	
-			return responses.askQuestion(preparedData.seed.printValue, data.options);
+			callback(responses.askQuestion(preparedData.seed.printValue, data.options));
 	
 		}
 	});
