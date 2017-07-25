@@ -135,7 +135,9 @@ function checkAnswer(session, answer, callback) {
 				// callback(responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session, obj => {
 				// 	return obj.displayText;
 				// })));
-				getQuestion(session, obj => {
+				console.log('DEBUG GQ')
+				return getQuestion(session, obj => {
+					console.log('DEBUG GQ 2', obj);
 					callback(responses.correctAnswer(result.linkingArticles[0].title, obj.displayText));
 				});
 			} else {
