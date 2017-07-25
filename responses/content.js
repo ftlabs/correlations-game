@@ -44,10 +44,12 @@ function askThePlayerAQuestion(personName, possibilities){
 		ssml += '<break time="1s"/>' + (index + 1) + ') ' + possibilities[key].printValue + '. ';
 	});
 
+	ssml += '</speak>';
+
 	return {
-		displayText,
-		speach : displayText,
-		ssml
+		displayText: displayText,
+		speech : displayText,
+		ssml: ssml
 	};
 
 }
