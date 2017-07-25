@@ -38,7 +38,8 @@ function askThePlayerAQuestion(personName, possibilities){
 	const phrase = `Who was recently mentioned in an article with ${personName}?`;
 	let displayText = phrase;
 	let ssml = `<speak>${phrase}`;
-
+	console.log('DEBUG possibilities', possibilities);
+	
 	Object.keys(possibilities).forEach((key, index) => {
 		displayText += (index + 1) + ') ' + possibilities[key].printValue + '. ';
 		ssml += '<break time="1s"/>' + (index + 1) + ') ' + possibilities[key].printValue + '. ';
