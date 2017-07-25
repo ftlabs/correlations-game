@@ -57,8 +57,7 @@ router.post('/googlehome', (req, res) => {
 					let answer;
 
 					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
-						answer = response.misunderstood(true, USER_INPUT, expectedAnswers);
-
+						answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 						++not_understood_count;
 						setCountState(SESSION, not_understood_count);
 					} else {
