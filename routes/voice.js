@@ -32,7 +32,7 @@ router.post('/googlehome', (req, res) => {
 				case 'start':
 				case 'repeat':
 					setCountState(SESSION, 0);
-					res.json(getQuestion(SESSION));
+					// res.json(getQuestion(SESSION));
 					getQuestion(SESSION, obj => {
 						res.json(obj);
 					});
