@@ -3,18 +3,18 @@ const express = require('express');
 const router = express.Router();
 
 const games = require('../bin/lib/game');
+const responses = require('../responses/content');
 const activeSessions = {};
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
-	let answer;
 	setCountState(SESSION, null);
 
 	let not_understood_count = activeSessions[SESSION].count;
 
-	checkExpectedInput(SESSION)
+	getExpectedAnswers(SESSION)
 		.then(answers => {
 			const expectedAnswers = Object.keys(answers).map(key => {
 				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
@@ -32,9 +32,7 @@ router.post('/googlehome', (req, res) => {
 				case 'start':
 				case 'repeat':
 					setCountState(SESSION, 0);
-					return getQuestion(SESSION, ans => {
-						res.json({'speech': ans, 'displayText': ans});
-					});
+					res.json(getQuestion(SESSION));
 				break;
 
 				case 'help':
@@ -47,12 +45,15 @@ router.post('/googlehome', (req, res) => {
 				case expectedAnswers[1]:
 				case expectedAnswers[2]:
 					setCountState(SESSION, 0);
-					return checkAnswer(SESSION, 'people:' + USER_INPUT, ans => {
-						res.json({'speech': ans, 'displayText': ans});
-					});
+
+					res.json(checkAnswer(SESSION, 'people:' + USER_INPUT));
+
 				break;
 
 				default:
+
+					let answer;
+
 					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
 						answer = 'Sorry, I heard '+ USER_INPUT +'. The possible answers were:';
 
@@ -63,17 +64,18 @@ router.post('/googlehome', (req, res) => {
 						++not_understood_count;
 						setCountState(SESSION, not_understood_count);
 					} else {
-						answer = 'Sorry, I\'m not quite sure what you mean. Say "help" for instructions.';
+						answer = responses.misunderstood();
 					}
+
+					res.json(answer);
+
 			}
-			
-			res.json({'speech': answer, 'displayText': answer});
 
 		});
 
 });
 
-function checkExpectedInput(session) {
+function getExpectedAnswers(session) {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
@@ -84,7 +86,7 @@ function checkExpectedInput(session) {
 	});
 }
 
-function getQuestion(session, callback) {
+function getQuestion(session) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
@@ -100,7 +102,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
-			callback('winner');
+			return responses.win();
 		} else {
 			const preparedData = {};
 
@@ -117,35 +119,23 @@ function getQuestion(session, callback) {
 					printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
 				};
 			});
-
-			formatQuestion(preparedData, ans => {
-				callback(ans);
-			});
+	
+			return responses.askQuestion(preparedData.seed.printValue, data.options);
+	
 		}
 	});
 }
 
-function checkAnswer(session, answer, callback) {
+function checkAnswer(session, answer) {
 	games.answer(session, answer)
-	.then(result => {
-		if(result.correct === true){
-			getQuestion(session, ans => {
-				callback('Correct. They were connected in the FT article:' + result.linkingArticles[0].title + '...' + ans);
-			});
-		} else {
-			callback('Sorry, that is incorrect. The correct answer was ' + result.expected + '. They were connected in the FT article:' +  result.linkingArticles[0].title + '.');
-		}
-	});
-}
-
-function formatQuestion(options, callback) {
-	let answerFormat = 'Who was recently mentioned in an article with ' + options.seed.printValue + '?\n';
-
-	Object.keys(options.options).forEach((key, index) => {
-		answerFormat += (index + 1) + ') ' + options.options[key].printValue + '. ';
-	});
-
-	callback(answerFormat);
+		.then(result => {
+			if(result.correct === true){
+				return responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session));
+			} else {
+				return responses.incorrectAnswer(result.expected, result.linkingArticles[0].title);
+			}
+		})
+	;
 }
 
 function setCountState(sessionID, count) {
