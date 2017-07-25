@@ -133,9 +133,8 @@ function checkAnswer(session, answer, callback) {
 		.then(result => {
 			if(result.correct === true){
 				callback(responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session, obj => {
-					return obj;
+					return obj.displayText;
 				})));
-
 			} else {
 				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
 			}
