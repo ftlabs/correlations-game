@@ -138,7 +138,7 @@ function checkAnswer(session, answer, callback) {
 				console.log('DEBUG GQ')
 				return getQuestion(session, obj => {
 					console.log('DEBUG GQ 2', obj);
-					callback(responses.correctAnswer(result.linkingArticles[0].title, obj.displayText));
+					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
 				});
 			} else {
 				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));

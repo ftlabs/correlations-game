@@ -15,8 +15,9 @@ function inputWasNotUnderstood(){
 function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 
 	return {
-		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion}`,
-		ssml : `<speak>Correct. They were connected in the FT article: ${articleHeadline}. <break time="1s"/> ${newQuestion}</speak>`
+		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.displayText}`,
+		speech : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.speech}`,
+		ssml : `<speak>Correct. They were connected in the FT article: ${articleHeadline}. <break time="1s"/> ${newQuestion.displayText}</speak>`
 	};
 
 }
