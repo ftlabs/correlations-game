@@ -32,7 +32,6 @@ router.post('/googlehome', (req, res) => {
 				case 'start':
 				case 'repeat':
 					setCountState(SESSION, 0);
-					// res.json(getQuestion(SESSION));
 					getQuestion(SESSION, obj => {
 						res.json(obj);
 					});
@@ -48,8 +47,9 @@ router.post('/googlehome', (req, res) => {
 				case expectedAnswers[1]:
 				case expectedAnswers[2]:
 					setCountState(SESSION, 0);
-
-					res.json(checkAnswer(SESSION, 'people:' + USER_INPUT));
+					checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+						res.json(obj);
+					});
 
 				break;
 
@@ -122,22 +122,22 @@ function getQuestion(session, callback) {
 					printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
 				};
 			});
-
-			console.log('DEBUG GET QUESTION', data.options);
 	
 			callback(responses.askQuestion(preparedData));
-	
 		}
 	});
 }
 
-function checkAnswer(session, answer) {
+function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
-				return responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session));
+				return responses.correctAnswer(result.linkingArticles[0].title, getQuestion(session, obj => {
+					callback(obj);
+				}));
+
 			} else {
-				return responses.incorrectAnswer(result.expected, result.linkingArticles[0].title);
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
 			}
 		})
 	;
