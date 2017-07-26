@@ -26,7 +26,7 @@ function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 	return {
 		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.displayText}`,
 		speech : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.speech}`,
-		ssml : `<speak>Correct. They were connected in the FT article: ${articleHeadline}. <break time="1s"/> ${newQuestion.displayText}</speak>`
+		ssml : `<speak>Correct. They were connected in the FT article: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
 	};
 
 }
@@ -65,7 +65,7 @@ function askThePlayerAQuestion(data){
 
 function theGameHasBeenWon(){
 
-	const phrase = 'winner';
+	const phrase = 'You won. There are no more connections to be made in this sequence.';
 
 	return {
 		displayText : phrase,
