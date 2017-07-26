@@ -152,7 +152,7 @@ function getAQuestionToAnswer(gameUUID){
 							if(selectedGame.nextAnswer === undefined){
 								
 								// The game is out of organic connections
-								debug(`Game ${selectedGame.id} has been won`);
+								debug(`Game ${selectedGame.uuid} has been won`);
 								debug(selectedGame.uuid, selectedGame);
 
 								selectedGame.state = 'finished';
@@ -169,7 +169,7 @@ function getAQuestionToAnswer(gameUUID){
 										throw err;
 									});
 								;
-								
+
 							} else {
 
 								selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());

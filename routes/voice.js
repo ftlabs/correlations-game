@@ -71,7 +71,19 @@ router.post('/googlehome', (req, res) => {
 
 					}
 
-				});
+				})
+			;
+		})
+		.catch(err => {
+			debug('Unknown error', err);
+			if(err === "GAMEOVER"){
+				const winnerResponse = responses.win();
+				debug(winnerResponse);
+				res.json(winnerResponse);
+			} else {
+				const misunderstoodResponse = responses.misunderstood();
+				res.json(misunderstoodResponse);				
+			}
 		})
 	;
 
