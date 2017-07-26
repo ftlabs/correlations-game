@@ -35,6 +35,7 @@ router.post('/googlehome', (req, res) => {
 					switch(USER_INPUT.toLowerCase()) {
 						case 'start':
 						case 'repeat':
+							debug(`start || repeat ${SESSION}`);
 							setCountState(SESSION, 0);
 							getQuestion(SESSION, obj => {
 								res.json(obj);
@@ -42,6 +43,7 @@ router.post('/googlehome', (req, res) => {
 						break;
 
 						case 'help':
+							debug(`help ${SESSION}`);
 							setCountState(SESSION, 0);
 							answer = "Add instructions here";
 							//?TODO: handle in a different intent?
@@ -50,6 +52,7 @@ router.post('/googlehome', (req, res) => {
 						case expectedAnswers[0]:
 						case expectedAnswers[1]:
 						case expectedAnswers[2]:
+							debug(`expectedAnswers ${SESSION}`);
 							setCountState(SESSION, 0);
 							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
 								res.json(obj);
@@ -58,6 +61,8 @@ router.post('/googlehome', (req, res) => {
 						break;
 
 						default:
+
+							debug(`default ${SESSION}`);
 							let answer;
 
 							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
@@ -69,6 +74,8 @@ router.post('/googlehome', (req, res) => {
 							}
 
 							res.json(answer);
+
+							debug(answer);
 
 					}
 
