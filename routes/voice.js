@@ -9,6 +9,7 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
+	debug(req.body);
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 	
