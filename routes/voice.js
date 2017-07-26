@@ -9,6 +9,7 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
+	debug(req.body);
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 	
@@ -34,6 +35,7 @@ router.post('/googlehome', (req, res) => {
 					switch(USER_INPUT.toLowerCase()) {
 						case 'start':
 						case 'repeat':
+							debug(`start || repeat ${SESSION}`);
 							setCountState(SESSION, 0);
 							getQuestion(SESSION, obj => {
 								res.json(obj);
@@ -41,6 +43,7 @@ router.post('/googlehome', (req, res) => {
 						break;
 
 						case 'help':
+							debug(`help ${SESSION}`);
 							setCountState(SESSION, 0);
 							answer = "Add instructions here";
 							//?TODO: handle in a different intent?
@@ -49,14 +52,18 @@ router.post('/googlehome', (req, res) => {
 						case expectedAnswers[0]:
 						case expectedAnswers[1]:
 						case expectedAnswers[2]:
+							debug(`expectedAnswers ${SESSION}`);
 							setCountState(SESSION, 0);
 							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+								debug(obj);
 								res.json(obj);
 							});
 
 						break;
 
 						default:
+
+							debug(`default ${SESSION}`);
 							let answer;
 
 							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
@@ -69,9 +76,23 @@ router.post('/googlehome', (req, res) => {
 
 							res.json(answer);
 
+							debug(answer);
+
 					}
 
-				});
+				})
+			;
+		})
+		.catch(err => {
+			debug('Unknown error', err);
+			if(err === "GAMEOVER"){
+				const winnerResponse = responses.win();
+				debug(winnerResponse);
+				res.json(winnerResponse);
+			} else {
+				const misunderstoodResponse = responses.misunderstood();
+				res.json(misunderstoodResponse);				
+			}
 		})
 	;
 
@@ -105,7 +126,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
-			return responses.win();
+			callback(responses.win());
 		} else {
 			const preparedData = {};
 
@@ -132,7 +153,8 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
-				return getQuestion(session, obj => {
+				getQuestion(session, obj => {
+					debug('Check answer:', obj);
 					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
 				});
 			} else {

@@ -150,7 +150,11 @@ function getAQuestionToAnswer(gameUUID){
 							}
 
 							if(selectedGame.nextAnswer === undefined){
+								
 								// The game is out of organic connections
+								debug(`Game ${selectedGame.uuid} has been won`);
+								debug(selectedGame.uuid, selectedGame);
+
 								selectedGame.state = 'finished';
 								database.write(selectedGame, process.env.GAME_TABLE)
 									.then(function(){
@@ -165,6 +169,7 @@ function getAQuestionToAnswer(gameUUID){
 										throw err;
 									});
 								;
+
 							} else {
 
 								selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
