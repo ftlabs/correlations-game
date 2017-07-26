@@ -1,4 +1,4 @@
-const debug = require('debug')('Morar:database');
+const debug = require('debug')('correlations-game:database');
 const AWS   = require('aws-sdk');
 AWS.config.update({region: process.env.AWS_REGION || 'us-west-2'});
 
