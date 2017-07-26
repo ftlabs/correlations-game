@@ -55,6 +55,7 @@ router.post('/googlehome', (req, res) => {
 							debug(`expectedAnswers ${SESSION}`);
 							setCountState(SESSION, 0);
 							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+								debug(obj);
 								res.json(obj);
 							});
 
@@ -125,7 +126,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
-			return responses.win();
+			callback(responses.win());
 		} else {
 			const preparedData = {};
 
@@ -152,7 +153,8 @@ function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
-				return getQuestion(session, obj => {
+				getQuestion(session, obj => {
+					debug('Check answer:', obj);
 					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
 				});
 			} else {
