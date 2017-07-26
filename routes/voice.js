@@ -165,6 +165,9 @@ function setCountState(sessionID, count) {
 			;
 
 		})
+		.catch(err => {
+			debug(err);
+		})
 	;
 
 }
