@@ -4,7 +4,7 @@ const database = require('./database');
 
 function checkSessionExistsInDatabase(sessionID){
 
-	return database.get({id : sessionID}, process.env.SESSION_TABLE)
+	return database.read({id : sessionID}, process.env.SESSION_TABLE)
 		.then(data => {
 			debug('Item retrieved from database (check)', data);
 			if(data.Item === undefined){
@@ -23,7 +23,7 @@ function checkSessionExistsInDatabase(sessionID){
 
 function getActiveSessionFromDatabase(sessionID){
 	
-	return database.get({id : sessionID}, process.env.SESSION_TABLE)
+	return database.read({id : sessionID}, process.env.SESSION_TABLE)
 		.then(data => {
 			debug('Item retrieved from database (get)', data);
 			return data.Item;
