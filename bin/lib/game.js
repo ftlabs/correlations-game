@@ -231,7 +231,6 @@ function getAQuestionToAnswer(gameUUID){
 		})
 	;
 
-
 }
 
 function answerAQuestion(gameUUID, submittedAnswer){
