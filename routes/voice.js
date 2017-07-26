@@ -4,71 +4,77 @@ const router = express.Router();
 
 const games = require('../bin/lib/game');
 const responses = require('../responses/content');
-const activeSessions = {};
+const activeSessions = require('../bin/lib/active-sessions-interface');
+
 const not_understood_limit = 3;
 
 router.post('/googlehome', (req, res) => {
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
-	setCountState(SESSION, null);
+	
+	setCountState(SESSION, null)
+		.then(sessionCount => {
+			
+			let not_understood_count = sessionCount;
 
-	let not_understood_count = activeSessions[SESSION].count;
-
-	getExpectedAnswers(SESSION)
-		.then(answers => {
-			const expectedAnswers = Object.keys(answers).map(key => {
-				return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
-			});
-
-			if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
-				USER_INPUT = expectedAnswers[0];
-			} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
-				USER_INPUT = expectedAnswers[1];
-			} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
-				USER_INPUT = expectedAnswers[2];
-			}
-
-			switch(USER_INPUT.toLowerCase()) {
-				case 'start':
-				case 'repeat':
-					setCountState(SESSION, 0);
-					getQuestion(SESSION, obj => {
-						res.json(obj);
-					});
-				break;
-
-				case 'help':
-					setCountState(SESSION, 0);
-					answer = "Add instructions here";
-					//?TODO: handle in a different intent?
-				break;
-
-				case expectedAnswers[0]:
-				case expectedAnswers[1]:
-				case expectedAnswers[2]:
-					setCountState(SESSION, 0);
-					checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
-						res.json(obj);
+			getExpectedAnswers(SESSION)
+				.then(answers => {
+					const expectedAnswers = Object.keys(answers).map(key => {
+						return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 					});
 
-				break;
-
-				default:
-					let answer;
-
-					if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
-						answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
-						++not_understood_count;
-						setCountState(SESSION, not_understood_count);
-					} else {
-						answer = responses.misunderstood(false);
+					if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+						USER_INPUT = expectedAnswers[0];
+					} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+						USER_INPUT = expectedAnswers[1];
+					} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+						USER_INPUT = expectedAnswers[2];
 					}
 
-					res.json(answer);
+					switch(USER_INPUT.toLowerCase()) {
+						case 'start':
+						case 'repeat':
+							setCountState(SESSION, 0);
+							getQuestion(SESSION, obj => {
+								res.json(obj);
+							});
+						break;
 
-			}
+						case 'help':
+							setCountState(SESSION, 0);
+							answer = "Add instructions here";
+							//?TODO: handle in a different intent?
+						break;
 
-		});
+						case expectedAnswers[0]:
+						case expectedAnswers[1]:
+						case expectedAnswers[2]:
+							setCountState(SESSION, 0);
+							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+								res.json(obj);
+							});
+
+						break;
+
+						default:
+							let answer;
+
+							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
+								answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+								++not_understood_count;
+								setCountState(SESSION, not_understood_count);
+							} else {
+								answer = responses.misunderstood(false);
+							}
+
+							res.json(answer);
+
+					}
+
+				});
+		})
+	;
+
 
 });
 
@@ -137,23 +143,33 @@ function checkAnswer(session, answer, callback) {
 }
 
 function setCountState(sessionID, count) {
-	if(activeSessions[sessionID] === undefined) {
-		activeSessions[sessionID] = {};
-	}
 
-	return new Promise( (resolve) => {
-		const activeSession = activeSessions[sessionID]
-		if(activeSession.count === undefined){
-			activeSession.count = 0;
-		} else {
-			activeSession.count = (count === null)?activeSession.count:count;
-		}
+	return activeSessions.get(sessionID)
+		.then(session => {
 
-		resolve({
-			count : activeSession.count
-		});
+			if(session === undefined) {
+				session = {};
+				session.id = sessionID;
+			}
 
-	});
+			if(session === undefined){
+				session.count = 0;
+			} else {
+				session.count = count === null ? session.count : count;
+			}
+
+			return activeSessions.set(session)
+				.then(function(){
+					return session.count;
+				})
+			;
+
+		})
+		.catch(err => {
+			debug(err);
+		})
+	;
+
 }
 
 module.exports = router;
