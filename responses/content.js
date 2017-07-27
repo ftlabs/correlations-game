@@ -25,20 +25,21 @@ function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 
 	return {
 		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.displayText}`,
-		speech : `Correct. They were connected in the FT article titled: ${articleHeadline}. ${newQuestion.speech}`,
-		ssml : `<speak>Correct. They were connected in the FT article titled: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
+		speech : `Correct. They were connected in the FT article, titled: ${articleHeadline}. ${newQuestion.speech}`,
+		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
 	};
 
 }
 
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 
-	const phrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article titled: ${articleHeadline}.`
+	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article: ${articleHeadline}.`;
+	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article, titled: ${articleHeadline}.`;
 
 	return {
-		displayText : phrase,
-		speech : phrase,
-		ssml : `<speak>${phrase}</speak>`
+		displayText : textPhrase,
+		speech : voicePhrase,
+		ssml : `<speak>${voicePhrase}</speak>`
 	};
 
 }
