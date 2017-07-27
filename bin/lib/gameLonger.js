@@ -33,39 +33,134 @@ class Game{
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
 		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, populated in createAnNewGame
-		this.remainingCandidates = []; // to be populated in createANewGame
-		this.addToBlacklist = function(uuid) { return this.blacklist.push( uuid ) };
-		this.isBlacklisted  = function(uuid) { return this.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) == -1; };
+		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 	}
 
-	selectRandomSeedPerson(){
-		return correlations_service.allIslands()
-			.then(islands => {
-				const biggestIsland = barnier.filter( Object.keys(islands[0]) );
-				const mostConnectedIndividuals = biggestIsland.map(person => {
-						return {
-							name : person,
-							numberOfConnectionsToOthers : biggestIsland[person]
-						}
-					})
-					.sort( (a, b) => {
-						if(a.numberOfConnectionsToOthers >= b.numberOfConnectionsToOthers){
-							return -1
-						} else {
-							return 1;
-						}
-					})
-					.slice(0, 5)
+	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
+	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) == -1; };
+	filterBlacklisted(names) { return names.filter( name => {return !isBlacklisted(name);}) };
+
+	addCandidates( candidates ) {
+		candidates.forEach( cand => {
+			if (! this.isBlacklisted(cand[0])) {
+				this.remainingCandidatesWithConnections.push(cand);
+			}
+		});
+	}
+
+	blacklistCandidate(name){
+		let candIndex = -1; // locate candidate in list
+		this.remainingCandidatesWithConnections.some( (cand, i) => {
+			if (cand[0] == name) {
+				candIndex = i;
+				return true;
+			} else {
+				return false;
+			}
+		} );
+
+		if (candIndex >= 0) {
+			this.remainingCandidatesWithConnections.splice(candIndex, 1)
+		}
+
+		this.addToBlacklist( name );
+	}
+
+	pickFromFirstFew(items, max=5){
+		if (items.length == 0) {
+			return undefined;
+		}
+		const range = Math.min(max, items.length);
+		const index = items[Math.floor(Math.random*range)];
+		return items[index];
+	}
+
+	pickNameFromTopFewCandidates(max=5){
+		if(this.remainingCandidatesWithConnections.length < 4) {
+			return undefined; // must have at least 4 people left: seed + 3 answers
+		}
+		return pickFromFirstFew( this.remainingCandidatesWithConnections )[0];
+	}
+
+	clearQuestion(){
+		this.seedPerson      = undefined;
+		this.answersReturned = undefined;
+		this.nextAnswer      = undefined;
+	}
+
+	shuffle(arr) {
+	    let i, j, temp;
+	    for (i = arr.length - 1; i > 0; i--) {
+	        j = Math.floor(Math.random() * (i + 1));
+	        temp = arr[i];
+	        arr[i] = arr[j];
+	        arr[j] = temp;
+	    }
+	    return arr;
+	}
+
+	promiseNextCandidateQuestion(){
+		let question = {
+			seedPerson     : undefined,
+			answer         : undefined,
+			wrongAnswers   : [],
+			answersReturned: undefined,
+		};
+
+		return Promise.resolve( pickNameFromTopFewCandidates() )
+		.then( name => {
+			if (name == undefined) { return undefined; }
+			question.seedPerson = name;
+
+			return correlations_service.calcChainLengthsFrom(name)
+			.then(chainFrom => { chainFrom.chainLengths })
+			.then(chainLengths => {
+				const nextAnswers = filterBlacklisted( chainLengths[1].entities );
+				if (nextAnswers.length == 0) {
+					blacklistCandidate(question.seedPerson);
+					return promiseNextCandidateQuestion();
+				}
+				question.nextAnswer = pickFromFirstFew( nextAnswers );
+				const wrongAnswers1 = filterBlacklisted( chainLengths[2].entities );
+				if (wrongAnswers1.length == 0) {
+					blacklist(question.seedPerson);
+					return promiseNextCandidateQuestion();
+				}
+				question.wrongAnswers.push( pickFromFirstFew( wrongAnswers1 ) );
+				const wrongAnswers2 = filterBlacklisted( chainLengths[3].entities );
+				if (wrongAnswers2.length == 0) {
+					blacklist(question.seedPerson);
+					return promiseNextCandidateQuestion();
+				}
+				question.wrongAnswers.push( pickFromFirstFew( wrongAnswers2 ) );
+				// yay, means we have all the bits needed for a valid question
+				question.answersReturned = question.wrongAnswers.slice(0);
+				question.answersReturned.push(answer);
+				shuffle( question.answersReturned );
+				return correlations_service.calcChainWithArticlesBetween(question.seedPerson, question.nextAnswer)
+				.then( data => {
+					question.linkingArticles = data.articlesPerLink[0];
+					return question;
+				})
+				.catch(err => {
+					debug(`Unable to fetch articles between ${question.seedPerson} and ${question.nextAnswer}`, err);
+					throw err;
+				})
 				;
-
-				debug('MOST CONNECTED', mostConnectedIndividuals);
-
-				return mostConnectedIndividuals[ Math.random() * mostConnectedIndividuals.length | 0 ];
-
 			})
+			;
+		})
 		;
+	}
+
+	acceptQuestionData(qd){
+		this.seedPerson      = qd.seedPerson;
+		this.answersReturned = qd.answersReturned;
+		this.nextAnswer      = qd.nextAnswer;
+
+		blacklistCandidate(this.seedPerson);
 	}
 }
 
@@ -78,13 +173,7 @@ function createANewGame(userUUID){
 	const newGame = new Game(userUUID);
 
 	return correlations_service.biggestIsland()
-		.then(island => {
-			// newGame.seedPerson = seedPerson.name;
-			// newGame.blacklist.push(seedPerson.name.toLowerCase());
-			// debug('NEW GAME SEED:: ', newGame);
-
-			...
-		})
+		.then(island => { newGame.addCandidates(island) })
 		.then(function(){
 			return database.write(newGame, process.env.GAME_TABLE)
 				.then(function(){
@@ -97,7 +186,6 @@ function createANewGame(userUUID){
 			;
 		})
 	;
-
 }
 
 function getAQuestionToAnswer(gameUUID){
@@ -109,139 +197,84 @@ function getAQuestionToAnswer(gameUUID){
 	}
 
 	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-		.then(data => {
-			if(data.Item === undefined){
-				throw `The game UUID '${gameUUID}' is not valid`;
+	.then(data => {
+		if(data.Item === undefined){
+			throw `The game UUID '${gameUUID}' is not valid`;
+		}
+
+		return new Promise( (resolve, reject) => {
+
+			const selectedGame = data.Item;
+			debug(selectedGame);
+
+			if(selectedGame.state === 'new'){
+				selectedGame.state = 'current';
 			}
 
-			return new Promise( (resolve, reject) => {
+			if(selectedGame.state === 'finished'){
+				reject('GAMEOVER');
+				return;
+			}
 
-				const selectedGame = data.Item;
-				debug(selectedGame);
+			if(selectedGame.answersReturned !== undefined){
+				resolve({
+					seed : selectedGame.seedPerson,
+					options : selectedGame.answersReturned
+				});
+			} else {
+				// if we are here, we need to pick our seed, nextAnswer, answersReturned
 
-				if(selectedGame.state === 'new'){
-					selectedGame.state = 'current';
-				}
+				selectedGame.clearQuestion();
 
-				if(selectedGame.state === 'finished'){
-					reject('GAMEOVER');
-					return;
-				}
+				promiseNextCandidateQuestion()
+				.then(questionData => {
+					if(questionData === undefined){
+						// The game is out of organic connections
+						debug(`Game ${selectedGame.uuid} has been won`);
+						debug(selectedGame.uuid, selectedGame);
 
-				if(selectedGame.answersReturned !== undefined){
-					resolve({
-						seed : selectedGame.seedPerson,
-						options : selectedGame.answersReturned
-					});
-				} else {
-
-					correlations_service.calcChainLengthsFrom(selectedGame.seedPerson)
-						.then(data => {
-
-							const possibleAlternatives = barnier.filter( data[1].entities );
-							selectedGame.nextAnswer = Math.random() >= 0.5 ? possibleAlternatives.shift() : possibleAlternatives.pop();
-
-							debug('First instance of nextAnswer', selectedGame.nextAnswer);
-							debug('The possible alternatives are', possibleAlternatives);
-
-							while(possibleAlternatives.length >= 0 && selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1){
-								debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
-								selectedGame.nextAnswer = possibleAlternatives.pop();
-								debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
-
-								if(selectedGame.nextAnswer === undefined){
-									break;
-								}
-
-							}
-
-							if(selectedGame.nextAnswer === undefined){
-
-								// The game is out of organic connections
-								debug(`Game ${selectedGame.uuid} has been won`);
-								debug(selectedGame.uuid, selectedGame);
-
-								selectedGame.state = 'finished';
-								database.write(selectedGame, process.env.GAME_TABLE)
-									.then(function(){
-										debug(`Game state (${selectedGame.uuid}) successfully updated on completion.`);
-										resolve({
-											limitReached : true,
-											score : selectedGame.distance
-										});
-									})
-									.catch(err => {
-										debug(`Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
-										throw err;
-									});
-								;
-
-							} else {
-
-								selectedGame.blacklist.push(selectedGame.nextAnswer.toLowerCase());
-
-								debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
-
-								// Get the answer from the island 1 distance away,
-								// then get a wrong answer from the island 2 distance,
-								// and then do the same 3 distance away.
-								// Then randomise the order they're sent in.
-								const possibleAnswers = [
-									selectedGame.nextAnswer,
-									data[2].entities[Math.random() * data[2].entities.length | 0],
-									data[3].entities[Math.random() * data[3].entities.length | 0]
-								].sort(function(){
-									return Math.random() > 0.5 ? 1 : -1;
-								});
-
-								const answersToReturn = {
-									a : possibleAnswers[0],
-									b : possibleAnswers[1],
-									c : possibleAnswers[2]
-								};
-
-								selectedGame.answersReturned = answersToReturn;
-
-								debug('SELECTEDGAME', selectedGame);
-
-								correlations_service.calcChainWithArticlesBetween(selectedGame.seedPerson, selectedGame.nextAnswer)
-									.then(data => {
-
-										selectedGame.linkingArticles = data.articlesPerLink[0];
-
-										database.write(selectedGame, process.env.GAME_TABLE)
-											.then(function(){
-												debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
-												resolve({
-													seed : selectedGame.seedPerson,
-													options : answersToReturn,
-													limitReached : false
-												});
-											})
-											.catch(err => {
-												debug(`Unable to save game state whilst returning answers`, err);
-												throw err;
-											})
-										;
-
-									})
-									.catch(err => {
-										debug(`Unable to articles between ${selectedGame.seedPerson} and ${selectedGame.nextAnswer}`, err);
-										throw err;
-									})
-								;
-							}
-
+						selectedGame.state = 'finished';
+						database.write(selectedGame, process.env.GAME_TABLE)
+						.then(function(){
+							debug(`Game state (${selectedGame.uuid}) successfully updated on completion.`);
+							resolve({
+								limitReached : true,
+								score : selectedGame.distance
+							});
 						})
-					;
+						.catch(err => {
+							debug(`Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
+							throw err;
+						});
+						;
 
-				}
+					} else {
+						selectedGame.acceptQuestionData( questionData );
 
-			});
+						debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
 
+						database.write(selectedGame, process.env.GAME_TABLE)
+						.then(function(){
+							debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
+							resolve({
+								seed : selectedGame.seedPerson,
+								options : answersToReturn,
+								limitReached : false
+							});
+						})
+						.catch(err => {
+							debug(`Unable to save game state whilst returning answers`, err);
+							throw err;
+						})
+						;
+					}
+				})
+				;
+			}
 		})
+		;
+	})
 	;
-
 }
 
 function answerAQuestion(gameUUID, submittedAnswer){
@@ -265,8 +298,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				if(submittedAnswer.replace('.', '').replace('-', ' ').toLowerCase() === selectedGame.nextAnswer.replace('.', '').replace('-', ' ').toLowerCase()){
 
 					selectedGame.distance += 1;
-					selectedGame.seedPerson = selectedGame.nextAnswer;
-					selectedGame.answersReturned = undefined;
+					selectedGame.clearQuestion();
 
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
