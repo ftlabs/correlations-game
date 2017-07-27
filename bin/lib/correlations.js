@@ -84,9 +84,28 @@ function getAChainBetweenTwoPeopleAndIncludeTheArticles(personOne, personTwo){
 	;
 }
 
+function getBiggestIsland(){
+	return fetch(`https://${CORRELATION_SERVICE_HOST}/biggestIsland`, REQUEST_HEADERS)
+		.then(res => {
+			if(res.ok){
+				return res.json();
+			} else {
+				throw res;
+			}
+		})
+		.catch(err => {
+			debug(err); //Log the error here, catch it in the application
+			throw err;
+		})
+	;
+
+}
+
+
 module.exports = {
 	allIslands : getAllOfTheIslandsInTheCorrelationsService,
 	islandOf : getListOfPeopleOnAPersonsIsland,
 	calcChainLengthsFrom : getListOfPeopleByDistances,
-	calcChainWithArticlesBetween : getAChainBetweenTwoPeopleAndIncludeTheArticles
+	calcChainWithArticlesBetween : getAChainBetweenTwoPeopleAndIncludeTheArticles,
+	biggestIsland : getBiggestIsland,
 };

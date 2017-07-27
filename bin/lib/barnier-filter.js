@@ -16,5 +16,6 @@ function checkIfIndividualFallsFoulOfFilter (person) {
 
 module.exports = {
 	filter : filterIndividualsFromGivenList,
-	check : checkIfIndividualFallsFoulOfFilter
+	check : checkIfIndividualFallsFoulOfFilter,
+	list : function(){ return CANDIDATES; },
 };
