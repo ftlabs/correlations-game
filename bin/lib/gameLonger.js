@@ -306,18 +306,24 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 				const selectedGame = data.Item;
 
-				if(submittedAnswer.replace('.', '').replace('-', ' ').toLowerCase() === selectedGame.nextAnswer.replace('.', '').replace('-', ' ').toLowerCase()){
+				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
+
+				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
 
 					selectedGame.distance += 1;
+					const result = {
+						correct         : true,
+						score           : selectedGame.distance,
+						linkingArticles : selectedGame.linkingArticles,
+						seedPerson      : selectedGame.seedPerson.replace('people:', ''),
+						submittedAnswer : submittedAnswer.replace('people:', ''),
+					};
 					selectedGame.clearQuestion();
 
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
-							resolve({
-								correct : true,
-								score : selectedGame.distance,
-								linkingArticles : selectedGame.linkingArticles
-							});
+							debug(`answerAQuestion: result=${JSON.stringify(result,null,2)}` );
+							resolve(result);
 						})
 						.catch(err => {
 							debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on correct answering of question`, err);
@@ -358,12 +364,15 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
-							resolve({
-								correct : false,
-								score : selectedGame.distance,
-								expected: selectedGame.nextAnswer.replace('people:', ''),
-								linkingArticles : selectedGame.linkingArticles
-							});
+							const result = {
+								correct         : false,
+								score           : selectedGame.distance,
+								expected        : selectedGame.nextAnswer.replace('people:', ''),
+								linkingArticles : selectedGame.linkingArticles,
+								seedPerson      : selectedGame.seedPerson.replace('people:', ''),
+								submittedAnswer : submittedAnswer.replace('people:', ''),
+						};
+							resolve(result);
 						})
 						.catch(err => {
 							debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);

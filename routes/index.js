@@ -84,9 +84,9 @@ router.post('/answer', (req, res) => {
 		games.answer(req.cookies['ftlabsCorrelationsGameUUID'], req.body.answer)
 			.then(result => {
 				if(result.correct === true){
-					res.redirect('/correct');
+					res.render('correct', {result});
 				} else {
-					res.redirect('/incorrect');
+					res.render('incorrect', {result});
 				}
 			})
 	}
