@@ -110,7 +110,7 @@ class Game{
 			answersReturned: undefined,
 		};
 
-		return Promise.resolve( pickNameFromTopFewCandidates() )
+		return Promise.resolve( this.pickNameFromTopFewCandidates() )
 		.then( name => {
 			if (name == undefined) { return undefined; }
 			question.seedPerson = name;
@@ -227,7 +227,7 @@ function getAQuestionToAnswer(gameUUID){
 
 				selectedGame.clearQuestion();
 
-				promiseNextCandidateQuestion()
+				selectedGame.promiseNextCandidateQuestion()
 				.then(questionData => {
 					if(questionData === undefined){
 						// The game is out of organic connections

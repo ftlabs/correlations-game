@@ -6,6 +6,10 @@ const games = (process.env.GAME=='LONGER')? require('../bin/lib/gameLonger') : r
 
 router.get('/', (req, res) => {
 
+	if (process.env.DATABASE == 'PRETEND') {
+		res.clearCookie('ftlabsCorrelationsGameUUID');
+	}
+
 	res.render('index', {
 		userUUID : res.locals.userUUID
 	});
