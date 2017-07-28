@@ -2,3 +2,10 @@
 <p>You achieved {{ score }} {{ consecutiveWording }}.</p>
 
 <p><a href="/question">Start again...</a></p>
+
+<p>History</p>
+<ul>
+{{#each displayable.history}}
+  <li>{{this.seedPerson}} - {{ this.nextAnswer }}</li>
+{{/each}}
+</ul>

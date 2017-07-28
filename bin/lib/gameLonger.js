@@ -37,6 +37,7 @@ class Game{
 		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.intervalDays        = undefined;
+		this.history             = [];
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 	}
@@ -134,9 +135,10 @@ class Game{
 		debug(`promiseNextCandidateQuestion: start`);
 		let question = {
 			seedPerson     : undefined,
-			answer         : undefined,
+			nextAnswer     : undefined,
 			wrongAnswers   : [],
 			answersReturned: undefined,
+			linkingArticles: undefined,
 		};
 
 		return Promise.resolve( this.pickNameFromTopFewCandidates() )
@@ -189,6 +191,8 @@ class Game{
 	}
 
 	acceptQuestionData(qd){
+		this.history.push(qd);
+
 		this.seedPerson      = qd.seedPerson;
 		this.answersReturned = qd.answersReturned;
 		this.nextAnswer      = qd.nextAnswer;
@@ -267,7 +271,7 @@ function getAQuestionToAnswer(gameUUID){
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
 
-				selectedGame.clearQuestion();
+				// selectedGame.clearQuestion();
 
 				selectedGame.promiseNextCandidateQuestion()
 				.then(questionData => {
@@ -284,7 +288,8 @@ function getAQuestionToAnswer(gameUUID){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
 							resolve({
 								limitReached : true,
-								score : selectedGame.distance
+								score        : selectedGame.distance,
+								history      : selectedGame.history,
 							});
 						})
 						.catch(err => {
@@ -300,8 +305,8 @@ function getAQuestionToAnswer(gameUUID){
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
 							resolve({
-								seed    : selectedGame.seedPerson,
-								options : selectedGame.answersReturned,
+								seed         : selectedGame.seedPerson,
+								options      : selectedGame.answersReturned,
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
 							});
@@ -346,6 +351,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					linkingArticles : selectedGame.linkingArticles,
 					seedPerson      : selectedGame.seedPerson,
 					submittedAnswer : submittedAnswer,
+					history         : selectedGame.history,
 				};
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }

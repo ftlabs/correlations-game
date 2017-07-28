@@ -47,6 +47,15 @@ router.get('/question', (req, res) => {
 					result.consecutiveWording = 'consecutive correct answers';
 				}
 
+				result.displayable = {};
+				result.displayable.history = [];
+				data.history.forEach( h => {
+					result.displayable.history.push({
+						seedPerson: h.seedPerson.replace('people:', ''),
+						nextAnswer: h.nextAnswer.replace('people:', ''),
+					});
+				});
+
 				res.render('winner', result);
 			} else {
 				const preparedData = {};
@@ -108,6 +117,13 @@ router.post('/answer', (req, res) => {
 				].forEach( field => {
 					result.displayable[field] = result[field].replace('people:', '');
 				} );
+				result.displayable.history = [];
+				result.history.forEach( h => {
+					result.displayable.history.push({
+						seedPerson: h.seedPerson.replace('people:', ''),
+						nextAnswer: h.nextAnswer.replace('people:', ''),
+					});
+				});
 
 				if(result.correct === true){
 					res.render('correct', {result});
