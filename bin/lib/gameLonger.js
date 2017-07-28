@@ -103,6 +103,7 @@ class Game{
 	}
 
 	promiseNextCandidateQuestion(){
+		debug(`promiseNextCandidateQuestion: start`);
 		let question = {
 			seedPerson     : undefined,
 			answer         : undefined,
@@ -172,6 +173,7 @@ function createANewGame(userUUID){
 	}
 
 	const newGame = new Game(userUUID);
+	debug(`createANewGame: newGame=${JSON.stringify(newGame)}`);
 
 	return correlations_service.biggestIsland()
 		.then(island => { newGame.addCandidates(island) })

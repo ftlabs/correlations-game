@@ -1,4 +1,4 @@
-const debug = require('debug')('correlations-game:database_pretend');
+const debug = require('debug')('bin:lib:database_pretend');
 
 let STORE_BY_UUID = {};
 
