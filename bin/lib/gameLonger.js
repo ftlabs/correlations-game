@@ -40,15 +40,18 @@ class Game{
 	}
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
-	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) == -1; };
+	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
 	filterBlacklisted(names) { return names.filter( name => {return !isBlacklisted(name);}) };
 
 	addCandidates( candidates ) {
+		let count = 0;
 		candidates.forEach( cand => {
 			if (! this.isBlacklisted(cand[0])) {
 				this.remainingCandidatesWithConnections.push(cand);
+				count = count + 1;
 			}
 		});
+		debug(`Game.addCandidates: added ${count}`);
 	}
 
 	blacklistCandidate(name){
@@ -176,14 +179,14 @@ function createANewGame(userUUID){
 	debug(`createANewGame: newGame=${JSON.stringify(newGame)}`);
 
 	return correlations_service.biggestIsland()
-		.then(island => { newGame.addCandidates(island) })
+		.then(island => {	newGame.addCandidates(island) })
 		.then(function(){
 			return database.write(newGame, process.env.GAME_TABLE)
 				.then(function(){
 					return newGame.uuid;
 				})
 				.catch(err => {
-					debug('Unable to store game instance in database:', err);
+					debug('createANewGame: Unable to store game instance in database:', err);
 					throw err;
 				})
 			;
@@ -193,7 +196,7 @@ function createANewGame(userUUID){
 
 function getAQuestionToAnswer(gameUUID){
 
-	debug(gameUUID);
+	debug(`getAQuestionToAnswer: gameUUID=${gameUUID}`);
 
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
@@ -208,7 +211,7 @@ function getAQuestionToAnswer(gameUUID){
 		return new Promise( (resolve, reject) => {
 
 			const selectedGame = data.Item;
-			debug(selectedGame);
+			debug(`getAQuestionToAnswer: selectedGame=${JSON.stringify(selectedGame)}`);
 
 			if(selectedGame.state === 'new'){
 				selectedGame.state = 'current';

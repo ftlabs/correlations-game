@@ -3,7 +3,7 @@ const debug = require('debug')('bin:lib:database_pretend');
 let STORE_BY_UUID = {};
 
 function writeToDatabase(item, table){
-	debug(`writeToDatabase: item=${JSON.stringify(item)}, table=${table}`);
+	debug(`writeToDatabase: item.uuid=${item.uuid}, item.distance=${item.distance}, table=${table}`);
 
 	return new Promise( (resolve, reject) => {
 		STORE_BY_UUID[item.uuid] = item;
@@ -19,7 +19,7 @@ function readFromDatabase(item, table){
 			debug(`readFromDatabase: no item found`);
 			resolve(undefined);
 		} else {
-			debug(`readFromDatabase: found storedItem=${JSON.stringify(storedItem)}`);
+			debug(`readFromDatabase: found storedItem: uuid=${storedItem.uuid}, distance=${storedItem.distance}`);
 			resolve({Item : storedItem});
 		}
 	});

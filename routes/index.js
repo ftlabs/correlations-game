@@ -20,13 +20,13 @@ router.get('/question', (req, res) => {
 
 	games.check(req.cookies['ftlabsCorrelationsGameUUID'])
 		.then(gameIsInProgress => {
-			debug(`gameIsInProgress ${gameIsInProgress}`)
+			debug(`/question: gameIsInProgress ${gameIsInProgress}`)
 			if(gameIsInProgress){
 				return games.question(req.cookies['ftlabsCorrelationsGameUUID']);
 			} else {
 				return games.new(req.cookies['ftlabsCorrelationsUserUUID'])
 					.then(gameUUID => {
-						debug('slkfjhakjzsdf;kljsdfkldjflkjdfkj', gameUUID);
+						debug(`/question: new gameUUID=${gameUUID}`);
 						const cookieOptions = { httpOnly : false, maxAge : 1000 * 60 * 60 * 24 * 10 }; // 10 day token
 						res.cookie('ftlabsCorrelationsGameUUID', gameUUID, cookieOptions);
 						return gameUUID;
