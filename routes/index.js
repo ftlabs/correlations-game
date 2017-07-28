@@ -100,7 +100,13 @@ router.post('/answer', (req, res) => {
 				} else {
 					result.consecutiveWording = 'consecutive correct answers';
 				}
-				result.consecutiveWording
+				result.displayable = {};
+				[
+					'expected', 'seedPerson', 'submittedAnswer'
+				].forEach( field => {
+					result.displayable[field] = result[field].replace('people:', '');
+				} );
+
 				if(result.correct === true){
 					res.render('correct', {result});
 				} else {

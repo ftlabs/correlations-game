@@ -1,8 +1,8 @@
 <h2>That was not correct.</h2>
 
-<p>The expected answer was {{result.expected}}.</p>
+<p>The expected answer was {{result.displayable.expected}}.</p>
 
-<p>{{ result.seedPerson}} was mentioned with {{result.submittedAnswer}} in {{result.articlesWording}}:<p>
+<p>{{ result.displayable.seedPerson}} was mentioned with {{result.displayable.expected}} in {{result.articlesWording}}:<p>
 
 <ul>
 {{#each result.linkingArticles}}

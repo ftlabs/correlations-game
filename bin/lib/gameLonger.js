@@ -71,6 +71,7 @@ class Game{
 		}
 
 		this.addToBlacklist( name );
+		debug(`Game.blacklistCandidate: name=${name}`);
 	}
 
 	pickFromFirstFew(items, max=5){
@@ -112,6 +113,22 @@ class Game{
 	    return arr;
 	}
 
+	// involves a recursive use of Promises. Oooh. Not sure if that is A Bad Thing.
+	// Basic alg:
+	// - start with a list of candidates, sorted by num connections (highest first)
+	// - pick one of the first few as a potential seedPerson
+	//   - get the chainLengths info from the service for that seedPerson
+	//   - check we have enough links in the chain (need at least 4)
+	//   - pick a nextAnswer from the 2nd link in the chain
+	//   - pick a wrongAnswer from the 3rd link
+	//   - pick a wrongAnswer from the 4th link
+	//   - get the linkingArticles between seedPerson and the nextAnswer
+	//   - construct and return the question data structure
+	// - if any of the steps after picking a potential seedPerson fails
+	//   - blacklist the seedPerson
+	//   - recursively call this fn again (to try another seedPerson)
+	// - if we run out of candidates, return undefined
+
 	promiseNextCandidateQuestion(){
 		debug(`promiseNextCandidateQuestion: start`);
 		let question = {
@@ -128,6 +145,10 @@ class Game{
 
 			return correlations_service.calcChainLengthsFrom(name)
 			.then(chainLengths => {
+				if (chainLengths.length < 4) {
+					this.blacklistCandidate(question.seedPerson);
+					return this.promiseNextCandidateQuestion();
+				}
 				const nextAnswers = this.filterBlacklisted( chainLengths[1].entities );
 				if (nextAnswers.length == 0) {
 					this.blacklistCandidate(question.seedPerson);
@@ -136,13 +157,13 @@ class Game{
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
 				const wrongAnswers1 = this.filterBlacklisted( chainLengths[2].entities );
 				if (wrongAnswers1.length == 0) {
-					this.blacklist(question.seedPerson);
+					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
 				const wrongAnswers2 = this.filterBlacklisted( chainLengths[3].entities );
 				if (wrongAnswers2.length == 0) {
-					this.blacklist(question.seedPerson);
+					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
@@ -173,6 +194,7 @@ class Game{
 		this.linkingArticles = qd.linkingArticles;
 
 		this.blacklistCandidate(this.seedPerson);
+		this.blacklistCandidate(this.nextAnswer);
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 } // eof Class Game
@@ -245,7 +267,7 @@ function getAQuestionToAnswer(gameUUID){
 					debug(`getAQuestionToAnswer: questionData=${JSON.stringify(questionData, null, 2)}`);
 
 					if(questionData === undefined){
-						// The game is out of organic connections
+						// The game is out of connections between the remaining (if any) candidates
 						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} has been won`);
 						debug(`getAQuestionToAnswer: selectedGame.uuid=${selectedGame.uuid}, selectedGame=${selectedGame}`);
 
@@ -312,10 +334,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				const result = {
 					correct         : undefined,
 					score           : selectedGame.distance,
-					expected        : selectedGame.nextAnswer.replace('people:', ''),
+					expected        : selectedGame.nextAnswer,
 					linkingArticles : selectedGame.linkingArticles,
-					seedPerson      : selectedGame.seedPerson.replace('people:', ''),
-					submittedAnswer : submittedAnswer.replace('people:', ''),
+					seedPerson      : selectedGame.seedPerson,
+					submittedAnswer : submittedAnswer,
 				};
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
@@ -324,11 +346,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					selectedGame.distance += 1;
 					selectedGame.clearQuestion();
 
-					result.correct = true;
-					result.score   += 1;
-
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
+							result.correct = true;
+							result.score   += 1;
 							debug(`answerAQuestion: result=${JSON.stringify(result,null,2)}` );
 							resolve(result);
 						})
