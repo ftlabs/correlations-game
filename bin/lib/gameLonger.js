@@ -165,12 +165,12 @@ class Game{
 	}
 
 	acceptQuestionData(qd){
-		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}`);
 		this.seedPerson      = qd.seedPerson;
 		this.answersReturned = qd.answersReturned;
 		this.nextAnswer      = qd.nextAnswer;
 
 		this.blacklistCandidate(this.seedPerson);
+		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 } // eof Class Game
 

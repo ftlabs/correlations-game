@@ -38,7 +38,7 @@ router.get('/question', (req, res) => {
 		.then(data => {
 
 			if(data.limitReached === true){
-				res.render('winner');
+				res.render('winner', {distance : data.distance});
 			} else {
 				const preparedData = {};
 
