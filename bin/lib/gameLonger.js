@@ -146,7 +146,7 @@ class Game{
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
 				// yay, means we have all the bits needed for a valid question
 				question.answersReturned = question.wrongAnswers.slice(0);
-				question.answersReturned.push(answer);
+				question.answersReturned.push(question.nextAnswer);
 				this.shuffle( question.answersReturned );
 				return correlations_service.calcChainWithArticlesBetween(question.seedPerson, question.nextAnswer)
 				.then( data => {
@@ -154,7 +154,7 @@ class Game{
 					return question;
 				})
 				.catch(err => {
-					debug(`Unable to fetch articles between ${question.seedPerson} and ${question.nextAnswer}`, err);
+					debug(`promiseNextCandidateQuestion: Unable to fetch articles between ${question.seedPerson} and ${question.nextAnswer}`, err);
 					throw err;
 				})
 				;
@@ -165,6 +165,7 @@ class Game{
 	}
 
 	acceptQuestionData(qd){
+		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}`);
 		this.seedPerson      = qd.seedPerson;
 		this.answersReturned = qd.answersReturned;
 		this.nextAnswer      = qd.nextAnswer;
@@ -238,22 +239,24 @@ function getAQuestionToAnswer(gameUUID){
 
 				selectedGame.promiseNextCandidateQuestion()
 				.then(questionData => {
+					debug(`getAQuestionToAnswer: questionData=${JSON.stringify(questionData, null, 2)}`);
+
 					if(questionData === undefined){
 						// The game is out of organic connections
-						debug(`Game ${selectedGame.uuid} has been won`);
-						debug(selectedGame.uuid, selectedGame);
+						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} has been won`);
+						debug(`getAQuestionToAnswer: selectedGame.uuid=${selectedGame.uuid}, selectedGame=${selectedGame}`);
 
 						selectedGame.state = 'finished';
 						database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
-							debug(`Game state (${selectedGame.uuid}) successfully updated on completion.`);
+							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
 							resolve({
 								limitReached : true,
 								score : selectedGame.distance
 							});
 						})
 						.catch(err => {
-							debug(`Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
+							debug(`getAQuestionToAnswer: Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
 							throw err;
 						});
 						;
@@ -261,19 +264,17 @@ function getAQuestionToAnswer(gameUUID){
 					} else {
 						selectedGame.acceptQuestionData( questionData );
 
-						debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
-
 						database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
-							debug(`Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
+							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
 							resolve({
-								seed : selectedGame.seedPerson,
-								options : answersToReturn,
+								seed    : selectedGame.seedPerson,
+								options : selectedGame.answersReturned,
 								limitReached : false
 							});
 						})
 						.catch(err => {
-							debug(`Unable to save game state whilst returning answers`, err);
+							debug(`getAQuestionToAnswer: Unable to save game state whilst returning answers`, err);
 							throw err;
 						})
 						;
@@ -319,7 +320,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 							});
 						})
 						.catch(err => {
-							debug(`Unable to save game state (${selectedGame.uuid}) on correct answering of question`, err);
+							debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on correct answering of question`, err);
 							throw err;
 						})
 					;
@@ -365,7 +366,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 							});
 						})
 						.catch(err => {
-							debug(`Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
+							debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
 							throw err;
 						})
 					;
@@ -383,7 +384,7 @@ function getListOfHighScores(){
 
 	return new Promise( (resolve) => {
 
-		debug(`HIGH SCORES ${highScores}`);
+		debug(`getListOfHighScores: HIGH SCORES ${highScores}`);
 
 		const sanitizedHighScores = highScores.map(score => {
 			return {
@@ -400,7 +401,7 @@ function getListOfHighScores(){
 
 function checkIfAGameExistsForAGivenUUID(gameUUID){
 
-	debug(`Checking gameUUID ${gameUUID}`);
+	debug(`checkIfAGameExistsForAGivenUUID: Checking gameUUID ${gameUUID}`);
 
 	return new Promise( (resolve) => {
 
@@ -418,7 +419,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 					}
 				})
 				.catch(err => {
-					debug(`Unable to check if game (${gameUUID}) exists`, err);
+					debug(`checkIfAGameExistsForAGivenUUID: Unable to check if game (${gameUUID}) exists`, err);
 					throw err;
 				})
 			;
@@ -438,7 +439,7 @@ function getGameDetails(gameUUID){
 	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
 		.then(data => data.Item)
 		.catch(err => {
-			debug(`Unable to read entry for game ${gameUUID}`, err);
+			debug(`getGameDetails: Unable to read entry for game ${gameUUID}`, err);
 			throw err;
 		})
 	;
