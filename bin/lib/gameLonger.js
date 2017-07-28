@@ -33,6 +33,7 @@ class Game{
 		this.seedPerson          = undefined;
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
+		this.linkingArticles     = undefined;
 		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 
@@ -97,6 +98,7 @@ class Game{
 		this.seedPerson      = undefined;
 		this.answersReturned = undefined;
 		this.nextAnswer      = undefined;
+		this.linkingArticles = undefined;
 	}
 
 	shuffle(arr) {
@@ -168,6 +170,7 @@ class Game{
 		this.seedPerson      = qd.seedPerson;
 		this.answersReturned = qd.answersReturned;
 		this.nextAnswer      = qd.nextAnswer;
+		this.linkingArticles = qd.linkingArticles;
 
 		this.blacklistCandidate(this.seedPerson);
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);

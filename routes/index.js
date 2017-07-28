@@ -83,6 +83,7 @@ router.post('/answer', (req, res) => {
 	} else {
 		games.answer(req.cookies['ftlabsCorrelationsGameUUID'], req.body.answer)
 			.then(result => {
+				result.articlesWording = (result.linkingArticles.length==1)? 'a recent article' : 'some recent articles';
 				if(result.correct === true){
 					res.render('correct', {result});
 				} else {

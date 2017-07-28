@@ -1,11 +1,11 @@
 <h2>That was the correct answer!</h2>
-<p>{{ result.seedPerson}} was mentioned with {{result.submittedAnswer}} in a recent article<p>
+<p>{{ result.seedPerson}} was mentioned with {{result.submittedAnswer}} in {{result.articlesWording}}:<p>
 
-<li>
+<ul>
 {{#each result.linkingArticles}}
-  <li>{{this.printValue}}</li>
+  <li>{{this.title}}</li>
 {{/each}}
-</li>
+</ul>
 
-<p>You have have achieved {{ result.score }} consecutive correct answers so far.
+<p>You have achieved {{ result.score }} consecutive correct answers so far.
 <p><a href="/question">Next question...</a></p>
