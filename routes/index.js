@@ -38,7 +38,16 @@ router.get('/question', (req, res) => {
 		.then(data => {
 
 			if(data.limitReached === true){
-				res.render('winner', {distance : data.distance});
+				const result = {score : data.score};
+				if(result.score == 0) {
+					result.consecutiveWording = 'correct answers';
+				} else if( result.score == 1) {
+					result.consecutiveWording = 'correct answer';
+				} else {
+					result.consecutiveWording = 'consecutive correct answers';
+				}
+
+				res.render('winner', result);
 			} else {
 				const preparedData = {};
 
@@ -84,6 +93,14 @@ router.post('/answer', (req, res) => {
 		games.answer(req.cookies['ftlabsCorrelationsGameUUID'], req.body.answer)
 			.then(result => {
 				result.articlesWording = (result.linkingArticles.length==1)? 'a recent article' : 'some recent articles';
+				if(result.score == 0) {
+					result.consecutiveWording = 'correct answers';
+				} else if( result.score == 1) {
+					result.consecutiveWording = 'correct answer';
+				} else {
+					result.consecutiveWording = 'consecutive correct answers';
+				}
+				result.consecutiveWording
 				if(result.correct === true){
 					res.render('correct', {result});
 				} else {

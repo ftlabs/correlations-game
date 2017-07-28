@@ -309,19 +309,23 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 				const selectedGame = data.Item;
 
-				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
+				const result = {
+					correct         : undefined,
+					score           : selectedGame.distance,
+					expected        : selectedGame.nextAnswer.replace('people:', ''),
+					linkingArticles : selectedGame.linkingArticles,
+					seedPerson      : selectedGame.seedPerson.replace('people:', ''),
+					submittedAnswer : submittedAnswer.replace('people:', ''),
+				};
 
+				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
 				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
 
 					selectedGame.distance += 1;
-					const result = {
-						correct         : true,
-						score           : selectedGame.distance,
-						linkingArticles : selectedGame.linkingArticles,
-						seedPerson      : selectedGame.seedPerson.replace('people:', ''),
-						submittedAnswer : submittedAnswer.replace('people:', ''),
-					};
 					selectedGame.clearQuestion();
+
+					result.correct = true;
+					result.score   += 1;
 
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
@@ -367,14 +371,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 					database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
-							const result = {
-								correct         : false,
-								score           : selectedGame.distance,
-								expected        : selectedGame.nextAnswer.replace('people:', ''),
-								linkingArticles : selectedGame.linkingArticles,
-								seedPerson      : selectedGame.seedPerson.replace('people:', ''),
-								submittedAnswer : submittedAnswer.replace('people:', ''),
-						};
+							result.correct = false;
 							resolve(result);
 						})
 						.catch(err => {
