@@ -20,6 +20,7 @@ const REQUEST_HEADERS = {
 };
 
 function getAllOfTheIslandsInTheCorrelationsService(){
+	debug(`getAllOfTheIslandsInTheCorrelationsService:`);
 	return fetch(`https://${CORRELATION_SERVICE_HOST}/allIslands`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
@@ -29,7 +30,7 @@ function getAllOfTheIslandsInTheCorrelationsService(){
 			}
 		})
 		.catch(err => {
-			debug(err); //Log the error here, catch it in the application
+			debug(`getAllOfTheIslandsInTheCorrelationsService: err=${err}`); //Log the error here, catch it in the application
 			throw err;
 		})
 	;
@@ -37,6 +38,7 @@ function getAllOfTheIslandsInTheCorrelationsService(){
 }
 
 function getListOfPeopleOnAPersonsIsland(personName){
+	debug(`getListOfPeopleOnAPersonsIsland: personName=${personName}`);
 
 	return fetch(`https://${CORRELATION_SERVICE_HOST}/islandOf/${ encodeURIComponent( personName ) }`, REQUEST_HEADERS)
 		.then(res => {
@@ -47,7 +49,7 @@ function getListOfPeopleOnAPersonsIsland(personName){
 			}
 		})
 		.catch(err => {
-			debug(err); //Log the error here, catch it in the application
+			debug(`getListOfPeopleOnAPersonsIsland: err=${err}`); //Log the error here, catch it in the application
 			throw err;
 		})
 	;
@@ -55,6 +57,8 @@ function getListOfPeopleOnAPersonsIsland(personName){
 }
 
 function getListOfPeopleByDistances(personName){
+	debug(`getListOfPeopleByDistances: personName=${personName}`);
+
 	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainLengthsFrom/${ encodeURIComponent( personName ) }`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
@@ -64,11 +68,10 @@ function getListOfPeopleByDistances(personName){
 			}
 		})
 		.then(data => {
-			debug(data);
 			return data.chainLengths;
 		})
 		.catch(err => {
-			debug(err); //Log the error here, catch it in the application
+			debug(`getListOfPeopleByDistances: err=${err}`); //Log the error here, catch it in the application
 			throw err;
 		})
 	;
@@ -76,6 +79,7 @@ function getListOfPeopleByDistances(personName){
 }
 
 function getAChainBetweenTwoPeopleAndIncludeTheArticles(personOne, personTwo){
+	debug(`getAChainBetweenTwoPeopleAndIncludeTheArticles: personOne=${personOne}, personTwo=${personTwo}`);
 	return fetch(`https://${CORRELATION_SERVICE_HOST}/calcChainWithArticlesBetween/${ encodeURIComponent( personOne ) }/${ encodeURIComponent( personTwo ) }`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
@@ -85,13 +89,14 @@ function getAChainBetweenTwoPeopleAndIncludeTheArticles(personOne, personTwo){
 			}
 		})
 		.catch(err => {
-			debug(err); //Log the error here, catch it in the application
+			debug(`getAChainBetweenTwoPeopleAndIncludeTheArticles: err=${err}`); //Log the error here, catch it in the application
 			throw err;
 		})
 	;
 }
 
 function getBiggestIsland(){
+	debug(`getBiggestIsland:`);
 	return fetch(`https://${CORRELATION_SERVICE_HOST}/biggestIsland`, REQUEST_HEADERS)
 		.then(res => {
 			if(res.ok){
@@ -101,18 +106,16 @@ function getBiggestIsland(){
 			}
 		})
 		.catch(err => {
-			debug(err); //Log the error here, catch it in the application
+			debug(`getBiggestIsland: err=${err}`); //Log the error here, catch it in the application
 			throw err;
 		})
 	;
-
 }
 
-
 module.exports = {
-	allIslands : getAllOfTheIslandsInTheCorrelationsService,
-	islandOf : getListOfPeopleOnAPersonsIsland,
-	calcChainLengthsFrom : getListOfPeopleByDistances,
+	allIslands                   : getAllOfTheIslandsInTheCorrelationsService,
+	islandOf                     : getListOfPeopleOnAPersonsIsland,
+	calcChainLengthsFrom         : getListOfPeopleByDistances,
 	calcChainWithArticlesBetween : getAChainBetweenTwoPeopleAndIncludeTheArticles,
-	biggestIsland : getBiggestIsland,
+	biggestIsland                : getBiggestIsland,
 };

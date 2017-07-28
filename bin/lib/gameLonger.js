@@ -41,7 +41,7 @@ class Game{
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
 	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
-	filterBlacklisted(names) { return names.filter( name => {return !isBlacklisted(name);}) };
+	filterBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
 
 	addCandidates( candidates ) {
 		let count = 0;
@@ -74,18 +74,23 @@ class Game{
 
 	pickFromFirstFew(items, max=5){
 		if (items.length == 0) {
+			debug(`Game.pickFromFirstFew: items.length == 0`);
 			return undefined;
 		}
 		const range = Math.min(max, items.length);
-		const index = items[Math.floor(Math.random*range)];
-		return items[index];
+		const index = Math.floor(Math.random()*range);
+		const item  = items[index];
+		debug(`Game.pickFromFirstFew: items.length=${items.length}, range=${range}, index=${index}, item=${item}`);
+		return item;
 	}
 
 	pickNameFromTopFewCandidates(max=5){
 		if(this.remainingCandidatesWithConnections.length < 4) {
 			return undefined; // must have at least 4 people left: seed + 3 answers
 		}
-		return pickFromFirstFew( this.remainingCandidatesWithConnections )[0];
+		const candidate = this.pickFromFirstFew( this.remainingCandidatesWithConnections );
+		debug(`Game.pickNameFromTopFewCandidates: candidate=${candidate}`);
+		return (candidate==undefined)? undefined : candidate[0];
 	}
 
 	clearQuestion(){
@@ -120,30 +125,29 @@ class Game{
 			question.seedPerson = name;
 
 			return correlations_service.calcChainLengthsFrom(name)
-			.then(chainFrom => { chainFrom.chainLengths })
 			.then(chainLengths => {
-				const nextAnswers = filterBlacklisted( chainLengths[1].entities );
+				const nextAnswers = this.filterBlacklisted( chainLengths[1].entities );
 				if (nextAnswers.length == 0) {
-					blacklistCandidate(question.seedPerson);
-					return promiseNextCandidateQuestion();
+					this.blacklistCandidate(question.seedPerson);
+					return this.promiseNextCandidateQuestion();
 				}
-				question.nextAnswer = pickFromFirstFew( nextAnswers );
-				const wrongAnswers1 = filterBlacklisted( chainLengths[2].entities );
+				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
+				const wrongAnswers1 = this.filterBlacklisted( chainLengths[2].entities );
 				if (wrongAnswers1.length == 0) {
-					blacklist(question.seedPerson);
-					return promiseNextCandidateQuestion();
+					this.blacklist(question.seedPerson);
+					return this.promiseNextCandidateQuestion();
 				}
-				question.wrongAnswers.push( pickFromFirstFew( wrongAnswers1 ) );
-				const wrongAnswers2 = filterBlacklisted( chainLengths[3].entities );
+				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
+				const wrongAnswers2 = this.filterBlacklisted( chainLengths[3].entities );
 				if (wrongAnswers2.length == 0) {
-					blacklist(question.seedPerson);
-					return promiseNextCandidateQuestion();
+					this.blacklist(question.seedPerson);
+					return this.promiseNextCandidateQuestion();
 				}
-				question.wrongAnswers.push( pickFromFirstFew( wrongAnswers2 ) );
+				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
 				// yay, means we have all the bits needed for a valid question
 				question.answersReturned = question.wrongAnswers.slice(0);
 				question.answersReturned.push(answer);
-				shuffle( question.answersReturned );
+				this.shuffle( question.answersReturned );
 				return correlations_service.calcChainWithArticlesBetween(question.seedPerson, question.nextAnswer)
 				.then( data => {
 					question.linkingArticles = data.articlesPerLink[0];
@@ -165,9 +169,9 @@ class Game{
 		this.answersReturned = qd.answersReturned;
 		this.nextAnswer      = qd.nextAnswer;
 
-		blacklistCandidate(this.seedPerson);
+		this.blacklistCandidate(this.seedPerson);
 	}
-}
+} // eof Class Game
 
 function createANewGame(userUUID){
 
