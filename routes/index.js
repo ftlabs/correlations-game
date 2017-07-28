@@ -51,6 +51,8 @@ router.get('/question', (req, res) => {
 			} else {
 				const preparedData = {};
 
+				preparedData.intervalDays = data.intervalDays;
+
 				preparedData.seed = {
 					value : data.seed,
 					printValue : data.seed.replace('people:', '')

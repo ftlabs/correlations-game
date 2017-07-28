@@ -34,8 +34,9 @@ class Game{
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
 		this.linkingArticles     = undefined;
-		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, populated in createAnNewGame
+		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
+		this.intervalDays        = undefined;
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 	}
@@ -210,6 +211,11 @@ function createANewGame(userUUID){
 
 	return correlations_service.biggestIsland()
 		.then(island => {	newGame.addCandidates(island) })
+		.then( () => { return correlations_service.summary() } )
+		.then( summary => {
+			debug(`createANewGame: summary=${JSON.stringify(summary)}`);
+			newGame.intervalDays = Math.floor( summary.times.intervalCoveredHrs / 24 )
+		} )
 		.then(function(){
 			return database.write(newGame, process.env.GAME_TABLE)
 				.then(function(){
@@ -255,7 +261,8 @@ function getAQuestionToAnswer(gameUUID){
 			if(selectedGame.answersReturned !== undefined){
 				resolve({
 					seed : selectedGame.seedPerson,
-					options : selectedGame.answersReturned
+					options : selectedGame.answersReturned,
+					intervalDays : selectedGame.intervalDays,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -295,7 +302,8 @@ function getAQuestionToAnswer(gameUUID){
 							resolve({
 								seed    : selectedGame.seedPerson,
 								options : selectedGame.answersReturned,
-								limitReached : false
+								limitReached : false,
+								intervalDays : selectedGame.intervalDays,
 							});
 						})
 						.catch(err => {
