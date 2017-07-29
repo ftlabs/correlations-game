@@ -4,6 +4,7 @@
 	{{#each options}}
 		<input type="radio" name="answer" value="{{this.value}}" class="o-forms__radio" id="{{this.printValue}}">
 		<label for="{{this.printValue}}" class="o-forms__label">{{this.printValue}}</label>
+		<br>
 	{{/each}}
 	<br />
 	<input type="submit" value="Submit Answer" class="o-buttons o-buttons--primary" style="margin-top:1.5em;" />
