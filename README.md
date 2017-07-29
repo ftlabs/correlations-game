@@ -81,6 +81,7 @@ The following env params need to be set:
 ... and if you want to avoid using AWS DynamoDB
 
 * DATABASE=PRETEND
+   * NB: always start a new session after restarting the server, since this DB in in-memory only.
 
 The following env params may be set:
 
@@ -90,3 +91,8 @@ The following env params may be set:
 ... to explore alternative game mechanics
 
 * GAME=LONGER
+
+### routes
+
+* '''/''' - start a new session
+* '''/stats''' - view the games stats, system response times, etc
