@@ -24,6 +24,11 @@ answersReturned - if the question has been requested more than once, the origina
 blacklist - each seed person is added to this list so they cannot be the seed person in future questions
 */
 
+const GAMES_STATS = {
+	count       : 0,
+	scoreCounts : { 0 : 0 }, // prime it with a count of 0 so there is always a counted score
+}
+
 class Game{
 	constructor(userUUID) {
 		this.uuid     = userUUID;
@@ -40,6 +45,7 @@ class Game{
 		this.history             = [];
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
+		GAMES_STATS.count += 1;
 	}
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
@@ -202,6 +208,21 @@ class Game{
 		this.blacklistCandidate(this.nextAnswer);
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
+
+	updateStats(){
+		const score = this.distance;
+		if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
+			GAMES_STATS.scoreCounts[score] = 0;
+		}
+
+		GAMES_STATS.scoreCounts[score] += 1;
+	}
+
+	bringToAnEnd(){
+		this.updateStats();
+		this.state = 'finished';
+	}
+
 } // eof Class Game
 
 function createANewGame(userUUID){
@@ -282,7 +303,8 @@ function getAQuestionToAnswer(gameUUID){
 						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} has been won`);
 						debug(`getAQuestionToAnswer: selectedGame.uuid=${selectedGame.uuid}, selectedGame=${selectedGame}`);
 
-						selectedGame.state = 'finished';
+						selectedGame.bringToAnEnd();
+
 						database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
@@ -374,7 +396,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					;
 
 				} else {
-					selectedGame.state = 'finished';
+					selectedGame.bringToAnEnd();
 
 					let scorePosition = -1;
 
@@ -424,23 +446,18 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 }
 
-function getListOfHighScores(){
-
-	return new Promise( (resolve) => {
-
-		debug(`getListOfHighScores: HIGH SCORES ${highScores}`);
-
-		const sanitizedHighScores = highScores.map(score => {
-			return {
-				userUUID : score.userUUID,
-				score : score.distance
-			};
-		});
-
-		resolve(sanitizedHighScores);
-
+function getSanitizedHighScores(){
+	debug(`getSanitizedHighScores: HIGH SCORES ${highScores}`);
+	return highScores.map(score => {
+		return {
+			player : score.player,
+			score  : score.distance
+		};
 	});
+}
 
+function getListOfHighScores(){
+	return Promise.resolve( getSanitizedHighScores() );
 }
 
 function checkIfAGameExistsForAGivenUUID(gameUUID){
@@ -490,8 +507,11 @@ function getGameDetails(gameUUID){
 }
 
 function getStats(){
+	const highestScore = Object.keys(GAMES_STATS.scoreCounts).sort((a, b) => b - a)[0];
 	return {
 		correlations_service : correlations_service.stats(),
+		games                : GAMES_STATS,
+		highestScore,
 	}
 }
 
