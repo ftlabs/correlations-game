@@ -94,5 +94,5 @@ The following env params may be set:
 
 ### routes
 
-* ```/``` - start a new session
-* ```/stats``` - view the games stats, system response times, etc
+* GET ```/``` - start a new session
+* GET ```/stats``` - view the games stats, system response times, etc
