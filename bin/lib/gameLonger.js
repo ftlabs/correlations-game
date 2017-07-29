@@ -271,7 +271,7 @@ function getAQuestionToAnswer(gameUUID){
 			const selectedGame = data.Item;
 			debug(`getAQuestionToAnswer: selectedGame=${JSON.stringify(selectedGame)}`);
 
-			if(selectedGame.state === 'new'){
+			if(selectedGame.state === 'new'){ // keep asking the same question
 				selectedGame.state = 'current';
 			}
 
@@ -288,17 +288,12 @@ function getAQuestionToAnswer(gameUUID){
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
-
-				// selectedGame.clearQuestion();
-
 				selectedGame.promiseNextCandidateQuestion()
 				.then(questionData => {
 					debug(`getAQuestionToAnswer: questionData=${JSON.stringify(questionData, null, 2)}`);
 
 					if(questionData === undefined){
-						// The game is out of connections between the remaining (if any) candidates
-						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} has been won`);
-						debug(`getAQuestionToAnswer: selectedGame.uuid=${selectedGame.uuid}, selectedGame=${selectedGame}`);
+						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} is out of connections`);
 
 						selectedGame.finish();
 
