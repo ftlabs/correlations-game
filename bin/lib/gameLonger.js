@@ -516,11 +516,11 @@ function getStats(){
 }
 
 module.exports = {
-	new : createANewGame,
-	question : getAQuestionToAnswer,
-	answer : answerAQuestion,
+	new        : createANewGame,
+	question   : getAQuestionToAnswer,
+	answer     : answerAQuestion,
 	highScores : getListOfHighScores,
-	check : checkIfAGameExistsForAGivenUUID,
-	get : getGameDetails,
-	stats : getStats,
+	check      : checkIfAGameExistsForAGivenUUID,
+	get        : getGameDetails,
+	stats      : getStats,
 };
