@@ -86,7 +86,7 @@ The following env params need to be set:
 The following env params may be set:
 
 * BARNIER_LIST=people:Michel Barnier,people:Nancy Pelosi
-* DEBUG=correlations-game:*,bin:lib:*
+* DEBUG=correlations-game:\*,bin:lib:\*
 
 ... to explore alternative game mechanics
 
@@ -94,5 +94,5 @@ The following env params may be set:
 
 ### routes
 
-* '''/''' - start a new session
-* '''/stats''' - view the games stats, system response times, etc
+* ```/``` - start a new session
+* ```/stats``` - view the games stats, system response times, etc
