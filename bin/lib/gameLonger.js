@@ -209,19 +209,15 @@ class Game{
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 
-	updateStats(){
+	finish(){
+		this.state = 'finished';
+		GAMES_STATS.counts.finished += 1;
+
 		const score = this.distance;
 		if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
 			GAMES_STATS.scoreCounts[score] = 0;
 		}
-
 		GAMES_STATS.scoreCounts[score] += 1;
-	}
-
-	finish(){
-		this.updateStats();
-		this.state = 'finished';
-		GAMES_STATS.counts.finished += 1;
 	}
 
 } // eof Class Game
