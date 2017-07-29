@@ -489,11 +489,18 @@ function getGameDetails(gameUUID){
 	;
 }
 
+function getStats(){
+	return {
+		correlations_service : correlations_service.stats(),
+	}
+}
+
 module.exports = {
 	new : createANewGame,
 	question : getAQuestionToAnswer,
 	answer : answerAQuestion,
 	highScores : getListOfHighScores,
 	check : checkIfAGameExistsForAGivenUUID,
-	get : getGameDetails
+	get : getGameDetails,
+	stats : getStats,
 };

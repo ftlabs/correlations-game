@@ -20,6 +20,22 @@ const REQUEST_HEADERS = {
 };
 
 const CALL_STATS = {};
+const CALL_STATS_WINDOW = 10;
+
+function calcFnStats(fnName){
+	const mostRecentDurations = CALL_STATS[fnName].durations.slice(- CALL_STATS_WINDOW);
+	const sumDurations = mostRecentDurations.reduce((sum, val)=>{ return sum+val; });
+	return {
+		fnName,
+		numCalls : CALL_STATS[fnName].durations.length,
+	  duration : {
+			avg    : sumDurations / mostRecentDurations.length,
+			max    : Math.max(...mostRecentDurations),
+			min    : Math.min(...mostRecentDurations),
+			window : CALL_STATS_WINDOW,
+		}
+	}
+}
 
 function updateStats(fnName, startTimeMillis){
 	if (!CALL_STATS.hasOwnProperty(fnName)) {
@@ -29,11 +45,17 @@ function updateStats(fnName, startTimeMillis){
 	}
 	const duration = Date.now() - startTimeMillis;
 	CALL_STATS[fnName].durations.push(duration);
-	const mostRecentDurations = CALL_STATS[fnName].durations.slice(-10);
-	const sumDurations = mostRecentDurations.reduce((sum, val)=>{ return sum+val; });
-	const avgDuration = sumDurations / mostRecentDurations.length;
-	const maxDuration = Math.max(...mostRecentDurations);
-	debug(`updateStats: fnName=${fnName}, duration=${duration}, avgDuration=${avgDuration}, maxDuration=${maxDuration}`);
+	debug(`updateStats: stats=${JSON.stringify(calcFnStats(fnName))}`);
+}
+
+function generateStats(){
+	const stats = {};
+
+	Object.keys(CALL_STATS).sort().forEach(fnName => {
+		stats[fnName] = calcFnStats(fnName);
+	});
+
+	return stats;
 }
 
 function getAllOfTheIslandsInTheCorrelationsService(){
@@ -163,4 +185,5 @@ module.exports = {
 	calcChainWithArticlesBetween : getAChainBetweenTwoPeopleAndIncludeTheArticles,
 	biggestIsland                : getBiggestIsland,
 	summary                      : getSummary,
+	stats                        : generateStats,
 };
