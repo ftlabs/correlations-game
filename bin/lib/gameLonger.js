@@ -25,7 +25,7 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 */
 
 const GAMES_STATS = {
-	count       : 0,
+	counts      : { created : 0, finished : 0 },
 	scoreCounts : { 0 : 0 }, // prime it with a count of 0 so there is always a counted score
 }
 
@@ -45,7 +45,7 @@ class Game{
 		this.history             = [];
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
-		GAMES_STATS.count += 1;
+		GAMES_STATS.counts.created += 1;
 	}
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
@@ -218,9 +218,10 @@ class Game{
 		GAMES_STATS.scoreCounts[score] += 1;
 	}
 
-	bringToAnEnd(){
+	finish(){
 		this.updateStats();
 		this.state = 'finished';
+		GAMES_STATS.counts.finished += 1;
 	}
 
 } // eof Class Game
@@ -303,7 +304,7 @@ function getAQuestionToAnswer(gameUUID){
 						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} has been won`);
 						debug(`getAQuestionToAnswer: selectedGame.uuid=${selectedGame.uuid}, selectedGame=${selectedGame}`);
 
-						selectedGame.bringToAnEnd();
+						selectedGame.finish();
 
 						database.write(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
@@ -396,7 +397,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					;
 
 				} else {
-					selectedGame.bringToAnEnd();
+					selectedGame.finish();
 
 					let scorePosition = -1;
 
