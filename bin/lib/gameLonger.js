@@ -241,29 +241,29 @@ class Game{
 	}
 
 	static readFromDB( uuid ){
-	const config = { uuid : uuid };
-	return database.read(config, process.env.GAME_TABLE)
-	.then( data => {
-		if (data === undefined) {
-			return undefined;
-		} else {
-			return new Game(data.Item.uuid, data.Item);
-		}
-	})
-	;
-}
+		const config = { uuid : uuid };
+		return database.read(config, process.env.GAME_TABLE)
+		.then( data => {
+			if (data === undefined) {
+				return undefined;
+			} else {
+				return new Game(data.Item.uuid, data.Item);
+			}
+		})
+		;
+	}
 
-static writeToDB( game ) {
-	return new Promise( (resolve, reject) => {
-		const objType = typeof game;
-		if (! objType === 'Game') {
-			reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
-		} else {
-			resolve( database.write(game, process.env.GAME_TABLE) );
-		}
-	})
-	;
-}
+	static writeToDB( game ) {
+		return new Promise( (resolve, reject) => {
+			const objType = typeof game;
+			if (! objType === 'Game') {
+				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
+			} else {
+				resolve( database.write(game, process.env.GAME_TABLE) );
+			}
+		})
+		;
+	}
 
 } // eof Class Game
 
