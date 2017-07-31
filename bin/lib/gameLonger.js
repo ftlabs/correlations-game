@@ -9,6 +9,8 @@ const barnier = require('./barnier-filter'); // Filter names from the game that 
 const runningGames = {};
 const highScores = [];
 
+const databaseTable = process.env.GAME_TABLE;
+
 /*
 Game class
 UUID = uuid for this game
@@ -28,12 +30,12 @@ history - record the sequence of questionData items for a summary at the end of 
 */
 
 const GAMES_STATS = {
-	counts      : { created : 0, finished : 0 },
+	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
 }
 
 class Game{
-	constructor(userUUID) {
+	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
 		this.player   = userUUID;
 		this.state    = 'new';
@@ -48,7 +50,22 @@ class Game{
 		this.history             = [];
 
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
-		GAMES_STATS.counts.created += 1;
+
+		if( config === undefined ) {
+			GAMES_STATS.counts.created += 1;
+		} else {
+			GAMES_STATS.counts.cloned += 1;
+			if (userUUID !== config['uuid']) {
+				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
+			}
+			[
+				'uuid', 'player', 'state', 'distance', 'seedPerson', 'nextAnswer',
+				'answersReturned', 'linkingArticles', 'blacklist', 'remainingCandidatesWithConnections',
+				'intervalDays', 'history'
+			].forEach( field => {
+				this[field] = config[field];
+			});
+		}
 	}
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
@@ -223,7 +240,33 @@ class Game{
 		GAMES_STATS.scoreCounts[score] += 1;
 	}
 
+	static readFromDB( uuid ){
+		const config = { uuid : uuid };
+		return database.read(config, process.env.GAME_TABLE)
+		.then( data => {
+			if (data === undefined) {
+				return undefined;
+			} else {
+				return new Game(data.Item.uuid, data.Item);
+			}
+		})
+		;
+	}
+
+	static writeToDB( game ) {
+		return new Promise( (resolve, reject) => {
+			const objType = typeof game;
+			if (! objType === 'Game') {
+				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
+			} else {
+				resolve( database.write(game, process.env.GAME_TABLE) );
+			}
+		})
+		;
+	}
+
 } // eof Class Game
+
 
 function createANewGame(userUUID){
 
@@ -242,7 +285,7 @@ function createANewGame(userUUID){
 			newGame.intervalDays = Math.floor( summary.times.intervalCoveredHrs / 24 )
 		} )
 		.then(function(){
-			return database.write(newGame, process.env.GAME_TABLE)
+			return Game.writeToDB(newGame)
 				.then(function(){
 					return newGame.uuid;
 				})
@@ -263,15 +306,14 @@ function getAQuestionToAnswer(gameUUID){
 		return Promise.reject('No game UUID was passed to the function');
 	}
 
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-	.then(data => {
-		if(data.Item === undefined){
+	return Game.readFromDB(gameUUID)
+	.then(selectedGame => {
+		if(selectedGame === undefined){
 			throw `The game UUID '${gameUUID}' is not valid`;
 		}
 
 		return new Promise( (resolve, reject) => {
 
-			const selectedGame = data.Item;
 			debug(`getAQuestionToAnswer: selectedGame=${JSON.stringify(selectedGame)}`);
 
 			if(selectedGame.state === 'new'){ // keep asking the same question
@@ -300,7 +342,7 @@ function getAQuestionToAnswer(gameUUID){
 
 						selectedGame.finish();
 
-						database.write(selectedGame, process.env.GAME_TABLE)
+						Game.writeToDB(selectedGame)
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
 							resolve({
@@ -318,7 +360,7 @@ function getAQuestionToAnswer(gameUUID){
 					} else {
 						selectedGame.acceptQuestionData( questionData );
 
-						database.write(selectedGame, process.env.GAME_TABLE)
+						Game.writeToDB(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
 							resolve({
@@ -351,16 +393,13 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		return Promise.reject(`An answer was not passed to the function`);
 	}
 
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-		.then(data => {
-			if(data.Item === undefined){
+	return Game.readFromDB(gameUUID)
+		.then(selectedGame => {
+			if(selectedGame === undefined){
 				throw `The game UUID '${gameUUID}' is not valid`;
 			}
 
 			return new Promise( (resolve) => {
-
-				const selectedGame = data.Item;
-
 				const result = {
 					correct         : undefined,
 					score           : selectedGame.distance,
@@ -377,7 +416,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					selectedGame.distance += 1;
 					selectedGame.clearQuestion();
 
-					database.write(selectedGame, process.env.GAME_TABLE)
+					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = true;
 							result.score   += 1;
@@ -421,7 +460,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						highScores.push(selectedGame);
 					}
 
-					database.write(selectedGame, process.env.GAME_TABLE)
+					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = false;
 							resolve(result);
@@ -464,11 +503,11 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 		if(gameUUID === undefined){
 			resolve(false);
 		} else {
-			database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-				.then(data => {
-					if(data.Item === undefined){
+			Game.readFromDB(gameUUID)
+				.then(selectedGame => {
+					if(selectedGame === undefined){
 						resolve(false);
-					} else if(data.Item.state === 'finished'){
+					} else if(selectedGame.state === 'finished'){
 						resolve(false);
 					} else {
 						resolve(true);
@@ -492,8 +531,7 @@ function getGameDetails(gameUUID){
 	}
 
 	// return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-		.then(data => data.Item)
+	return Game.readFromDB(gameUUID)
 		.catch(err => {
 			debug(`getGameDetails: Unable to read entry for game ${gameUUID}`, err);
 			throw err;
