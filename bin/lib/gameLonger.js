@@ -24,11 +24,13 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 remainingCandidatesWithConnections - a whitelist of people who could be chosen as seeds
 intervalDays - how many days of articles are covered by the current correlations_service
 history - record the sequence of questionData items for a summary at the end of a game
+achievedHighestScore, achievedHighestScoreFirst - set when finishing a question, based on current best score
 */
 
 const GAMES_STATS = {
 	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
+	maxScore    : 0,
 }
 
 class Game{
@@ -49,6 +51,8 @@ class Game{
 		this.answersReturned     = undefined;
 		this.linkingArticles     = undefined;
 		this.intervalDays        = undefined;
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
 		this.isQuestionSet       = false;
 
 		// pre-pop the blacklist with the barnier list
@@ -141,6 +145,8 @@ class Game{
 		this.answersReturned = undefined;
 		this.nextAnswer      = undefined;
 		this.linkingArticles = undefined;
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
 		this.isQuestionSet   = false;
 	}
 
@@ -255,6 +261,10 @@ class Game{
 			GAMES_STATS.scoreCounts[score] = 0;
 		}
 		GAMES_STATS.scoreCounts[score] += 1;
+		GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+
+		this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
+		this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
 	}
 
 	static readFromDB( uuid ){
@@ -366,6 +376,8 @@ function getAQuestionToAnswer(gameUUID){
 								limitReached : true,
 								score        : selectedGame.distance,
 								history      : selectedGame.history,
+								achievedHighestScore     : selectedGame.achievedHighestScore,
+								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
 							});
 						})
 						.catch(err => {
@@ -452,6 +464,8 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = false;
+							result.achievedHighestScore      = selectedGame.achievedHighestScore;
+							result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
 							resolve(result);
 						})
 						.catch(err => {
@@ -514,11 +528,9 @@ function getGameDetails(gameUUID){
 }
 
 function getStats(){
-	const highestScore = Object.keys(GAMES_STATS.scoreCounts).sort((a, b) => b - a)[0];
 	return {
 		correlations_service : correlations_service.stats(),
 		games                : GAMES_STATS,
-		highestScore,
 	}
 }
 
