@@ -6,9 +6,6 @@ const database = (process.env.DATABASE == 'PRETEND')? require('./database_preten
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
-const runningGames = {};
-const highScores = [];
-
 const databaseTable = process.env.GAME_TABLE;
 
 /*
@@ -38,19 +35,26 @@ class Game{
 	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
 		this.player   = userUUID;
-		this.state    = 'new';
-		this.distance = 0;
+
+		// context of current game
+		this.state     = 'new';
+		this.distance  = 0;
+		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
+		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
+		this.history   = [];
+
+		// details+context of the current question
 		this.seedPerson          = undefined;
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
 		this.linkingArticles     = undefined;
-		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
-		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.intervalDays        = undefined;
-		this.history             = [];
+		this.isQuestionSet       = false;
 
+		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 
+    // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
 		if( config === undefined ) {
 			GAMES_STATS.counts.created += 1;
 		} else {
@@ -59,10 +63,19 @@ class Game{
 				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
 			}
 			[
-				'uuid', 'player', 'state', 'distance', 'seedPerson', 'nextAnswer',
-				'answersReturned', 'linkingArticles', 'blacklist', 'remainingCandidatesWithConnections',
-				'intervalDays', 'history'
+				'uuid', 'player', 'state', 'distance', 'blacklist', 'remainingCandidatesWithConnections', 'history', 'isQuestionSet',
 			].forEach( field => {
+				if (!config.hasOwnProperty(field)) {
+					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+				}
+				this[field] = config[field];
+			});
+			[
+				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
+			].forEach( field => {
+				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
+					throw `Game.constructor: config.isQuestionSet==true but field=${field} not defined: config=${JSON.stringify(config)}`;
+				}
 				this[field] = config[field];
 			});
 		}
@@ -128,6 +141,7 @@ class Game{
 		this.answersReturned = undefined;
 		this.nextAnswer      = undefined;
 		this.linkingArticles = undefined;
+		this.isQuestionSet   = false;
 	}
 
 	shuffle(arr) {
@@ -226,6 +240,9 @@ class Game{
 
 		this.blacklistCandidate(this.seedPerson);
 		this.blacklistCandidate(this.nextAnswer);
+
+		this.isQuestionSet   = true;
+
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 
@@ -325,7 +342,7 @@ function getAQuestionToAnswer(gameUUID){
 				return;
 			}
 
-			if(selectedGame.answersReturned !== undefined){
+			if(selectedGame.isQuestionSet){
 				resolve({
 					seed : selectedGame.seedPerson,
 					options : selectedGame.answersReturned,
@@ -432,34 +449,6 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				} else {
 					selectedGame.finish();
 
-					let scorePosition = -1;
-
-					if(highScores.length >= 1){
-
-						for(let x = 0; x < highScores.length; x += 1){
-
-							if(selectedGame.distance > highScores[x].distance){
-								scorePosition = x;
-								break;
-							}
-
-						}
-
-						if(scorePosition !== -1){
-							highScores.splice(scorePosition, 0, selectedGame);
-
-							if(highScores.length > 10){
-								for(let y = highScores.length - 10; y > 0; y -= 1){
-									highScores.pop();
-								}
-							}
-
-						}
-
-					} else {
-						highScores.push(selectedGame);
-					}
-
 					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = false;
@@ -478,20 +467,6 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		})
 	;
 
-}
-
-function getSanitizedHighScores(){
-	debug(`getSanitizedHighScores: HIGH SCORES ${highScores}`);
-	return highScores.map(score => {
-		return {
-			player : score.player,
-			score  : score.distance
-		};
-	});
-}
-
-function getListOfHighScores(){
-	return Promise.resolve( getSanitizedHighScores() );
 }
 
 function checkIfAGameExistsForAGivenUUID(gameUUID){
@@ -530,7 +505,6 @@ function getGameDetails(gameUUID){
 		throw 'No gameUUID was passed to the function';
 	}
 
-	// return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
 	return Game.readFromDB(gameUUID)
 		.catch(err => {
 			debug(`getGameDetails: Unable to read entry for game ${gameUUID}`, err);
@@ -552,7 +526,6 @@ module.exports = {
 	new        : createANewGame,
 	question   : getAQuestionToAnswer,
 	answer     : answerAQuestion,
-	highScores : getListOfHighScores,
 	check      : checkIfAGameExistsForAGivenUUID,
 	get        : getGameDetails,
 	stats      : getStats,
