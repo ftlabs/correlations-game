@@ -22,11 +22,14 @@ seedPerson - the person to start the game with. Initially undefined, but should 
 nextAnswer - the correct answer for the seed person given. Also the next seed person is question is answered correctly
 answersReturned - if the question has been requested more than once, the original set of answers (stored in this variable) will be returned instead of generating new ones for the seed person
 blacklist - each seed person is added to this list so they cannot be the seed person in future questions
+remainingCandidatesWithConnections - a whitelist of people who could be chosen as seeds
+intervalDays - how many days of articles are covered by the current correlations_service
+history - record the sequence of questionData items for a summary at the end of a game
 */
 
 const GAMES_STATS = {
 	counts      : { created : 0, finished : 0 },
-	scoreCounts : { 0 : 0 }, // prime it with a count of 0 so there is always a counted score
+	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
 }
 
 class Game{
