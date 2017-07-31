@@ -357,6 +357,7 @@ function getAQuestionToAnswer(gameUUID){
 					seed : selectedGame.seedPerson,
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
+					questionNum : selectedGame.distance + 1,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -397,6 +398,7 @@ function getAQuestionToAnswer(gameUUID){
 								options      : selectedGame.answersReturned,
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
+								questionNum  : selectedGame.distance + 1,
 							});
 						})
 						.catch(err => {

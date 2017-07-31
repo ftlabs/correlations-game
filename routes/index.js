@@ -97,6 +97,8 @@ router.get('/question', (req, res) => {
 					};
 				});
 
+				preparedData.questionNum = result.questionNum;
+
 				debug(preparedData);
 
 				res.render('question', preparedData);
