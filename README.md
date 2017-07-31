@@ -2,7 +2,7 @@
 
 ## What is it?
 
-This is an API for playing the FT Labs Correlations game. 
+This is an API for playing the FT Labs Correlations game.
 
 ## How do I play it?
 
@@ -70,3 +70,29 @@ _All example responses assume the request has been successfully completed_
 	"correct" : false
 }
 ```
+
+## For local dev/testing: index routes
+
+The following env params need to be set:
+
+* CORRELATION_SERVICE_HOST=...
+* CORRELATIONS_SERVICE_TOKEN=...
+
+... and if you want to avoid using AWS DynamoDB
+
+* DATABASE=PRETEND
+   * NB: always start a new session after restarting the server, since this DB in in-memory only.
+
+The following env params may be set:
+
+* BARNIER_LIST=people:Michel Barnier,people:Nancy Pelosi
+* DEBUG=correlations-game:\*,bin:lib:\*
+
+... to explore alternative game mechanics
+
+* GAME=LONGER
+
+### routes
+
+* GET ```/``` - start a new session
+* GET ```/stats``` - view the games stats, system response times, etc

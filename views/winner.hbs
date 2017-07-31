@@ -1,2 +1,11 @@
-<h2>You have run out of connections</h2>
-<p>Insert score here...</p>
+<h2>We have run out of connections</h2>
+<p>You achieved {{ score }} {{ consecutiveWording }}.</p>
+
+<p><a href="/question">Start again...</a></p>
+
+<p>History</p>
+<ul>
+{{#each displayable.history}}
+  <li>{{this.seedPerson}} - {{ this.nextAnswer }}</li>
+{{/each}}
+</ul>
