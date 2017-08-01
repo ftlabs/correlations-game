@@ -5,22 +5,31 @@ let STORE_BY_UUID = {};
 function writeToDatabase(item, table){
 	debug(`writeToDatabase: item.uuid=${item.uuid}, item.distance=${item.distance}, table=${table}`);
 
-	return new Promise( (resolve, reject) => {
-		STORE_BY_UUID[item.uuid] = item;
-		resolve();
-	});
+	return Promise.resolve()
+	.then( () => {
+		return JSON.parse(JSON.stringify(item)); // convert into basic obj, minus all the class stuff
+	})
+	.then( itemObj => {
+		STORE_BY_UUID[itemObj.uuid] = itemObj;
+	})
+	.catch( err => {
+		debug(`ERROR: writeToDatabase: err=${err}`);
+		throw err;
+	})
+	;
 }
 
 function readFromDatabase(item, table){
 	debug(`readFromDatabase: reading item=${JSON.stringify(item)}, table=${table}`);
-	return new Promise( (resolve, reject) => {
+	return Promise.resolve()
+	.then( () => {
 		const storedItem = STORE_BY_UUID[item.uuid];
 		if (storedItem == undefined) {
 			debug(`readFromDatabase: no item found`);
-			resolve(undefined);
+			return undefined;
 		} else {
 			debug(`readFromDatabase: found storedItem: uuid=${storedItem.uuid}, distance=${storedItem.distance}`);
-			resolve({Item : storedItem});
+			return {Item : storedItem};
 		}
 	});
 }

@@ -6,8 +6,7 @@ const database = (process.env.DATABASE == 'PRETEND')? require('./database_preten
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
-const runningGames = {};
-const highScores = [];
+const databaseTable = process.env.GAME_TABLE;
 
 /*
 Game class
@@ -25,30 +24,65 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 remainingCandidatesWithConnections - a whitelist of people who could be chosen as seeds
 intervalDays - how many days of articles are covered by the current correlations_service
 history - record the sequence of questionData items for a summary at the end of a game
+achievedHighestScore, achievedHighestScoreFirst - set when finishing a question, based on current best score
 */
 
 const GAMES_STATS = {
-	counts      : { created : 0, finished : 0 },
+	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
+	maxScore    : 0,
 }
 
 class Game{
-	constructor(userUUID) {
+	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
 		this.player   = userUUID;
-		this.state    = 'new';
-		this.distance = 0;
+
+		// context of current game
+		this.state     = 'new';
+		this.distance  = 0;
+		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
+		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
+		this.history   = [];
+
+		// details+context of the current question
 		this.seedPerson          = undefined;
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
 		this.linkingArticles     = undefined;
-		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
-		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.intervalDays        = undefined;
-		this.history             = [];
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
+		this.isQuestionSet       = false;
 
+		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
-		GAMES_STATS.counts.created += 1;
+
+    // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
+		if( config === undefined ) {
+			GAMES_STATS.counts.created += 1;
+		} else {
+			GAMES_STATS.counts.cloned += 1;
+			if (userUUID !== config['uuid']) {
+				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
+			}
+			[
+				'uuid', 'player', 'state', 'distance', 'blacklist', 'remainingCandidatesWithConnections', 'history', 'isQuestionSet',
+			].forEach( field => {
+				if (!config.hasOwnProperty(field)) {
+					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+				}
+				this[field] = config[field];
+			});
+			[
+				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
+			].forEach( field => {
+				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
+					throw `Game.constructor: config.isQuestionSet==true but field=${field} not defined: config=${JSON.stringify(config)}`;
+				}
+				this[field] = config[field];
+			});
+		}
 	}
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
@@ -111,6 +145,9 @@ class Game{
 		this.answersReturned = undefined;
 		this.nextAnswer      = undefined;
 		this.linkingArticles = undefined;
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
+		this.isQuestionSet   = false;
 	}
 
 	shuffle(arr) {
@@ -209,6 +246,9 @@ class Game{
 
 		this.blacklistCandidate(this.seedPerson);
 		this.blacklistCandidate(this.nextAnswer);
+
+		this.isQuestionSet   = true;
+
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 
@@ -221,9 +261,39 @@ class Game{
 			GAMES_STATS.scoreCounts[score] = 0;
 		}
 		GAMES_STATS.scoreCounts[score] += 1;
+		GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+
+		this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
+		this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
+	}
+
+	static readFromDB( uuid ){
+		const config = { uuid : uuid };
+		return database.read(config, process.env.GAME_TABLE)
+		.then( data => {
+			if (data === undefined) {
+				return undefined;
+			} else {
+				return new Game(data.Item.uuid, data.Item);
+			}
+		})
+		;
+	}
+
+	static writeToDB( game ) {
+		return new Promise( (resolve, reject) => {
+			const objType = typeof game;
+			if (! objType === 'Game') {
+				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
+			} else {
+				resolve( database.write(game, process.env.GAME_TABLE) );
+			}
+		})
+		;
 	}
 
 } // eof Class Game
+
 
 function createANewGame(userUUID){
 
@@ -242,7 +312,7 @@ function createANewGame(userUUID){
 			newGame.intervalDays = Math.floor( summary.times.intervalCoveredHrs / 24 )
 		} )
 		.then(function(){
-			return database.write(newGame, process.env.GAME_TABLE)
+			return Game.writeToDB(newGame)
 				.then(function(){
 					return newGame.uuid;
 				})
@@ -263,15 +333,14 @@ function getAQuestionToAnswer(gameUUID){
 		return Promise.reject('No game UUID was passed to the function');
 	}
 
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-	.then(data => {
-		if(data.Item === undefined){
+	return Game.readFromDB(gameUUID)
+	.then(selectedGame => {
+		if(selectedGame === undefined){
 			throw `The game UUID '${gameUUID}' is not valid`;
 		}
 
 		return new Promise( (resolve, reject) => {
 
-			const selectedGame = data.Item;
 			debug(`getAQuestionToAnswer: selectedGame=${JSON.stringify(selectedGame)}`);
 
 			if(selectedGame.state === 'new'){ // keep asking the same question
@@ -283,11 +352,12 @@ function getAQuestionToAnswer(gameUUID){
 				return;
 			}
 
-			if(selectedGame.answersReturned !== undefined){
+			if(selectedGame.isQuestionSet){
 				resolve({
 					seed : selectedGame.seedPerson,
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
+					questionNum : selectedGame.distance + 1,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -300,13 +370,15 @@ function getAQuestionToAnswer(gameUUID){
 
 						selectedGame.finish();
 
-						database.write(selectedGame, process.env.GAME_TABLE)
+						Game.writeToDB(selectedGame)
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
 							resolve({
 								limitReached : true,
 								score        : selectedGame.distance,
 								history      : selectedGame.history,
+								achievedHighestScore     : selectedGame.achievedHighestScore,
+								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
 							});
 						})
 						.catch(err => {
@@ -318,7 +390,7 @@ function getAQuestionToAnswer(gameUUID){
 					} else {
 						selectedGame.acceptQuestionData( questionData );
 
-						database.write(selectedGame, process.env.GAME_TABLE)
+						Game.writeToDB(selectedGame, process.env.GAME_TABLE)
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
 							resolve({
@@ -326,6 +398,7 @@ function getAQuestionToAnswer(gameUUID){
 								options      : selectedGame.answersReturned,
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
+								questionNum  : selectedGame.distance + 1,
 							});
 						})
 						.catch(err => {
@@ -351,16 +424,13 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		return Promise.reject(`An answer was not passed to the function`);
 	}
 
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-		.then(data => {
-			if(data.Item === undefined){
+	return Game.readFromDB(gameUUID)
+		.then(selectedGame => {
+			if(selectedGame === undefined){
 				throw `The game UUID '${gameUUID}' is not valid`;
 			}
 
 			return new Promise( (resolve) => {
-
-				const selectedGame = data.Item;
-
 				const result = {
 					correct         : undefined,
 					score           : selectedGame.distance,
@@ -377,7 +447,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					selectedGame.distance += 1;
 					selectedGame.clearQuestion();
 
-					database.write(selectedGame, process.env.GAME_TABLE)
+					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = true;
 							result.score   += 1;
@@ -393,37 +463,11 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				} else {
 					selectedGame.finish();
 
-					let scorePosition = -1;
-
-					if(highScores.length >= 1){
-
-						for(let x = 0; x < highScores.length; x += 1){
-
-							if(selectedGame.distance > highScores[x].distance){
-								scorePosition = x;
-								break;
-							}
-
-						}
-
-						if(scorePosition !== -1){
-							highScores.splice(scorePosition, 0, selectedGame);
-
-							if(highScores.length > 10){
-								for(let y = highScores.length - 10; y > 0; y -= 1){
-									highScores.pop();
-								}
-							}
-
-						}
-
-					} else {
-						highScores.push(selectedGame);
-					}
-
-					database.write(selectedGame, process.env.GAME_TABLE)
+					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = false;
+							result.achievedHighestScore      = selectedGame.achievedHighestScore;
+							result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
 							resolve(result);
 						})
 						.catch(err => {
@@ -441,20 +485,6 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 }
 
-function getSanitizedHighScores(){
-	debug(`getSanitizedHighScores: HIGH SCORES ${highScores}`);
-	return highScores.map(score => {
-		return {
-			player : score.player,
-			score  : score.distance
-		};
-	});
-}
-
-function getListOfHighScores(){
-	return Promise.resolve( getSanitizedHighScores() );
-}
-
 function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	debug(`checkIfAGameExistsForAGivenUUID: Checking gameUUID ${gameUUID}`);
@@ -464,11 +494,11 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 		if(gameUUID === undefined){
 			resolve(false);
 		} else {
-			database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-				.then(data => {
-					if(data.Item === undefined){
+			Game.readFromDB(gameUUID)
+				.then(selectedGame => {
+					if(selectedGame === undefined){
 						resolve(false);
-					} else if(data.Item.state === 'finished'){
+					} else if(selectedGame.state === 'finished'){
 						resolve(false);
 					} else {
 						resolve(true);
@@ -491,9 +521,7 @@ function getGameDetails(gameUUID){
 		throw 'No gameUUID was passed to the function';
 	}
 
-	// return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
-	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
-		.then(data => data.Item)
+	return Game.readFromDB(gameUUID)
 		.catch(err => {
 			debug(`getGameDetails: Unable to read entry for game ${gameUUID}`, err);
 			throw err;
@@ -502,11 +530,9 @@ function getGameDetails(gameUUID){
 }
 
 function getStats(){
-	const highestScore = Object.keys(GAMES_STATS.scoreCounts).sort((a, b) => b - a)[0];
 	return {
 		correlations_service : correlations_service.stats(),
 		games                : GAMES_STATS,
-		highestScore,
 	}
 }
 
@@ -514,7 +540,6 @@ module.exports = {
 	new        : createANewGame,
 	question   : getAQuestionToAnswer,
 	answer     : answerAQuestion,
-	highScores : getListOfHighScores,
 	check      : checkIfAGameExistsForAGivenUUID,
 	get        : getGameDetails,
 	stats      : getStats,
