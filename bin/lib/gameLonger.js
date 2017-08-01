@@ -337,7 +337,7 @@ class Game{
 		const config = { uuid : uuid };
 		return database.read(config, process.env.GAME_TABLE)
 		.then( data => {
-			if (data === undefined) {
+			if (data.Item === undefined) {
 				return undefined;
 			} else {
 				return new Game(data.Item.uuid, data.Item);
@@ -352,7 +352,9 @@ class Game{
 			if (! objType === 'Game') {
 				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
 			} else {
-				resolve( database.write(game, process.env.GAME_TABLE) );
+				database.write(game, process.env.GAME_TABLE)
+				.then( () => { resolve(); })
+				;
 			}
 		})
 		;
