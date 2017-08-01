@@ -95,9 +95,9 @@ The following env params may be set:
 * FIRST_FEW_MAX=5 # which subset of the most-connected candidates to choose from
 * GAME_VARIANT=any_seed # which is the default. Other values are:
    * any_seed                # pick any candidate, blacklist candidate
-	 * any_seed_kill_answer    # pick any candidate, blacklist candidate and answer
-	 * seed_from_answer        # pick initial any candidate then only from answer, blacklist candidate
-	 * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
+   * any_seed_kill_answer    # pick any candidate, blacklist candidate and answer
+   * seed_from_answer        # pick initial any candidate then only from answer, blacklist candidate
+   * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
 
 ### routes
 
