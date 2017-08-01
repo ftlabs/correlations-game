@@ -287,7 +287,13 @@ class Game{
 			if (! objType === 'Game') {
 				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
 			} else {
-				resolve( database.write(game, process.env.GAME_TABLE) );
+
+				database.write(game, process.env.GAME_TABLE)
+					.then(function(){
+						resolve();
+					})
+				;
+
 			}
 		})
 		;
