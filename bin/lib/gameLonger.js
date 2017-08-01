@@ -270,14 +270,14 @@ class Game{
 	static readFromDB( uuid ){
 		const config = { uuid : uuid };
 		return database.read(config, process.env.GAME_TABLE)
-		.then( data => {
-			debug('>>>>>>>>>>>>>>>', data);
-			if (data.uuid === undefined) {
-				return undefined;
-			} else {
-				return new Game(data.Item.uuid, data.Item);
-			}
-		})
+			.then( data => {
+				debug('>>>>>>>>>>>>>>>', data);
+				if (data.Item === undefined) {
+					return undefined;
+				} else {
+					return new Game(data.Item.uuid, data.Item);
+				}
+			})
 		;
 	}
 

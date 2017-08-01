@@ -116,13 +116,20 @@ function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
-			return games.question(session);
+			return games.question(session)
+				.catch(err => {
+					debug('1>', err);
+				})
+			;
 		} else {
 			return games.new(session)
 				.then(gameUUID => {
 					return gameUUID;
 				})
 				.then(gameUUID => games.question(gameUUID))
+				.catch(err => {
+					debug('2>', err);
+				})
 			;
 		}
 	})
