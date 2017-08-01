@@ -117,9 +117,6 @@ function getQuestion(session, callback) {
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
 			return games.question(session)
-				.catch(err => {
-					debug('1>', err);
-				})
 			;
 		} else {
 			return games.new(session)
@@ -127,9 +124,6 @@ function getQuestion(session, callback) {
 					return gameUUID;
 				})
 				.then(gameUUID => games.question(gameUUID))
-				.catch(err => {
-					debug('2>', err);
-				})
 			;
 		}
 	})

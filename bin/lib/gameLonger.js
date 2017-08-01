@@ -271,7 +271,7 @@ class Game{
 		const config = { uuid : uuid };
 		return database.read(config, process.env.GAME_TABLE)
 			.then( data => {
-				debug('>>>>>>>>>>>>>>>', data);
+				debug('Data return from DB', data);
 				if (data.Item === undefined) {
 					return undefined;
 				} else {
