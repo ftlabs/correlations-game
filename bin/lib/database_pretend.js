@@ -24,7 +24,7 @@ function readFromDatabase(item, table){
 	return Promise.resolve()
 	.then( () => {
 		const storedItem = STORE_BY_UUID[item.uuid];
-		if (storedItem == undefined) {
+		if (storedItem === undefined) {
 			debug(`readFromDatabase: no item found`);
 			return undefined;
 		} else {

@@ -2,11 +2,11 @@ const debug = require('debug')('correlations-game:routes:index');
 const express = require('express');
 const router = express.Router();
 
-const games = (process.env.GAME=='LONGER')? require('../bin/lib/gameLonger') : require('../bin/lib/game');
+const games = (process.env.GAME === 'LONGER')? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 
 router.get('/', (req, res) => {
 
-	if (process.env.DATABASE == 'PRETEND') {
+	if (process.env.DATABASE === 'PRETEND') {
 		res.clearCookie('ftlabsCorrelationsGameUUID');
 	}
 
@@ -17,10 +17,10 @@ router.get('/', (req, res) => {
 });
 
 function processResultForDisplay( result ){
-	result.articlesWording = (result.hasOwnProperty('linkingArticles') && result.linkingArticles.length==1)? 'a recent article' : 'some recent articles';
-	if(result.score == 0) {
+	result.articlesWording = (result.hasOwnProperty('linkingArticles') && result.linkingArticles.length === 1)? 'a recent article' : 'some recent articles';
+	if(result.score === 0) {
 		result.consecutiveWording = 'correct answers';
-	} else if( result.score == 1) {
+	} else if( result.score === 1) {
 		result.consecutiveWording = 'correct answer';
 	} else {
 		result.consecutiveWording = 'consecutive correct answers';
