@@ -2,11 +2,13 @@ const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
 
-const games = require('../bin/lib/game');
+const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 const responses = require('../responses/content');
 const activeSessions = require('../bin/lib/active-sessions-interface');
 
 const not_understood_limit = 3;
+
+console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', (process.env.GAME === 'LONGER') ? 'gameLonger' : 'game');
 
 router.post('/googlehome', (req, res) => {
 	debug(req.body);
