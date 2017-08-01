@@ -8,6 +8,8 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 
 const not_understood_limit = 3;
 
+console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', (process.env.GAME === 'LONGER') ? 'gameLonger' : 'game');
+
 router.post('/googlehome', (req, res) => {
 	debug(req.body);
 	let USER_INPUT = req.body.result.resolvedQuery;
