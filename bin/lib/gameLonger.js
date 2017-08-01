@@ -2,7 +2,7 @@ const debug = require('debug')('bin:lib:gameLonger');
 const uuid = require('uuid').v4;
 
 // const database = require('./database');
-const database = (process.env.DATABASE == 'PRETEND')? require('./database_pretend') : require('./database');
+const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
@@ -78,7 +78,7 @@ class Game{
 				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
 			].forEach( field => {
 				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
-					throw `Game.constructor: config.isQuestionSet==true but field=${field} not defined: config=${JSON.stringify(config)}`;
+					throw `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
 				}
 				this[field] = config[field];
 			});
@@ -103,7 +103,7 @@ class Game{
 	blacklistCandidate(name){
 		let candIndex = -1; // locate candidate in list
 		this.remainingCandidatesWithConnections.some( (cand, i) => {
-			if (cand[0] == name) {
+			if (cand[0] === name) {
 				candIndex = i;
 				return true;
 			} else {
@@ -120,8 +120,8 @@ class Game{
 	}
 
 	pickFromFirstFew(items, max=5){
-		if (items.length == 0) {
-			debug(`Game.pickFromFirstFew: items.length == 0`);
+		if (items.length === 0) {
+			debug(`Game.pickFromFirstFew: items.length === 0`);
 			return undefined;
 		}
 		const range = Math.min(max, items.length);
@@ -137,7 +137,7 @@ class Game{
 		}
 		const candidate = this.pickFromFirstFew( this.remainingCandidatesWithConnections );
 		debug(`Game.pickNameFromTopFewCandidates: candidate=${candidate}`);
-		return (candidate==undefined)? undefined : candidate[0];
+		return (candidate === undefined)? undefined : candidate[0];
 	}
 
 	clearQuestion(){
@@ -189,7 +189,7 @@ class Game{
 
 		return Promise.resolve( this.pickNameFromTopFewCandidates() )
 		.then( name => {
-			if (name == undefined) { return undefined; }
+			if (name === undefined) { return undefined; }
 			question.seedPerson = name;
 
 			return correlations_service.calcChainLengthsFrom(name)
@@ -199,19 +199,19 @@ class Game{
 					return this.promiseNextCandidateQuestion();
 				}
 				const nextAnswers = this.filterBlacklisted( chainLengths[1].entities );
-				if (nextAnswers.length == 0) {
+				if (nextAnswers.length === 0) {
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
 				const wrongAnswers1 = this.filterBlacklisted( chainLengths[2].entities );
-				if (wrongAnswers1.length == 0) {
+				if (wrongAnswers1.length === 0) {
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
 				const wrongAnswers2 = this.filterBlacklisted( chainLengths[3].entities );
-				if (wrongAnswers2.length == 0) {
+				if (wrongAnswers2.length === 0) {
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}

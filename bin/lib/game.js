@@ -2,7 +2,7 @@ const debug = require('debug')('bin:lib:game');
 const uuid = require('uuid').v4;
 
 // const database = require('./database');
-const database = (process.env.DATABASE == 'PRETEND')? require('./database_pretend') : require('./database');
+const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
