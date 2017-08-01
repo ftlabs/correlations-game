@@ -91,6 +91,14 @@ The following env params may be set:
 ... to explore alternative game mechanics
 
 * GAME=LONGER
+* MAX_CANDIDATES=10 # to limit the game size (default is -1, meaning no limit)
+* GAME_VARIANT=any_seed
+
+Picking from
+   * any_seed                # pick any candidate, blacklist candidate
+	 * any_seed_kill_answer    # pick any candidate, blacklist candidate and answer
+	 * seed_from_answer        # pick initial any candidate then only from answer, blacklist candidate
+	 * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
 
 ### routes
 

@@ -29,7 +29,7 @@ function processResultForDisplay( result ){
 	[
 		'expected', 'seedPerson', 'submittedAnswer'
 	].forEach( field => {
-		result.displayable[field] = result[field].replace('people:', '');
+		result.displayable[field] = (result[field] === undefined)? '' : result[field].replace('people:', '');
 	} );
 	result.displayable.history = [];
 	if (result.hasOwnProperty('history')) {

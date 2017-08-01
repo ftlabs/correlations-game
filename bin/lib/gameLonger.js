@@ -33,6 +33,24 @@ const GAMES_STATS = {
 	maxScore    : 0,
 }
 
+const GAME_VARIANT = {
+	any_seed                : 'any_seed',
+	any_seed_kill_answer    : 'any_seed_kill_answer',
+	seed_from_answer        : 'seed_from_answer',
+	seed_from_answer_or_any : 'seed_from_answer_or_any',
+	default                 : 'any_seed_kill_answer',
+}
+
+if(process.env.GAME_VARIANT !== undefined){
+	if (GAME_VARIANT.hasOwnProperty(process.env.GAME_VARIANT)) {
+		GAME_VARIANT.default = GAME_VARIANT[process.env.GAME_VARIANT];
+	} else {
+		debug(`WARNING: unrecognised value of process.env.GAME_VARIANT, {process.env.GAME_VARIANT}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`);
+	}
+}
+
+const MAX_CANDIDATES = parseInt( (process.env.MAX_CANDIDATES === undefined)? -1 : process.env.MAX_CANDIDATES );
+
 class Game{
 	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
@@ -43,7 +61,10 @@ class Game{
 		this.distance  = 0;
 		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
+		this.remainingCandidatesByName = {}; // to be populated in createANewGame
 		this.history   = [];
+		this.variant   = GAME_VARIANT.default;
+		this.max_candidates = MAX_CANDIDATES;
 
 		// details+context of the current question
 		this.seedPerson          = undefined;
@@ -67,7 +88,10 @@ class Game{
 				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
 			}
 			[
-				'uuid', 'player', 'state', 'distance', 'blacklist', 'remainingCandidatesWithConnections', 'history', 'isQuestionSet',
+				'uuid', 'player', 'state', 'distance', 'blacklist',
+				'remainingCandidatesWithConnections', 'remainingCandidatesByName',
+				'history', 'isQuestionSet',
+				'variant', 'max_candidates',
 			].forEach( field => {
 				if (!config.hasOwnProperty(field)) {
 					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
@@ -87,17 +111,24 @@ class Game{
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
 	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
-	filterBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
+	filterOutBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
+	isCandidate(name) { return this.remainingCandidatesByName.hasOwnProperty( name ); };
+	filterCandidates(names) { return names.filter( name => {return this.isCandidate(name);}) };
 
 	addCandidates( candidates ) {
 		let count = 0;
 		candidates.forEach( cand => {
-			if (! this.isBlacklisted(cand[0])) {
+			if (this.max_candidates >= 0 && this.max_candidates === count) {
+				return;
+			}
+			const candName = cand[0];
+			if (! this.isBlacklisted(candName)) {
 				this.remainingCandidatesWithConnections.push(cand);
+				this.remainingCandidatesByName[candName] = cand;
 				count = count + 1;
 			}
 		});
-		debug(`Game.addCandidates: added ${count}`);
+		debug(`Game.addCandidates: added ${count}, all candidates=${Object.keys(this.remainingCandidatesByName)}`);
 	}
 
 	blacklistCandidate(name){
@@ -113,6 +144,7 @@ class Game{
 
 		if (candIndex >= 0) {
 			this.remainingCandidatesWithConnections.splice(candIndex, 1)
+			delete this.remainingCandidatesByName[name];
 		}
 
 		this.addToBlacklist( name );
@@ -187,7 +219,33 @@ class Game{
 			linkingArticles: undefined,
 		};
 
-		return Promise.resolve( this.pickNameFromTopFewCandidates() )
+		let seedPerson = undefined;
+		if(
+				 this.variant === GAME_VARIANT.any_seed
+			|| this.variant === GAME_VARIANT.any_seed_kill_answer
+		){
+				seedPerson = this.pickNameFromTopFewCandidates();
+		} else if(
+				 this.variant === GAME_VARIANT.seed_from_answer
+			|| this.variant === GAME_VARIANT.seed_from_answer_or_any
+		) {
+			if (this.history.length > 0) {
+				seedPerson = this.history[this.history.length-1].nextAnswer;
+				if (this.isBlacklisted(seedPerson)) {
+					if (this.variant === GAME_VARIANT.seed_from_answer_or_any) {
+						seedPerson = this.pickNameFromTopFewCandidates();
+					} else {
+						seedPerson = undefined;
+					}
+				}
+			} else {
+				seedPerson = this.pickNameFromTopFewCandidates();
+			}
+		} else {
+				throw `ERROR: invalid GAME_VARIANT: this.variant=${this.variant}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`;
+		}
+
+		return Promise.resolve( seedPerson )
 		.then( name => {
 			if (name === undefined) { return undefined; }
 			question.seedPerson = name;
@@ -195,23 +253,27 @@ class Game{
 			return correlations_service.calcChainLengthsFrom(name)
 			.then(chainLengths => {
 				if (chainLengths.length < 4) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: chainLengths.length(${chainLengths.length}) < 4`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
-				const nextAnswers = this.filterBlacklisted( chainLengths[1].entities );
+				const nextAnswers = this.filterCandidates( chainLengths[1].entities );
 				if (nextAnswers.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: nextAnswers.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
-				const wrongAnswers1 = this.filterBlacklisted( chainLengths[2].entities );
+				const wrongAnswers1 = this.filterCandidates( chainLengths[2].entities );
 				if (wrongAnswers1.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers1.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
-				const wrongAnswers2 = this.filterBlacklisted( chainLengths[3].entities );
+				const wrongAnswers2 = this.filterCandidates( chainLengths[3].entities );
 				if (wrongAnswers2.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers2.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
@@ -245,7 +307,10 @@ class Game{
 		this.linkingArticles = qd.linkingArticles;
 
 		this.blacklistCandidate(this.seedPerson);
-		this.blacklistCandidate(this.nextAnswer);
+
+		if (this.variant === GAME_VARIANT.any_seed_kill_answer) {
+			this.blacklistCandidate(this.nextAnswer);
+		}
 
 		this.isQuestionSet   = true;
 
