@@ -92,6 +92,7 @@ The following env params may be set:
 
 * GAME=LONGER
 * MAX_CANDIDATES=10 # to limit the game size (default is -1, meaning no limit)
+* FIRST_FEW_MAX=5 # which subset of the most-connected candidates to choose from
 * GAME_VARIANT=any_seed
 
 Picking from

@@ -65,6 +65,7 @@ class Game{
 		this.history   = [];
 		this.variant   = GAME_VARIANT.default;
 		this.max_candidates = MAX_CANDIDATES;
+		this.firstFewMax = parseInt( (process.env.FIRST_FEW_MAX === undefined)? 5 : process.env.FIRST_FEW_MAX );
 
 		// details+context of the current question
 		this.seedPerson          = undefined;
@@ -91,7 +92,7 @@ class Game{
 				'uuid', 'player', 'state', 'distance', 'blacklist',
 				'remainingCandidatesWithConnections', 'remainingCandidatesByName',
 				'history', 'isQuestionSet',
-				'variant', 'max_candidates',
+				'variant', 'max_candidates', 'firstFewMax'
 			].forEach( field => {
 				if (!config.hasOwnProperty(field)) {
 					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
@@ -151,7 +152,7 @@ class Game{
 		debug(`Game.blacklistCandidate: name=${name}`);
 	}
 
-	pickFromFirstFew(items, max=5){
+	pickFromFirstFew(items, max=this.firstFewMax){
 		if (items.length === 0) {
 			debug(`Game.pickFromFirstFew: items.length === 0`);
 			return undefined;
