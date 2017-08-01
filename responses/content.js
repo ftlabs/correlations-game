@@ -10,7 +10,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		}
 
 	} else {
-		phrase = `Sorry, I'm not quite sure what you mean. Say "help" for instructions.`;
+		phrase = `Sorry, I'm not sure what you said. For instructions, say "help".`;
 	}
 
 	return {
@@ -25,26 +25,27 @@ function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 
 	return {
 		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.displayText}`,
-		speech : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.speech}`,
-		ssml : `<speak>Correct. They were connected in the FT article: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
+		speech : `Correct. They were connected in the FT article, titled: ${articleHeadline}. ${newQuestion.speech}`,
+		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
 	};
 
 }
 
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 
-	const phrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article ${articleHeadline}.`
+	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article: ${articleHeadline}.`;
+	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article, titled: ${articleHeadline}.`;
 
 	return {
-		displayText : phrase,
-		speech : phrase,
-		ssml : `<speak>${phrase}</speak>`
+		displayText : textPhrase,
+		speech : voicePhrase,
+		ssml : `<speak>${voicePhrase}</speak>`
 	};
 
 }
 
 function askThePlayerAQuestion(data){
-	const phrase = `Who was recently mentioned in an article with ${data.seed.printValue}?`;
+	const phrase = `Who was mentioned in a recent article with ${data.seed.printValue}?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 
@@ -65,7 +66,7 @@ function askThePlayerAQuestion(data){
 
 function theGameHasBeenWon(){
 
-	const phrase = 'You won. There are no more connections to be made in this sequence.';
+	const phrase = 'You have reached the end of the chain. There are no more connections to be made.';
 
 	return {
 		displayText : phrase,

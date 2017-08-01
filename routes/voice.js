@@ -2,20 +2,23 @@ const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
 
-const games = (process.env.GAME=='LONGER')? require('../bin/lib/gameLonger') : require('../bin/lib/game');
+
+const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 const responses = require('../responses/content');
 const activeSessions = require('../bin/lib/active-sessions-interface');
 
 const not_understood_limit = 3;
 
+console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', (process.env.GAME === 'LONGER') ? 'gameLonger' : 'game');
+
 router.post('/googlehome', (req, res) => {
 	debug(req.body);
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
-	
+
 	setCountState(SESSION, null)
 		.then(sessionCount => {
-			
+
 			let not_understood_count = sessionCount;
 
 			getExpectedAnswers(SESSION)
@@ -66,7 +69,7 @@ router.post('/googlehome', (req, res) => {
 							debug(`default ${SESSION}`);
 							let answer;
 
-							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {	
+							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
 								answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 								++not_understood_count;
 								setCountState(SESSION, not_understood_count);
@@ -91,7 +94,7 @@ router.post('/googlehome', (req, res) => {
 				res.json(winnerResponse);
 			} else {
 				const misunderstoodResponse = responses.misunderstood();
-				res.json(misunderstoodResponse);				
+				res.json(misunderstoodResponse);
 			}
 		})
 	;
@@ -114,13 +117,14 @@ function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
-			return games.question(session);
+			return games.question(session)
+			;
 		} else {
 			return games.new(session)
-				.then(gameUUID => {
-					return gameUUID;
-				})
-				.then(gameUUID => games.question(gameUUID))
+			.then(gameUUID => {
+				return gameUUID;
+			})
+			.then(gameUUID => games.question(gameUUID))
 			;
 		}
 	})
@@ -143,7 +147,7 @@ function getQuestion(session, callback) {
 					printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
 				};
 			});
-	
+
 			callback(responses.askQuestion(preparedData));
 		}
 	});

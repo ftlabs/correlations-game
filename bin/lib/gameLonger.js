@@ -2,12 +2,9 @@ const debug = require('debug')('bin:lib:gameLonger');
 const uuid = require('uuid').v4;
 
 // const database = require('./database');
-const database = (process.env.DATABASE == 'PRETEND')? require('./database_pretend') : require('./database');
+const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
-
-const runningGames = {};
-const highScores = [];
 
 const databaseTable = process.env.GAME_TABLE;
 
@@ -27,30 +24,63 @@ blacklist - each seed person is added to this list so they cannot be the seed pe
 remainingCandidatesWithConnections - a whitelist of people who could be chosen as seeds
 intervalDays - how many days of articles are covered by the current correlations_service
 history - record the sequence of questionData items for a summary at the end of a game
+achievedHighestScore, achievedHighestScoreFirst - set when finishing a question, based on current best score
 */
 
 const GAMES_STATS = {
 	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
+	maxScore    : 0,
 }
+
+const GAME_VARIANT = {
+	any_seed                : 'any_seed',
+	any_seed_kill_answer    : 'any_seed_kill_answer',
+	seed_from_answer        : 'seed_from_answer',
+	seed_from_answer_or_any : 'seed_from_answer_or_any',
+	default                 : 'any_seed_kill_answer',
+}
+
+if(process.env.GAME_VARIANT !== undefined){
+	if (GAME_VARIANT.hasOwnProperty(process.env.GAME_VARIANT)) {
+		GAME_VARIANT.default = GAME_VARIANT[process.env.GAME_VARIANT];
+	} else {
+		debug(`WARNING: unrecognised value of process.env.GAME_VARIANT, {process.env.GAME_VARIANT}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`);
+	}
+}
+
+const MAX_CANDIDATES = parseInt( (process.env.MAX_CANDIDATES === undefined)? -1 : process.env.MAX_CANDIDATES );
 
 class Game{
 	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
 		this.player   = userUUID;
-		this.state    = 'new';
-		this.distance = 0;
+
+		// context of current game
+		this.state     = 'new';
+		this.distance  = 0;
+		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
+		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
+		this.remainingCandidatesByName = {}; // to be populated in createANewGame
+		this.history   = [];
+		this.variant   = GAME_VARIANT.default;
+		this.max_candidates = MAX_CANDIDATES;
+		this.firstFewMax = parseInt( (process.env.FIRST_FEW_MAX === undefined)? 5 : process.env.FIRST_FEW_MAX );
+
+		// details+context of the current question
 		this.seedPerson          = undefined;
 		this.nextAnswer          = undefined;
 		this.answersReturned     = undefined;
 		this.linkingArticles     = undefined;
-		this.blacklist           = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
-		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.intervalDays        = undefined;
-		this.history             = [];
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
+		this.isQuestionSet       = false;
 
+		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 
+    // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
 		if( config === undefined ) {
 			GAMES_STATS.counts.created += 1;
 		} else {
@@ -59,10 +89,22 @@ class Game{
 				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
 			}
 			[
-				'uuid', 'player', 'state', 'distance', 'seedPerson', 'nextAnswer',
-				'answersReturned', 'linkingArticles', 'blacklist', 'remainingCandidatesWithConnections',
-				'intervalDays', 'history'
+				'uuid', 'player', 'state', 'distance', 'blacklist',
+				'remainingCandidatesWithConnections', 'remainingCandidatesByName',
+				'history', 'isQuestionSet',
+				'variant', 'max_candidates', 'firstFewMax'
 			].forEach( field => {
+				if (!config.hasOwnProperty(field)) {
+					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+				}
+				this[field] = config[field];
+			});
+			[
+				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
+			].forEach( field => {
+				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
+					throw `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
+				}
 				this[field] = config[field];
 			});
 		}
@@ -70,23 +112,30 @@ class Game{
 
 	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
 	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
-	filterBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
+	filterOutBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
+	isCandidate(name) { return this.remainingCandidatesByName.hasOwnProperty( name ); };
+	filterCandidates(names) { return names.filter( name => {return this.isCandidate(name);}) };
 
 	addCandidates( candidates ) {
 		let count = 0;
 		candidates.forEach( cand => {
-			if (! this.isBlacklisted(cand[0])) {
+			if (this.max_candidates >= 0 && this.max_candidates === count) {
+				return;
+			}
+			const candName = cand[0];
+			if (! this.isBlacklisted(candName)) {
 				this.remainingCandidatesWithConnections.push(cand);
+				this.remainingCandidatesByName[candName] = cand;
 				count = count + 1;
 			}
 		});
-		debug(`Game.addCandidates: added ${count}`);
+		debug(`Game.addCandidates: added ${count}, all candidates=${Object.keys(this.remainingCandidatesByName)}`);
 	}
 
 	blacklistCandidate(name){
 		let candIndex = -1; // locate candidate in list
 		this.remainingCandidatesWithConnections.some( (cand, i) => {
-			if (cand[0] == name) {
+			if (cand[0] === name) {
 				candIndex = i;
 				return true;
 			} else {
@@ -96,15 +145,16 @@ class Game{
 
 		if (candIndex >= 0) {
 			this.remainingCandidatesWithConnections.splice(candIndex, 1)
+			delete this.remainingCandidatesByName[name];
 		}
 
 		this.addToBlacklist( name );
 		debug(`Game.blacklistCandidate: name=${name}`);
 	}
 
-	pickFromFirstFew(items, max=5){
-		if (items.length == 0) {
-			debug(`Game.pickFromFirstFew: items.length == 0`);
+	pickFromFirstFew(items, max=this.firstFewMax){
+		if (items.length === 0) {
+			debug(`Game.pickFromFirstFew: items.length === 0`);
 			return undefined;
 		}
 		const range = Math.min(max, items.length);
@@ -120,7 +170,7 @@ class Game{
 		}
 		const candidate = this.pickFromFirstFew( this.remainingCandidatesWithConnections );
 		debug(`Game.pickNameFromTopFewCandidates: candidate=${candidate}`);
-		return (candidate==undefined)? undefined : candidate[0];
+		return (candidate === undefined)? undefined : candidate[0];
 	}
 
 	clearQuestion(){
@@ -128,6 +178,9 @@ class Game{
 		this.answersReturned = undefined;
 		this.nextAnswer      = undefined;
 		this.linkingArticles = undefined;
+		this.achievedHighestScore      = undefined;
+		this.achievedHighestScoreFirst = undefined;
+		this.isQuestionSet   = false;
 	}
 
 	shuffle(arr) {
@@ -167,31 +220,61 @@ class Game{
 			linkingArticles: undefined,
 		};
 
-		return Promise.resolve( this.pickNameFromTopFewCandidates() )
+		let seedPerson = undefined;
+		if(
+				 this.variant === GAME_VARIANT.any_seed
+			|| this.variant === GAME_VARIANT.any_seed_kill_answer
+		){
+				seedPerson = this.pickNameFromTopFewCandidates();
+		} else if(
+				 this.variant === GAME_VARIANT.seed_from_answer
+			|| this.variant === GAME_VARIANT.seed_from_answer_or_any
+		) {
+			if (this.history.length > 0) {
+				seedPerson = this.history[this.history.length-1].nextAnswer;
+				if (this.isBlacklisted(seedPerson)) {
+					if (this.variant === GAME_VARIANT.seed_from_answer_or_any) {
+						seedPerson = this.pickNameFromTopFewCandidates();
+					} else {
+						seedPerson = undefined;
+					}
+				}
+			} else {
+				seedPerson = this.pickNameFromTopFewCandidates();
+			}
+		} else {
+				throw `ERROR: invalid GAME_VARIANT: this.variant=${this.variant}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`;
+		}
+
+		return Promise.resolve( seedPerson )
 		.then( name => {
-			if (name == undefined) { return undefined; }
+			if (name === undefined) { return undefined; }
 			question.seedPerson = name;
 
 			return correlations_service.calcChainLengthsFrom(name)
 			.then(chainLengths => {
 				if (chainLengths.length < 4) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: chainLengths.length(${chainLengths.length}) < 4`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
-				const nextAnswers = this.filterBlacklisted( chainLengths[1].entities );
-				if (nextAnswers.length == 0) {
+				const nextAnswers = this.filterCandidates( chainLengths[1].entities );
+				if (nextAnswers.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: nextAnswers.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
-				const wrongAnswers1 = this.filterBlacklisted( chainLengths[2].entities );
-				if (wrongAnswers1.length == 0) {
+				const wrongAnswers1 = this.filterCandidates( chainLengths[2].entities );
+				if (wrongAnswers1.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers1.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
-				const wrongAnswers2 = this.filterBlacklisted( chainLengths[3].entities );
-				if (wrongAnswers2.length == 0) {
+				const wrongAnswers2 = this.filterCandidates( chainLengths[3].entities );
+				if (wrongAnswers2.length === 0) {
+					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers2.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
@@ -225,7 +308,13 @@ class Game{
 		this.linkingArticles = qd.linkingArticles;
 
 		this.blacklistCandidate(this.seedPerson);
-		this.blacklistCandidate(this.nextAnswer);
+
+		if (this.variant === GAME_VARIANT.any_seed_kill_answer) {
+			this.blacklistCandidate(this.nextAnswer);
+		}
+
+		this.isQuestionSet   = true;
+
 		debug(`Game.acceptQuestionData: seedPerson=${qd.seedPerson}, num remainingCandidatesWithConnections=${this.remainingCandidatesWithConnections.length}`);
 	}
 
@@ -238,13 +327,17 @@ class Game{
 			GAMES_STATS.scoreCounts[score] = 0;
 		}
 		GAMES_STATS.scoreCounts[score] += 1;
+		GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+
+		this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
+		this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
 	}
 
 	static readFromDB( uuid ){
 		const config = { uuid : uuid };
 		return database.read(config, process.env.GAME_TABLE)
 		.then( data => {
-			if (data === undefined) {
+			if (data.Item === undefined) {
 				return undefined;
 			} else {
 				return new Game(data.Item.uuid, data.Item);
@@ -259,7 +352,9 @@ class Game{
 			if (! objType === 'Game') {
 				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
 			} else {
-				resolve( database.write(game, process.env.GAME_TABLE) );
+				database.write(game, process.env.GAME_TABLE)
+				.then( () => { resolve(); })
+				;
 			}
 		})
 		;
@@ -325,11 +420,12 @@ function getAQuestionToAnswer(gameUUID){
 				return;
 			}
 
-			if(selectedGame.answersReturned !== undefined){
+			if(selectedGame.isQuestionSet){
 				resolve({
 					seed : selectedGame.seedPerson,
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
+					questionNum : selectedGame.distance + 1,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -349,6 +445,8 @@ function getAQuestionToAnswer(gameUUID){
 								limitReached : true,
 								score        : selectedGame.distance,
 								history      : selectedGame.history,
+								achievedHighestScore     : selectedGame.achievedHighestScore,
+								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
 							});
 						})
 						.catch(err => {
@@ -368,6 +466,7 @@ function getAQuestionToAnswer(gameUUID){
 								options      : selectedGame.answersReturned,
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
+								questionNum  : selectedGame.distance + 1,
 							});
 						})
 						.catch(err => {
@@ -432,37 +531,11 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				} else {
 					selectedGame.finish();
 
-					let scorePosition = -1;
-
-					if(highScores.length >= 1){
-
-						for(let x = 0; x < highScores.length; x += 1){
-
-							if(selectedGame.distance > highScores[x].distance){
-								scorePosition = x;
-								break;
-							}
-
-						}
-
-						if(scorePosition !== -1){
-							highScores.splice(scorePosition, 0, selectedGame);
-
-							if(highScores.length > 10){
-								for(let y = highScores.length - 10; y > 0; y -= 1){
-									highScores.pop();
-								}
-							}
-
-						}
-
-					} else {
-						highScores.push(selectedGame);
-					}
-
 					Game.writeToDB(selectedGame)
 						.then(function(){
 							result.correct = false;
+							result.achievedHighestScore      = selectedGame.achievedHighestScore;
+							result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
 							resolve(result);
 						})
 						.catch(err => {
@@ -478,20 +551,6 @@ function answerAQuestion(gameUUID, submittedAnswer){
 		})
 	;
 
-}
-
-function getSanitizedHighScores(){
-	debug(`getSanitizedHighScores: HIGH SCORES ${highScores}`);
-	return highScores.map(score => {
-		return {
-			player : score.player,
-			score  : score.distance
-		};
-	});
-}
-
-function getListOfHighScores(){
-	return Promise.resolve( getSanitizedHighScores() );
 }
 
 function checkIfAGameExistsForAGivenUUID(gameUUID){
@@ -530,7 +589,6 @@ function getGameDetails(gameUUID){
 		throw 'No gameUUID was passed to the function';
 	}
 
-	// return Promise.resolve( Object.assign({}, runningGames[gameUUID]) );
 	return Game.readFromDB(gameUUID)
 		.catch(err => {
 			debug(`getGameDetails: Unable to read entry for game ${gameUUID}`, err);
@@ -540,11 +598,9 @@ function getGameDetails(gameUUID){
 }
 
 function getStats(){
-	const highestScore = Object.keys(GAMES_STATS.scoreCounts).sort((a, b) => b - a)[0];
 	return {
 		correlations_service : correlations_service.stats(),
 		games                : GAMES_STATS,
-		highestScore,
 	}
 }
 
@@ -552,7 +608,6 @@ module.exports = {
 	new        : createANewGame,
 	question   : getAQuestionToAnswer,
 	answer     : answerAQuestion,
-	highScores : getListOfHighScores,
 	check      : checkIfAGameExistsForAGivenUUID,
 	get        : getGameDetails,
 	stats      : getStats,

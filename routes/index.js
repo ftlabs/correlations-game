@@ -2,11 +2,11 @@ const debug = require('debug')('correlations-game:routes:index');
 const express = require('express');
 const router = express.Router();
 
-const games = (process.env.GAME=='LONGER')? require('../bin/lib/gameLonger') : require('../bin/lib/game');
+const games = (process.env.GAME === 'LONGER')? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 
 router.get('/', (req, res) => {
 
-	if (process.env.DATABASE == 'PRETEND') {
+	if (process.env.DATABASE === 'PRETEND') {
 		res.clearCookie('ftlabsCorrelationsGameUUID');
 	}
 
@@ -15,6 +15,44 @@ router.get('/', (req, res) => {
 	});
 
 });
+
+function processResultForDisplay( result ){
+	result.articlesWording = (result.hasOwnProperty('linkingArticles') && result.linkingArticles.length === 1)? 'a recent article' : 'some recent articles';
+	if(result.score === 0) {
+		result.consecutiveWording = 'correct answers';
+	} else if( result.score === 1) {
+		result.consecutiveWording = 'correct answer';
+	} else {
+		result.consecutiveWording = 'consecutive correct answers';
+	}
+	result.displayable = {};
+	[
+		'expected', 'seedPerson', 'submittedAnswer'
+	].forEach( field => {
+		result.displayable[field] = (result[field] === undefined)? '' : result[field].replace('people:', '');
+	} );
+	result.displayable.history = [];
+	if (result.hasOwnProperty('history')) {
+		result.history.forEach( h => {
+			result.displayable.history.push({
+				seedPerson: h.seedPerson.replace('people:', ''),
+				nextAnswer: h.nextAnswer.replace('people:', ''),
+			});
+		});
+	}
+
+	if (result.achievedHighestScore) {
+		if (result.achievedHighestScoreFirst) {
+			result.highestScoreMessage = `Congratulations: you are the first to achieve this high score.`;
+		} else {
+			result.highestScoreMessage = `Congratulations: you have equalled the current highest score.`;
+		}
+	} else {
+		result.highestScoreMessage = '';
+	}
+
+	return result;
+}
 
 router.get('/question', (req, res) => {
 
@@ -35,46 +73,31 @@ router.get('/question', (req, res) => {
 				;
 			}
 		})
-		.then(data => {
+		.then(result => {
 
-			if(data.limitReached === true){
-				const result = {score : data.score};
-				if(result.score == 0) {
-					result.consecutiveWording = 'correct answers';
-				} else if( result.score == 1) {
-					result.consecutiveWording = 'correct answer';
-				} else {
-					result.consecutiveWording = 'consecutive correct answers';
-				}
-
-				result.displayable = {};
-				result.displayable.history = [];
-				data.history.forEach( h => {
-					result.displayable.history.push({
-						seedPerson: h.seedPerson.replace('people:', ''),
-						nextAnswer: h.nextAnswer.replace('people:', ''),
-					});
-				});
-
+			if(result.limitReached === true){
+				processResultForDisplay(result);
 				res.render('winner', result);
 			} else {
 				const preparedData = {};
 
-				preparedData.intervalDays = data.intervalDays;
+				preparedData.intervalDays = result.intervalDays;
 
 				preparedData.seed = {
-					value : data.seed,
-					printValue : data.seed.replace('people:', '')
+					value : result.seed,
+					printValue : result.seed.replace('people:', '')
 				};
 
 				preparedData.options = {};
 
-				Object.keys(data.options).forEach(key => {
+				Object.keys(result.options).forEach(key => {
 					preparedData.options[key] = {
-						value : data.options[key],
-						printValue : data.options[key].replace('people:', '')
+						value : result.options[key],
+						printValue : result.options[key].replace('people:', '')
 					};
 				});
+
+				preparedData.questionNum = result.questionNum;
 
 				debug(preparedData);
 
@@ -103,28 +126,7 @@ router.post('/answer', (req, res) => {
 	} else {
 		games.answer(req.cookies['ftlabsCorrelationsGameUUID'], req.body.answer)
 			.then(result => {
-				result.articlesWording = (result.linkingArticles.length==1)? 'a recent article' : 'some recent articles';
-				if(result.score == 0) {
-					result.consecutiveWording = 'correct answers';
-				} else if( result.score == 1) {
-					result.consecutiveWording = 'correct answer';
-				} else {
-					result.consecutiveWording = 'consecutive correct answers';
-				}
-				result.displayable = {};
-				[
-					'expected', 'seedPerson', 'submittedAnswer'
-				].forEach( field => {
-					result.displayable[field] = result[field].replace('people:', '');
-				} );
-				result.displayable.history = [];
-				result.history.forEach( h => {
-					result.displayable.history.push({
-						seedPerson: h.seedPerson.replace('people:', ''),
-						nextAnswer: h.nextAnswer.replace('people:', ''),
-					});
-				});
-
+				processResultForDisplay( result );
 				if(result.correct === true){
 					res.render('correct', {result});
 				} else {

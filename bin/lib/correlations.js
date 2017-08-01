@@ -4,10 +4,10 @@ const fetch = require('node-fetch');
 const CORRELATION_SERVICE_HOST = process.env.CORRELATION_SERVICE_HOST;
 const CORRELATIONS_SERVICE_TOKEN = process.env.CORRELATIONS_SERVICE_TOKEN;
 
-if (CORRELATION_SERVICE_HOST == undefined) {
+if (CORRELATION_SERVICE_HOST === undefined) {
 	throw 'CORRELATION_SERVICE_HOST undefined';
 }
-if (CORRELATIONS_SERVICE_TOKEN == undefined) {
+if (CORRELATIONS_SERVICE_TOKEN === undefined) {
 	throw 'CORRELATIONS_SERVICE_TOKEN undefined';
 }
 
