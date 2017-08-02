@@ -96,6 +96,17 @@ function getQuestion(session, callback) {
 	});
 }
 
+function getExpectedAnswers(session) {
+	return games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			return games.get(session).then(data => data.answersReturned);
+		} else {
+			return [];
+		}
+	});
+}
+
 function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
