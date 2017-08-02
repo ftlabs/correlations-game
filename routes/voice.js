@@ -37,8 +37,7 @@ router.post('/googlehome', (req, res) => {
 	console.log('INIT::');
 	const app = new ApiAiApp({ req, res });
 	console.log('INIT1::', app);
- //  	app.handleRequest(actionMap);
- 	res.json({'speech': 'test'});
+  	app.handleRequest(actionMap);
 });
 
 // router.post('/googlehome', (req, res) => {
