@@ -1,3 +1,4 @@
+'use strict';
 const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
