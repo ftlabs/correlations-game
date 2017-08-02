@@ -33,8 +33,8 @@ function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
 
-	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article: ${articleHeadline}.`;
-	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer}. They were connected in the FT article, titled: ${articleHeadline}.`;
+	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article: ${articleHeadline}.`;
+	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleHeadline}.`;
 
 	return {
 		displayText : textPhrase,

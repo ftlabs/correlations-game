@@ -1,3 +1,24 @@
-<h2>That was not correct</h2>
-<p>Insert score here...</p>
-<a href="/question">Try again...</a>
+<h2>That was not correct.</h2>
+
+<p>The expected answer was {{result.displayable.expected}}.</p>
+
+<p>{{ result.displayable.seedPerson}} was mentioned with {{result.displayable.expected}} in {{result.articlesWording}}:<p>
+
+<ul>
+{{#each result.linkingArticles}}
+  <li>{{this.title}}</li>
+{{/each}}
+</ul>
+
+<p>You achieved a total of {{result.score}} {{ result.consecutiveWording }}.</p>
+
+<p>{{ result.highestScoreMessage }}</p>
+
+<p><a href="/question">Start again...</a></p>
+
+<p>History</p>
+<ul>
+{{#each result.displayable.history}}
+  <li>{{this.seedPerson}} - {{ this.nextAnswer }}</li>
+{{/each}}
+</ul>

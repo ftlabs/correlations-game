@@ -1,9 +1,10 @@
-<h2> Who was recently mentioned in an article with <u><em>{{seed.printValue}}</em></u>?<!--<em>{{seed.value}}</em>--></h2>
+<h2> Question {{ questionNum }}: In the last {{ intervalDays }} days, <em>{{seed.printValue}}</em> was mentioned in an article with which one of the following people?</h2>
 
 <form method="POST" action="/answer" class="o-forms">
 	{{#each options}}
 		<input type="radio" name="answer" value="{{this.value}}" class="o-forms__radio" id="{{this.printValue}}">
 		<label for="{{this.printValue}}" class="o-forms__label">{{this.printValue}}</label>
+		<br>
 	{{/each}}
 	<br />
 	<input type="submit" value="Submit Answer" class="o-buttons o-buttons--primary" style="margin-top:1.5em;" />

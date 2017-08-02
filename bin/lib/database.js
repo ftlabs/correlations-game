@@ -1,4 +1,4 @@
-const debug = require('debug')('correlations-game:database');
+const debug = require('debug')('bin:lib:database');
 const AWS   = require('aws-sdk');
 AWS.config.update({region: process.env.AWS_REGION || 'us-west-2'});
 
@@ -15,7 +15,7 @@ function describeTable(table){
 			}, (err, result) => {
 				if(err){
 					reject(err);
-				} else {				
+				} else {
 					resolve(result);
 				}
 			});
@@ -30,7 +30,7 @@ function writeToDatabase(item, table){
 		if(table === undefined || table === null){
 			reject(`'table' argument is ${table}`);
 		} else {
-			
+
 			DynamoClient.put({
 				TableName : table,
 				Item : item
@@ -38,7 +38,7 @@ function writeToDatabase(item, table){
 
 				if(err){
 					reject(err);
-				} else {				
+				} else {
 					resolve(result);
 				}
 
@@ -62,7 +62,7 @@ function readFromDatabase(item, table){
 				TableName : table,
 				Key : item
 			}, function(err, data) {
-				
+
 				if (err) {
 					reject(err);
 				} else {
@@ -71,13 +71,13 @@ function readFromDatabase(item, table){
 			});
 
 		}
-	
+
 	});
 
 }
 
 function scanDatabase(query, recursive = true){
-	
+
 	debug('Scanning database', query);
 
 	const results = [];

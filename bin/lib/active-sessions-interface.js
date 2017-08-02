@@ -1,4 +1,4 @@
-const debug = require('debug')('active-sessions-interface');
+const debug = require('debug')('bin:lib:active-sessions-interface');
 
 const database = require('./database');
 
@@ -22,7 +22,7 @@ function checkSessionExistsInDatabase(sessionID){
 }
 
 function getActiveSessionFromDatabase(sessionID){
-	
+
 	return database.read({id : sessionID}, process.env.SESSION_TABLE)
 		.then(data => {
 			debug('Item retrieved from database (get)', data);

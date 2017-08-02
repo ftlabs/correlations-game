@@ -1,2 +1,11 @@
 <h2>That was the correct answer!</h2>
-<a href="/question">Next question...</a>
+<p>{{ result.displayable.seedPerson}} was mentioned with {{result.displayable.submittedAnswer}} in {{result.articlesWording}}:<p>
+
+<ul>
+{{#each result.linkingArticles}}
+  <li>{{this.title}}</li>
+{{/each}}
+</ul>
+
+<p>You have achieved {{ result.score }} {{ result.consecutiveWording }} so far.
+<p><a href="/question">Next question...</a></p>

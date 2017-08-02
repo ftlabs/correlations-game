@@ -2,7 +2,7 @@
 
 ## What is it?
 
-This is an API for playing the FT Labs Correlations game. 
+This is an API for playing the FT Labs Correlations game.
 
 ## How do I play it?
 
@@ -70,3 +70,37 @@ _All example responses assume the request has been successfully completed_
 	"correct" : false
 }
 ```
+
+## For local dev/testing: index routes
+
+The following env params need to be set:
+
+* CORRELATION_SERVICE_HOST=...
+* CORRELATIONS_SERVICE_TOKEN=...
+
+... and if you want to avoid using AWS DynamoDB
+
+* DATABASE=PRETEND
+   * NB: always start a new session after restarting the server, since this DB in in-memory only.
+
+The following env params may be set:
+
+* BARNIER_LIST=people:Michel Barnier,people:Nancy Pelosi
+* DEBUG=correlations-game:\*,bin:lib:\*
+
+... to explore alternative game mechanics
+
+* GAME=LONGER
+* MAX_CANDIDATES=10 # to limit the game size (default is -1, meaning no limit)
+* FIRST_FEW_MAX=5 # which subset of the most-connected candidates to choose from
+* GAME_VARIANT=any_seed # which is the default
+   * Other values are:
+   * any_seed                # pick any candidate, blacklist candidate
+   * any_seed_kill_answer    # pick any candidate, blacklist candidate and answer
+   * seed_from_answer        # pick initial any candidate then only from answer, blacklist candidate
+   * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
+
+### routes
+
+* GET ```/``` - start a new session
+* GET ```/stats``` - view the games stats, system response times, etc

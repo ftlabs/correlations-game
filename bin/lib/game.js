@@ -1,14 +1,15 @@
 const debug = require('debug')('bin:lib:game');
 const uuid = require('uuid').v4;
 
-const database = require('./database');
+// const database = require('./database');
+const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
 
 const runningGames = {};
 const highScores = [];
 
-/* 
+/*
 Game class
 UUID = uuid for this game
 player = userUUID
@@ -137,20 +138,20 @@ function getAQuestionToAnswer(gameUUID){
 
 							debug('First instance of nextAnswer', selectedGame.nextAnswer);
 							debug('The possible alternatives are', possibleAlternatives);
-							
+
 							while(possibleAlternatives.length >= 0 && selectedGame.blacklist.indexOf(selectedGame.nextAnswer.toLowerCase()) > -1){
 								debug(`Current nextAnswer (${selectedGame.nextAnswer}) is in blacklist`)
 								selectedGame.nextAnswer = possibleAlternatives.pop();
 								debug(`Setting ${selectedGame.nextAnswer} as nextAnswer`);
-								
+
 								if(selectedGame.nextAnswer === undefined){
-									break;	
+									break;
 								}
 
 							}
 
 							if(selectedGame.nextAnswer === undefined){
-								
+
 								// The game is out of organic connections
 								debug(`Game ${selectedGame.uuid} has been won`);
 								debug(selectedGame.uuid, selectedGame);
@@ -162,7 +163,7 @@ function getAQuestionToAnswer(gameUUID){
 										resolve({
 											limitReached : true,
 											score : selectedGame.distance
-										});	
+										});
 									})
 									.catch(err => {
 										debug(`Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
@@ -176,11 +177,11 @@ function getAQuestionToAnswer(gameUUID){
 
 								debug(`BLACKLIST + ANSWER ${selectedGame.blacklist} ${selectedGame.nextAnswer.toLowerCase()}`);
 
-								// Get the answer from the island 1 distance away, 
+								// Get the answer from the island 1 distance away,
 								// then get a wrong answer from the island 2 distance,
 								// and then do the same 3 distance away.
 								// Then randomise the order they're sent in.
-								const possibleAnswers = [ 
+								const possibleAnswers = [
 									selectedGame.nextAnswer,
 									data[2].entities[Math.random() * data[2].entities.length | 0],
 									data[3].entities[Math.random() * data[3].entities.length | 0]
@@ -245,7 +246,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 	} else if(submittedAnswer === undefined){
 		return Promise.reject(`An answer was not passed to the function`);
 	}
-	
+
 	return database.read({ uuid : gameUUID }, process.env.GAME_TABLE)
 		.then(data => {
 			if(data.Item === undefined){
@@ -257,7 +258,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				const selectedGame = data.Item;
 
 				if(submittedAnswer.replace('.', '').replace('-', ' ').toLowerCase() === selectedGame.nextAnswer.replace('.', '').replace('-', ' ').toLowerCase()){
-					
+
 					selectedGame.distance += 1;
 					selectedGame.seedPerson = selectedGame.nextAnswer;
 					selectedGame.answersReturned = undefined;
@@ -317,11 +318,11 @@ function answerAQuestion(gameUUID, submittedAnswer){
 							});
 						})
 						.catch(err => {
-							debug(`Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);							
+							debug(`Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
 							throw err;
 						})
 					;
-				
+
 				}
 
 			} );
