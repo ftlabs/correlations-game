@@ -80,6 +80,8 @@ class Game{
 		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 
+		const missing_fields = [];
+
     // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
 		if( config === undefined ) {
 			GAMES_STATS.counts.created += 1;
@@ -95,7 +97,8 @@ class Game{
 				'variant', 'max_candidates', 'firstFewMax'
 			].forEach( field => {
 				if (!config.hasOwnProperty(field)) {
-					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+					debug `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+					missing_fields.push(field);
 				}
 				this[field] = config[field];
 			});
@@ -103,10 +106,16 @@ class Game{
 				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
 			].forEach( field => {
 				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
-					throw `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
+					debug `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
+					missing_fields.psuh(field);
 				}
 				this[field] = config[field];
 			});
+
+			if (missing_fields.length > 0) {
+				this.missing_fields = missing_fields; // setting this field signifies that the config source is out of date (from a prev version of code) and has created a corrupt game instance
+				debug(`WARNING: Game.constructor: this.missing_fields = ${JSON.stringify(missing_fields)}`);
+			}
 		}
 	}
 
@@ -336,13 +345,20 @@ class Game{
 	static readFromDB( uuid ){
 		const config = { uuid : uuid };
 		return database.read(config, process.env.GAME_TABLE)
-			.then( data => {
-				if (data.Item === undefined) {
+		.then( data => {
+			if (data.Item === undefined) {
+				return undefined;
+			} else {
+				let game = new Game(data.Item.uuid, data.Item);
+				if (game.hasOwnProperty('missing_fields')) {
+					debug(`WARNING: readFromDB: missing_fields ==> corrupt data.Item retrieved from db, so returning undefined to trigger starting a new game`);
 					return undefined;
 				} else {
-					return new Game(data.Item.uuid, data.Item);
+					return game;
 				}
-			})
+				return (game.hasOwnProperty('missing_fields')) ? undefined : game ;
+			}
+		})
 		;
 	}
 
