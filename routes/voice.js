@@ -18,27 +18,16 @@ const Actions = {
 
 const returnQuestion = app => {
 	console.log('Getting question', app);
-	getQuestion(app.body_.sessionId, obj => {
-		app.ask(obj);
-	});
-}
+	// getQuestion(app.body_.sessionId, obj => {
+	// 	app.ask(obj);
+	// });
+	app.ask('<speak> Is that you I see?</speak>', 'fallback');
+};
 
 const matchAnswer = app => {
 	app.ask('<speak>Test</speak>');
-}
+};
 
-const actionMap = new Map();
-// actionMap.set(Actions.INIT, functionNameHere);
-actionMap.set(Actions.QUESTION, returnQuestion);
-actionMap.set(Actions.ANSWER, matchAnswer);
-
-router.post('/googlehome', (req, res) => {
-
-	console.log('INIT::');
-	const app = new ApiAiApp({ req, res });
-	console.log('INIT1::', app);
-  	app.handleRequest(actionMap);
-});
 
 // router.post('/googlehome', (req, res) => {
 // 	let USER_INPUT = req.body.result.resolvedQuery;
@@ -218,5 +207,19 @@ function setCountState(sessionID, count) {
 		})
 	;
 }
+
+
+const actionMap = new Map();
+// actionMap.set(Actions.INIT, functionNameHere);
+actionMap.set(Actions.QUESTION, returnQuestion);
+actionMap.set(Actions.ANSWER, matchAnswer);
+
+router.post('/googlehome', (req, res) => {
+
+	console.log('INIT::');
+	const app = new ApiAiApp({ req, res });
+	console.log('INIT1::', app);
+  	app.handleRequest(actionMap);
+});
 
 module.exports = router;
