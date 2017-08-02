@@ -36,8 +36,8 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 router.post('/googlehome', (req, res) => {
 
 	debug('INIT::');
-	const app = new ApiAiApp({ req, res });
-	debug('INIT1::', app);
+	// const app = new ApiAiApp({ req, res });
+	// debug('INIT1::', app);
  //  	app.handleRequest(actionMap);
  	res.json({'speech': 'test'});
 });
