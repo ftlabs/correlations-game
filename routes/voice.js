@@ -29,6 +29,8 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 
+	console.log('MATCH:::', USER_INPUT, SESSION);
+
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
