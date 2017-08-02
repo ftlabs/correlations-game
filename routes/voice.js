@@ -10,7 +10,6 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 
 const not_understood_limit = 3;
 
-
 const Actions = {
   INIT: 		'correlations.welcome',
   QUESTION: 	'correlations.question',
@@ -18,7 +17,7 @@ const Actions = {
 };
 
 const returnQuestion = app => {
-	debug('Getting question', app);
+	console.log('Getting question', app);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj);
 	});
@@ -35,9 +34,9 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (req, res) => {
 
-	debug('INIT::');
-	// const app = new ApiAiApp({ req, res });
-	// debug('INIT1::', app);
+	console.log('INIT::');
+	const app = new ApiAiApp({ req, res });
+	console.log('INIT1::', app);
  //  	app.handleRequest(actionMap);
  	res.json({'speech': 'test'});
 });
