@@ -26,7 +26,35 @@ const returnQuestion = app => {
 };
 
 const matchAnswer = app => {
-	app.ask('<speak>Test</speak>', ['fallback']);
+	let USER_INPUT = app.body_.result.resolvedQuery;
+	const SESSION = app.body_.sessionId;
+
+	getExpectedAnswers(SESSION)
+	.then(answers => {
+		const expectedAnswers = Object.keys(answers).map(key => {
+			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+		});
+
+		if (USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+			USER_INPUT = expectedAnswers[0];
+		} else if (USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+			USER_INPUT = expectedAnswers[1];
+		} else if (USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+			USER_INPUT = expectedAnswers[2];
+		}
+
+		if (
+			USER_INPUT === expectedAnswers[0] ||
+			USER_INPUT === expectedAnswers[1] ||
+			USER_INPUT === expectedAnswers[2]
+		) {
+			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+				app.ask(obj.ssml, ['fallback']);
+			});
+		}
+	});
+
+	
 };
 
 function getQuestion(session, callback) {
@@ -68,6 +96,19 @@ function getQuestion(session, callback) {
 	});
 }
 
+function checkAnswer(session, answer, callback) {
+	games.answer(session, answer)
+		.then(result => {
+			if(result.correct === true){
+				getQuestion(session, obj => {
+					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
+				});
+			} else {
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
+			}
+		})
+	;
+}
 
 const actionMap = new Map();
 // actionMap.set(Actions.INIT, testFunction);
