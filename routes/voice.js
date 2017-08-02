@@ -264,7 +264,7 @@ if (!Object.values) {
 const testFunction = app => {
   console.log(app.data);
   const responseText = '<speak>This is all you\'re getting</speak>';
-  app.ask(responseText, 'fallback');
+  app.ask(responseText, ['fallback']);
 }
 
 /** @type {Map<string, function(ApiAiApp): void>} */
