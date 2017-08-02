@@ -17,6 +17,16 @@ const Actions = {
   ANSWER:   	'correlations.answer'
 };
 
+const returnQuestion = app => {
+	getQuestion(app.body_.sessionId, obj => {
+		app.ask(obj);
+	});
+}
+
+const matchAnswer = app => {
+	app.ask('<speak>Test</speak>');
+}
+
 const actionMap = new Map();
 // actionMap.set(Actions.INIT, functionNameHere);
 actionMap.set(Actions.QUESTION, returnQuestion);
@@ -27,16 +37,6 @@ router.post('/googlehome', (req, res) => {
   	app.handleRequest(actionMap);
 });
 
-
-const returnQuestion = app => {
-	getQuestion(app.body_.sessionId, obj => {
-		app.ask(obj);
-	});
-}
-
-const matchAnswer = app => {
-	app.ask('<speak>Test</speak>');
-}
 // router.post('/googlehome', (req, res) => {
 // 	let USER_INPUT = req.body.result.resolvedQuery;
 // 	const SESSION = req.body.sessionId;
