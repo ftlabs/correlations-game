@@ -25,7 +25,7 @@ const returnQuestion = app => {
 };
 
 const matchAnswer = app => {
-	console.log('>>>>>>>>>>>>>>MATCH0', app);
+	console.log('>>>>>>>>>>>>>>MATCH0', app.body_);
 	// let USER_INPUT = app.body_.result.resolvedQuery;
 	// const SESSION = app.body_.sessionId;
 
