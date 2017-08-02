@@ -26,7 +26,7 @@ const welcome = app => {
 	app.ask('<speak>Welcome</speak>', 'fallback');
 }
 
-const returnQuestion = app => {
+const pickQuestion = app => {
 	console.log('Getting question', app);
 	// getQuestion(app.body_.sessionId, obj => {
 	// 	app.ask(obj);
@@ -40,17 +40,16 @@ const matchAnswer = app => {
 
 const actionMap = new Map();
 actionMap.set(Actions.INIT, welcome);
-actionMap.set(Actions.QUESTION, returnQuestion);
+actionMap.set(Actions.QUESTION, pickQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 
-router.post('/googlehome', (req, res) => {
+router.post('/googlehome', (request, ressponse) => {
 
 	console.log('INIT::', req);
-
-	res.json('<speak>Testy</speak>');
+	const app = new ApiAiApp({ request, response });
 	// const app = new ApiAiApp({ req, res });
-	// console.log('INIT1::', app);
- //  	app.handleRequest(actionMap);
+	console.log('INIT1::', app);
+  	app.handleRequest(actionMap);
 });
 
 module.exports = router;
