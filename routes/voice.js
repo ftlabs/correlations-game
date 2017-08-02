@@ -22,11 +22,11 @@ const returnQuestion = app => {
 	// getQuestion(app.body_.sessionId, obj => {
 	// 	app.ask(obj);
 	// });
-	app.ask('<speak> Is that you I see?</speak>', 'fallback');
+	app.ask('<speak> Is that you I see?</speak>', ['fallback']);
 };
 
 const matchAnswer = app => {
-	app.ask('<speak>Test</speak>');
+	app.ask('<speak>Test</speak>', ['fallback']);
 };
 
 const actionMap = new Map();
