@@ -31,30 +31,30 @@ const matchAnswer = app => {
 
 	console.log('MATCH:::', USER_INPUT, SESSION);
 
-	// getExpectedAnswers(SESSION)
-	// .then(answers => {
-	// 	const expectedAnswers = Object.keys(answers).map(key => {
-	// 		return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
-	// 	});
+	getExpectedAnswers(SESSION)
+	.then(answers => {
+		const expectedAnswers = Object.keys(answers).map(key => {
+			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+		});
 
-	// 	if (USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
-	// 		USER_INPUT = expectedAnswers[0];
-	// 	} else if (USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
-	// 		USER_INPUT = expectedAnswers[1];
-	// 	} else if (USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
-	// 		USER_INPUT = expectedAnswers[2];
-	// 	}
+		if (USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+			USER_INPUT = expectedAnswers[0];
+		} else if (USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+			USER_INPUT = expectedAnswers[1];
+		} else if (USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+			USER_INPUT = expectedAnswers[2];
+		}
 
-	// 	if (
-	// 		USER_INPUT === expectedAnswers[0] ||
-	// 		USER_INPUT === expectedAnswers[1] ||
-	// 		USER_INPUT === expectedAnswers[2]
-	// 	) {
-	// 		checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
-	// 			app.ask(obj.ssml, ['fallback']);
-	// 		});
-	// 	}
-	// });
+		if (
+			USER_INPUT === expectedAnswers[0] ||
+			USER_INPUT === expectedAnswers[1] ||
+			USER_INPUT === expectedAnswers[2]
+		) {
+			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+				app.ask(obj.ssml, ['fallback']);
+			});
+		}
+	});
 
 	app.ask('<speak>Ill come back to you</speak>', ['fallback']);	
 };
