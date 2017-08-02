@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { ApiAiApp } = require('actions-on-google');
 
+process.env.DEBUG = 'actions-on-google:*';
 
 const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 const responses = require('../responses/content');
@@ -15,6 +16,14 @@ const Actions = {
   QUESTION: 	'correlations.question',
   ANSWER:   	'correlations.answer'
 };
+
+if (!Object.values) {
+  Object.values = o => Object.keys(o).map(k => o[k]);
+}
+
+const welcome = app => {
+	app.ask('<speak>Welcome</speak>', 'fallback');
+}
 
 const returnQuestion = app => {
 	console.log('Getting question', app);
@@ -210,7 +219,7 @@ function setCountState(sessionID, count) {
 
 
 const actionMap = new Map();
-// actionMap.set(Actions.INIT, functionNameHere);
+actionMap.set(Actions.INIT, welcome);
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 
