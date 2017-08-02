@@ -45,10 +45,12 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (req, res) => {
 
-	console.log('INIT::');
-	const app = new ApiAiApp({ req, res });
-	console.log('INIT1::', app);
-  	app.handleRequest(actionMap);
+	console.log('INIT::', req);
+
+	res.json('<speak>Testy</speak>');
+	// const app = new ApiAiApp({ req, res });
+	// console.log('INIT1::', app);
+ //  	app.handleRequest(actionMap);
 });
 
 module.exports = router;
