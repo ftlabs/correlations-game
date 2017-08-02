@@ -282,7 +282,7 @@ actionMap.set(Actions.ANSWER, testFunction);
  * @param {Response} response An Express like Response object to send back data
  */
 
-router.post('/', (request, response) => {
+router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
   // console.log(`Request headers: ${JSON.stringify(request.headers)}`);
   // console.log(`Request body: ${JSON.stringify(request.body)}`);
