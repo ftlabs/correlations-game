@@ -35,6 +35,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (req, res) => {
 	const app = new ApiAiApp({ req, res });
+	debug('INIT::', app);
   	app.handleRequest(actionMap);
 });
 
