@@ -18,6 +18,7 @@ const Actions = {
 };
 
 const returnQuestion = app => {
+	debug('Getting question', app);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj);
 	});
