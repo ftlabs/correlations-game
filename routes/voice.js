@@ -33,6 +33,7 @@ const matchAnswer = app => {
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
+		console.log('DEBUG::', answers);
 		const expectedAnswers = Object.keys(answers).map(key => {
 			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 		});
@@ -56,7 +57,7 @@ const matchAnswer = app => {
 		}
 	});
 
-	app.ask('<speak>Ill come back to you</speak>', ['fallback']);	
+	// app.ask('<speak>Ill come back to you</speak>', ['fallback']);	
 };
 
 function getQuestion(session, callback) {
