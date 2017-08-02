@@ -25,11 +25,11 @@ const returnQuestion = app => {
 };
 
 const matchAnswer = app => {
-	console.log('>>>>>>>>>>>>>>MATCH0');
-	let USER_INPUT = app.body_.result.resolvedQuery;
-	const SESSION = app.body_.sessionId;
+	console.log('>>>>>>>>>>>>>>MATCH0', app);
+	// let USER_INPUT = app.body_.result.resolvedQuery;
+	// const SESSION = app.body_.sessionId;
 
-	console.log('MATCH:::', USER_INPUT, SESSION);
+	// console.log('MATCH:::', USER_INPUT, SESSION);
 
 	// getExpectedAnswers(SESSION)
 	// .then(answers => {
