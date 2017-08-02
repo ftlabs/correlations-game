@@ -19,7 +19,6 @@ if (!Object.values) {
 }
 
 const returnQuestion = app => {
-	console.log('Getting question', app);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj.ssml, ['fallback']);
 	});
