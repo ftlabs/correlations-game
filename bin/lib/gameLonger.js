@@ -97,7 +97,7 @@ class Game{
 				'variant', 'max_candidates', 'firstFewMax'
 			].forEach( field => {
 				if (!config.hasOwnProperty(field)) {
-					debug `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+					debug(`Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`);
 					missing_fields.push(field);
 				}
 				this[field] = config[field];
@@ -106,8 +106,8 @@ class Game{
 				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
 			].forEach( field => {
 				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
-					debug `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
-					missing_fields.psuh(field);
+					debug(`Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`);
+					missing_fields.push(field);
 				}
 				this[field] = config[field];
 			});
