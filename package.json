@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "actions-on-google": "^1.2.0",
     "aws-sdk": "^2.88.0",
     "bluebird": "^3.5.0",
     "body-parser": "~1.17.1",

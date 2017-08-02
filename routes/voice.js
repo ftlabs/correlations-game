@@ -1,6 +1,7 @@
 const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
+const { ApiAiApp } = require('actions-on-google');
 
 
 const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
@@ -10,91 +11,117 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 const not_understood_limit = 3;
 
 
+const Actions = {
+  INIT: 		'correlations.welcome',
+  QUESTION: 	'correlations.question',
+  ANSWER:   	'correlations.answer'
+};
+
+const actionMap = new Map();
+// actionMap.set(Actions.INIT, functionNameHere);
+actionMap.set(Actions.QUESTION, returnQuestion);
+actionMap.set(Actions.ANSWER, matchAnswer);
+
 router.post('/googlehome', (req, res) => {
-	let USER_INPUT = req.body.result.resolvedQuery;
-	const SESSION = req.body.sessionId;
-
-	setCountState(SESSION, null)
-		.then(sessionCount => {
-
-			let not_understood_count = sessionCount;
-
-			getExpectedAnswers(SESSION)
-				.then(answers => {
-					const expectedAnswers = Object.keys(answers).map(key => {
-						return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
-					});
-
-					if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
-						USER_INPUT = expectedAnswers[0];
-					} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
-						USER_INPUT = expectedAnswers[1];
-					} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
-						USER_INPUT = expectedAnswers[2];
-					}
-
-					switch(USER_INPUT.toLowerCase()) {
-						case 'start':
-						case 'repeat':
-							debug(`start || repeat ${SESSION}`);
-							setCountState(SESSION, 0);
-							getQuestion(SESSION, obj => {
-								res.json(obj);
-							});
-						break;
-
-						case 'help':
-							debug(`help ${SESSION}`);
-							setCountState(SESSION, 0);
-							answer = "Add instructions here";
-							//?TODO: handle in a different intent?
-						break;
-
-						case expectedAnswers[0]:
-						case expectedAnswers[1]:
-						case expectedAnswers[2]:
-							debug(`expectedAnswers ${SESSION}`);
-							setCountState(SESSION, 0);
-							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
-								debug(obj);
-								res.json(obj);
-							});
-
-						break;
-
-						default:
-
-							debug(`default ${SESSION}`);
-							let answer;
-
-							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
-								answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
-								++not_understood_count;
-								setCountState(SESSION, not_understood_count);
-							} else {
-								answer = responses.misunderstood(false);
-							}
-
-							res.json(answer);
-
-							debug(answer);
-					}
-				})
-			;
-		})
-		.catch(err => {
-			debug('Unknown error', err);
-			if(err === "GAMEOVER"){
-				const winnerResponse = responses.win();
-				debug(winnerResponse);
-				res.json(winnerResponse);
-			} else {
-				const misunderstoodResponse = responses.misunderstood();
-				res.json(misunderstoodResponse);
-			}
-		})
-	;
+	const app = new ApiAiApp({ request, response });
+  	app.handleRequest(actionMap);
 });
+
+
+const returnQuestion = app => {
+	getQuestion(app.body_.sessionId, obj => {
+		app.ask(obj);
+	});
+}
+
+const matchAnswer = app => {
+	app.ask('<speak>Test</speak>');
+}
+// router.post('/googlehome', (req, res) => {
+// 	let USER_INPUT = req.body.result.resolvedQuery;
+// 	const SESSION = req.body.sessionId;
+
+// 	setCountState(SESSION, null)
+// 		.then(sessionCount => {
+
+// 			let not_understood_count = sessionCount;
+
+// 			getExpectedAnswers(SESSION)
+// 				.then(answers => {
+// 					const expectedAnswers = Object.keys(answers).map(key => {
+// 						return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+// 					});
+
+// 					if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+// 						USER_INPUT = expectedAnswers[0];
+// 					} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+// 						USER_INPUT = expectedAnswers[1];
+// 					} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+// 						USER_INPUT = expectedAnswers[2];
+// 					}
+
+// 					switch(USER_INPUT.toLowerCase()) {
+// 						case 'start':
+// 						case 'repeat':
+// 							debug(`start || repeat ${SESSION}`);
+// 							setCountState(SESSION, 0);
+// 							getQuestion(SESSION, obj => {
+// 								res.json(obj);
+// 							});
+// 						break;
+
+// 						case 'help':
+// 							debug(`help ${SESSION}`);
+// 							setCountState(SESSION, 0);
+// 							answer = "Add instructions here";
+// 							//?TODO: handle in a different intent?
+// 						break;
+
+// 						case expectedAnswers[0]:
+// 						case expectedAnswers[1]:
+// 						case expectedAnswers[2]:
+// 							debug(`expectedAnswers ${SESSION}`);
+// 							setCountState(SESSION, 0);
+// 							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+// 								debug(obj);
+// 								res.json(obj);
+// 							});
+
+// 						break;
+
+// 						default:
+
+// 							debug(`default ${SESSION}`);
+// 							let answer;
+
+// 							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
+// 								answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+// 								++not_understood_count;
+// 								setCountState(SESSION, not_understood_count);
+// 							} else {
+// 								answer = responses.misunderstood(false);
+// 							}
+
+// 							res.json(answer);
+
+// 							debug(answer);
+// 					}
+// 				})
+// 			;
+// 		})
+// 		.catch(err => {
+// 			debug('Unknown error', err);
+// 			if(err === "GAMEOVER"){
+// 				const winnerResponse = responses.win();
+// 				debug(winnerResponse);
+// 				res.json(winnerResponse);
+// 			} else {
+// 				const misunderstoodResponse = responses.misunderstood();
+// 				res.json(misunderstoodResponse);
+// 			}
+// 		})
+// 	;
+// });
 
 function getExpectedAnswers(session) {
 	return games.check(session)
