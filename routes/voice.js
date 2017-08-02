@@ -9,10 +9,8 @@ const activeSessions = require('../bin/lib/active-sessions-interface');
 
 const not_understood_limit = 3;
 
-console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', (process.env.GAME === 'LONGER') ? 'gameLonger' : 'game');
 
 router.post('/googlehome', (req, res) => {
-	debug(req.body);
 	let USER_INPUT = req.body.result.resolvedQuery;
 	const SESSION = req.body.sessionId;
 
@@ -80,9 +78,7 @@ router.post('/googlehome', (req, res) => {
 							res.json(answer);
 
 							debug(answer);
-
 					}
-
 				})
 			;
 		})
@@ -98,8 +94,6 @@ router.post('/googlehome', (req, res) => {
 			}
 		})
 	;
-
-
 });
 
 function getExpectedAnswers(session) {
@@ -117,8 +111,7 @@ function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
-			return games.question(session)
-			;
+			return games.question(session);
 		} else {
 			return games.new(session)
 			.then(gameUUID => {
@@ -158,7 +151,6 @@ function checkAnswer(session, answer, callback) {
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					debug('Check answer:', obj);
 					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
 				});
 			} else {
@@ -195,7 +187,6 @@ function setCountState(sessionID, count) {
 			debug(err);
 		})
 	;
-
 }
 
 module.exports = router;
