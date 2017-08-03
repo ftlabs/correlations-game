@@ -67,15 +67,16 @@ const matchAnswer = app => {
 			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				// sayMisunderstood(app);
 			}
+
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0) {
+				return app.ask(responses.misunderstood(false).ssml, ['fallback']);
+			}
+
+			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
 };
-
-const sayMisunderstood = app => {
-	app.ask(responses.misunderstood(true, 'hi', ['e', 'f', 'g']).ssml, ['fallback']);
-}
 
 function getQuestion(session, callback) {
 	games.check(session)
@@ -144,7 +145,7 @@ function checkAnswer(session, answer, callback) {
 const actionMap = new Map();
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
-actionMap.set(Actions.NOTHEARD, sayMisunderstood);
+actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
