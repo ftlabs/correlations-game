@@ -11,7 +11,7 @@ process.env.DEBUG = 'actions-on-google:*';
 const Actions = {
   INIT: 		'correlations.welcome',
   QUESTION: 	'correlations.question',
-  ANSWER:   	'correlations.answer' 
+  ANSWER:   	'correlations.answer'
 };
 
 const Contexts = {
@@ -57,6 +57,8 @@ const matchAnswer = app => {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
 				app.ask(obj.ssml, ['fallback']);
 			});
+		} else {
+			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
 };
