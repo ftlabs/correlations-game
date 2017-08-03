@@ -14,6 +14,10 @@ const Actions = {
   ANSWER:   	'correlations.answer' 
 };
 
+const Contexts = {
+	GAME: 	'Game'
+};
+
 if (!Object.values) {
   Object.values = o => Object.keys(o).map(k => o[k]);
 }
@@ -127,6 +131,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
+  app.setContext(Contexts.GAME);
   app.handleRequest(actionMap);
 });
 
