@@ -134,6 +134,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
+  console.log('ENDPOITN::', app.body_.sessionId);
 
   games.check(app.body_.sessionId)
   .then(gameIsInProgress => {
