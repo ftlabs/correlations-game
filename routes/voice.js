@@ -11,11 +11,13 @@ process.env.DEBUG = 'actions-on-google:*';
 const Actions = {
   INIT: 		'correlations.welcome',
   QUESTION: 	'correlations.question',
-  ANSWER:   	'correlations.answer'
+  ANSWER:   	'correlations.answer',
+  NOTHEARD:  	'correlations.misunderstood'
 };
 
 const Contexts = {
-	GAME: 	'Game'
+	GAME: 	'Game',
+	MISUNDERSTOOD: 'Misunderstood'
 };
 
 if (!Object.values) {
@@ -23,7 +25,6 @@ if (!Object.values) {
 }
 
 const returnQuestion = app => {
-    app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj.ssml, ['fallback']);
 	});
@@ -56,10 +57,12 @@ const matchAnswer = app => {
 			USER_INPUT === expectedAnswers[2]
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+    			app.setContext(Contexts.GAME, 1000);
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
 			console.log('misunderstood', app);
+			app.setContext(Context.MISUNDERSTOOD, 2);
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
@@ -132,6 +135,7 @@ function checkAnswer(session, answer, callback) {
 const actionMap = new Map();
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
+actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
