@@ -82,6 +82,8 @@ class Game{
 		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 
+		const missing_fields = [];
+
     // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
 		if( config !== undefined ) {
 			if (userUUID !== config['uuid']) {
@@ -94,7 +96,8 @@ class Game{
 				'variant', 'max_candidates', 'firstFewMax'
 			].forEach( field => {
 				if (!config.hasOwnProperty(field)) {
-					throw `Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`;
+					debug(`Game.constructor: config missing field=${field}: config=${JSON.stringify(config)}`);
+					missing_fields.push(field);
 				}
 				this[field] = config[field];
 			});
@@ -102,10 +105,16 @@ class Game{
 				'seedPerson', 'nextAnswer', 'answersReturned', 'linkingArticles', 'intervalDays',
 			].forEach( field => {
 				if (this.isQuestionSet && !config.hasOwnProperty(field)) {
-					throw `Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`;
+					debug(`Game.constructor: config.isQuestionSet===true but field=${field} not defined: config=${JSON.stringify(config)}`);
+					missing_fields.push(field);
 				}
 				this[field] = config[field];
 			});
+
+			if (missing_fields.length > 0) {
+				this.missing_fields = missing_fields; // setting this field signifies that the config source is out of date (from a prev version of code) and has created a corrupt game instance
+				debug(`WARNING: Game.constructor: this.missing_fields = ${JSON.stringify(missing_fields)}`);
+			}
 		}
 	}
 
@@ -356,8 +365,14 @@ class Game{
 				return data.Item;
 			} else {
 				const clonedGame = new Game(data.Item.uuid, data.Item);
-				return clonedGame.updateClonedCount()
-				.then( () => { return clonedGame; });
+				if (clonedGame.hasOwnProperty('missing_fields')) {
+					debug(`WARNING: readFromDB: missing_fields ==> corrupt data.Item retrieved from db, so returning undefined to trigger starting a new game`);
+					return undefined;
+				} else {
+					return clonedGame.updateClonedCount()
+					.then( () => { return clonedGame; } )
+					;
+				}
 			}
 		})
 		;
