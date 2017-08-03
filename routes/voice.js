@@ -137,7 +137,9 @@ router.post('/googlehome', (request, response) => {
 
   games.check(app.body_.sessionId)
   .then(gameIsInProgress => {
+  	console.log('>>>> CHECK GAME EXISTS');
   	if(gameIsInProgress) {
+  		console.log('>>>GAME EXISTS, SET CONTEXT');
   		app.setContext(Contexts.GAME, 1000);
   	}
   	app.handleRequest(actionMap);
