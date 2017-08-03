@@ -35,7 +35,8 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 
-	console.log('>>>>>>> MATCH', USER_INPUT);
+	// console.log('>>>>>>> MATCH', USER_INPUT);
+	console.log('CONTEXT::', app.getContext());
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
