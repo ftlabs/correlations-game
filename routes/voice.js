@@ -131,7 +131,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
-  app.setContext(Contexts.GAME);
+  app.setContext(Contexts.GAME, 1000);
   app.handleRequest(actionMap);
 });
 
