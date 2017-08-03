@@ -25,6 +25,7 @@ if (!Object.values) {
 }
 
 const returnQuestion = app => {
+	app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj.ssml, ['fallback']);
 	});
