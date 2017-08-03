@@ -23,6 +23,7 @@ if (!Object.values) {
 }
 
 const returnQuestion = app => {
+    app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
 		app.ask(obj.ssml, ['fallback']);
 	});
@@ -134,17 +135,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
-  console.log('ENDPOITN::', app.body_.sessionId);
-
-  games.check(app.body_.sessionId)
-  .then(gameIsInProgress => {
-  	console.log('>>>> CHECK GAME EXISTS');
-  	if(gameIsInProgress) {
-  		console.log('>>>GAME EXISTS, SET CONTEXT');
-  		app.setContext(Contexts.GAME, 1000);
-  	}
-  	app.handleRequest(actionMap);
-  });
+  app.handleRequest(actionMap);
 });
 
 module.exports = router;
