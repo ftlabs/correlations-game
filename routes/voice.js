@@ -35,13 +35,8 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 
-	// console.log('>>>>>>> MATCH', USER_INPUT);
-
-	console.log('CONTEXT::', app.getContext())
-
 	getExpectedAnswers(SESSION)
 	.then(answers => {
-		console.log('DEBUG::', answers);
 		const expectedAnswers = Object.keys(answers).map(key => {
 			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 		});
@@ -64,9 +59,8 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
-			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
-				app.setContext(Contexts.MISUNDERSTOOD, 2);
+				app.setContext(Contexts.MISUNDERSTOOD, 3);
 				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 			}
 
