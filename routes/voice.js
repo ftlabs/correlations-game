@@ -66,14 +66,15 @@ const matchAnswer = app => {
 		} else {
 			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
-				app.setContext(Contexts.MISUNDERSTOOD, 3);	
+				app.setContext(Contexts.MISUNDERSTOOD, 3);
+				sayMisunderstood(app);
 			}
 		}
 	});
 };
 
 const sayMisunderstood = app => {
-	app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
+	app.ask(responses.misunderstood(true, 'hi', ['e', 'f', 'g']).ssml, ['fallback']);
 }
 
 function getQuestion(session, callback) {
