@@ -62,7 +62,7 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
-			app.setContext(Contexts.MISUNDERSTOOD, 3);
+			app.setContext(Contexts.MISUNDERSTOOD, 1000);
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
