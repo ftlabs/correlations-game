@@ -364,8 +364,17 @@ class Game{
 			} else if (uuid === GAMES_STATS_ID) {
 				return data.Item;
 			} else {
-				const clonedGame = new Game(data.Item.uuid, data.Item);
-				if (clonedGame.hasOwnProperty('missing_fields')) {
+				let clonedGame = undefined;
+				try {
+					clonedGame = new Game(data.Item.uuid, data.Item);
+				} catch( err ) {
+					debug(`ERROR: readFromDB: cloning game failed: err=${err}`);
+					clonedGame = undefined;
+				}
+
+				if (clonedGame === undefined) {
+					return undefined;
+				} else if (clonedGame.hasOwnProperty('missing_fields')) {
 					debug(`WARNING: readFromDB: missing_fields ==> corrupt data.Item retrieved from db, so returning undefined to trigger starting a new game`);
 					return undefined;
 				} else {
