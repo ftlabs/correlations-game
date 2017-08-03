@@ -65,14 +65,16 @@ const matchAnswer = app => {
 			});
 		} else {
 			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
-			// if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
-			// 	app.setContext(Contexts.MISUNDERSTOOD, 3);	
-			// }
-
-			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
+				app.setContext(Contexts.MISUNDERSTOOD, 3);	
+			}
 		}
 	});
 };
+
+const sayMisunderstood = app => {
+	app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
+}
 
 function getQuestion(session, callback) {
 	games.check(session)
@@ -141,7 +143,7 @@ function checkAnswer(session, answer, callback) {
 const actionMap = new Map();
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
-actionMap.set(Actions.NOTHEARD, matchAnswer);
+actionMap.set(Actions.NOTHEARD, sayMisunderstood);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
