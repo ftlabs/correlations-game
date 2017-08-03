@@ -66,7 +66,8 @@ const matchAnswer = app => {
 		} else {
 			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
-				app.setContext(Contexts.MISUNDERSTOOD, 3);
+				app.setContext(Contexts.MISUNDERSTOOD, 2);
+				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0) {
