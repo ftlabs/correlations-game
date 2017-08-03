@@ -62,9 +62,9 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
-			// if(app.getContexts(MISUNDERSTOOD) === null) {
+			if(app.getContext(Contexts.MISUNDERSTOOD) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);	
-			// }
+			}
 
 			console.log('CONTEXT::', app.getContexts());
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
