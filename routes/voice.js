@@ -62,7 +62,7 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
-			console.log('CONTEXT::', app.getContexts());
+			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
 			if(app.getContext(Contexts.MISUNDERSTOOD) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);	
 			}
