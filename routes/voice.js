@@ -50,21 +50,21 @@ const matchAnswer = app => {
 		}
 
 		if (
-			USER_INPUT === expectedAnswers[0] ||
-			USER_INPUT === expectedAnswers[1] ||
-			USER_INPUT === expectedAnswers[2]
+			USER_INPUT.toLowerCase() === expectedAnswers[0] ||
+			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
+			USER_INPUT.toLowerCase() === expectedAnswers[2]
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
     			app.setContext(Contexts.GAME, 1000);
 				app.ask(obj.ssml);
 			});
 		} else {
-			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
 				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
 			}
 
-			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0) {
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
 				return app.ask(responses.misunderstood(false).ssml);
 			}
 
