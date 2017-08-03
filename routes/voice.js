@@ -63,7 +63,7 @@ const matchAnswer = app => {
 			});
 		} else {
 			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()));
-			if(app.getContext(Contexts.MISUNDERSTOOD) === null) {
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);	
 			}
 
