@@ -36,7 +36,7 @@ const matchAnswer = app => {
 	const SESSION = app.body_.sessionId;
 
 	// console.log('>>>>>>> MATCH', USER_INPUT);
-	console.log('CONTEXT::', app.getContext());
+	console.log('CONTEXT::', app.getContext(MISUNDERSTOOD));
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -63,7 +63,7 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
-			app.setContext(Contexts.MISUNDERSTOOD, 1000);
+			app.setContext(Contexts.MISUNDERSTOOD, 3);
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
