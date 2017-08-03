@@ -63,7 +63,7 @@ const matchAnswer = app => {
 			});
 		} else {
 			console.log('misunderstood', app);
-			app.setContext(Context.MISUNDERSTOOD, 2);
+			app.setContext(Contexts.MISUNDERSTOOD, 2);
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
