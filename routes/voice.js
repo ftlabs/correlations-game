@@ -1,111 +1,77 @@
+'use strict';
 const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
-
-
 const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
 const responses = require('../responses/content');
-const activeSessions = require('../bin/lib/active-sessions-interface');
+const { ApiAiApp } = require('actions-on-google');
 
-const not_understood_limit = 3;
+process.env.DEBUG = 'actions-on-google:*';
 
+const Actions = {
+  INIT: 		'correlations.welcome',
+  QUESTION: 	'correlations.question',
+  ANSWER:   	'correlations.answer',
+  NOTHEARD:  	'correlations.misunderstood'
+};
 
-router.post('/googlehome', (req, res) => {
-	let USER_INPUT = req.body.result.resolvedQuery;
-	const SESSION = req.body.sessionId;
+const Contexts = {
+	GAME: 	'Game',
+	MISUNDERSTOOD: 'Misunderstood'
+};
 
-	setCountState(SESSION, null)
-		.then(sessionCount => {
+if (!Object.values) {
+  Object.values = o => Object.keys(o).map(k => o[k]);
+}
 
-			let not_understood_count = sessionCount;
+const returnQuestion = app => {
+	app.setContext(Contexts.GAME, 1000);
+	getQuestion(app.body_.sessionId, obj => {
+		app.ask(obj.ssml);
+	});
+};
 
-			getExpectedAnswers(SESSION)
-				.then(answers => {
-					const expectedAnswers = Object.keys(answers).map(key => {
-						return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
-					});
+const matchAnswer = app => {
+	let USER_INPUT = app.body_.result.resolvedQuery;
+	const SESSION = app.body_.sessionId;
 
-					if(USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
-						USER_INPUT = expectedAnswers[0];
-					} else if(USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
-						USER_INPUT = expectedAnswers[1];
-					} else if(USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
-						USER_INPUT = expectedAnswers[2];
-					}
+	getExpectedAnswers(SESSION)
+	.then(answers => {
+		const expectedAnswers = Object.keys(answers).map(key => {
+			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+		});
 
-					switch(USER_INPUT.toLowerCase()) {
-						case 'start':
-						case 'repeat':
-							debug(`start || repeat ${SESSION}`);
-							setCountState(SESSION, 0);
-							getQuestion(SESSION, obj => {
-								res.json(obj);
-							});
-						break;
+		if (USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+			USER_INPUT = expectedAnswers[0];
+		} else if (USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+			USER_INPUT = expectedAnswers[1];
+		} else if (USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+			USER_INPUT = expectedAnswers[2];
+		}
 
-						case 'help':
-							debug(`help ${SESSION}`);
-							setCountState(SESSION, 0);
-							answer = "Add instructions here";
-							//?TODO: handle in a different intent?
-						break;
-
-						case expectedAnswers[0]:
-						case expectedAnswers[1]:
-						case expectedAnswers[2]:
-							debug(`expectedAnswers ${SESSION}`);
-							setCountState(SESSION, 0);
-							checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
-								debug(obj);
-								res.json(obj);
-							});
-
-						break;
-
-						default:
-
-							debug(`default ${SESSION}`);
-							let answer;
-
-							if(not_understood_count < not_understood_limit && expectedAnswers.length > 0) {
-								answer = responses.misunderstood(true, USER_INPUT, expectedAnswers);
-								++not_understood_count;
-								setCountState(SESSION, not_understood_count);
-							} else {
-								answer = responses.misunderstood(false);
-							}
-
-							res.json(answer);
-
-							debug(answer);
-					}
-				})
-			;
-		})
-		.catch(err => {
-			debug('Unknown error', err);
-			if(err === "GAMEOVER"){
-				const winnerResponse = responses.win();
-				debug(winnerResponse);
-				res.json(winnerResponse);
-			} else {
-				const misunderstoodResponse = responses.misunderstood();
-				res.json(misunderstoodResponse);
-			}
-		})
-	;
-});
-
-function getExpectedAnswers(session) {
-	return games.check(session)
-	.then(gameIsInProgress => {
-		if(gameIsInProgress) {
-			return games.get(session).then(data => data.answersReturned);
+		if (
+			USER_INPUT === expectedAnswers[0] ||
+			USER_INPUT === expectedAnswers[1] ||
+			USER_INPUT === expectedAnswers[2]
+		) {
+			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+    			app.setContext(Contexts.GAME, 1000);
+				app.ask(obj.ssml);
+			});
 		} else {
-			return [];
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
+				app.setContext(Contexts.MISUNDERSTOOD, 3);
+				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
+			}
+
+			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0) {
+				return app.ask(responses.misunderstood(false).ssml);
+			}
+
+			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
 		}
 	});
-}
+};
 
 function getQuestion(session, callback) {
 	games.check(session)
@@ -146,6 +112,17 @@ function getQuestion(session, callback) {
 	});
 }
 
+function getExpectedAnswers(session) {
+	return games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			return games.get(session).then(data => data.answersReturned);
+		} else {
+			return [];
+		}
+	});
+}
+
 function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
@@ -160,33 +137,14 @@ function checkAnswer(session, answer, callback) {
 	;
 }
 
-function setCountState(sessionID, count) {
+const actionMap = new Map();
+actionMap.set(Actions.QUESTION, returnQuestion);
+actionMap.set(Actions.ANSWER, matchAnswer);
+actionMap.set(Actions.NOTHEARD, matchAnswer);
 
-	return activeSessions.get(sessionID)
-		.then(session => {
-
-			if(session === undefined) {
-				session = {};
-				session.id = sessionID;
-			}
-
-			if(session === undefined){
-				session.count = 0;
-			} else {
-				session.count = count === null ? session.count : count;
-			}
-
-			return activeSessions.set(session)
-				.then(function(){
-					return session.count;
-				})
-			;
-
-		})
-		.catch(err => {
-			debug(err);
-		})
-	;
-}
+router.post('/googlehome', (request, response) => {
+  const app = new ApiAiApp({ request, response });
+  app.handleRequest(actionMap);
+});
 
 module.exports = router;
