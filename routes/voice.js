@@ -133,6 +133,7 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
+  console.log('ENDPOINT HIT', app.body_.sessionId);
   app.setContext(Contexts.GAME, 1000);
   app.handleRequest(actionMap);
 });
