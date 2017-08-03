@@ -62,11 +62,11 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
+			console.log('CONTEXT::', app.getContext(Contexts.MISUNDERSTOOD));
 			if(app.getContext(Contexts.MISUNDERSTOOD) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);	
 			}
 
-			console.log('CONTEXT::', app.getContexts());
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
