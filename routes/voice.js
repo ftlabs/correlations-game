@@ -58,6 +58,7 @@ const matchAnswer = app => {
 				app.ask(obj.ssml, ['fallback']);
 			});
 		} else {
+			console.log('misunderstood', app);
 			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
 		}
 	});
@@ -133,9 +134,14 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
-  console.log('ENDPOINT HIT', app.body_.sessionId);
-  app.setContext(Contexts.GAME, 1000);
-  app.handleRequest(actionMap);
+
+  games.check(app.body_.sessionId)
+  .then(gameIsInProgress => {
+  	if(gameIsInProgress) {
+  		app.setContext(Contexts.GAME, 1000);
+  	}
+  	app.handleRequest(actionMap);
+  });
 });
 
 module.exports = router;
