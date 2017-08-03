@@ -25,11 +25,10 @@ const returnQuestion = app => {
 };
 
 const matchAnswer = app => {
-	console.log('>>>>>>>>>>>>>>MATCH0', app.body_.result.resolvedQuery);
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 
-	console.log('MATCH:::', USER_INPUT, SESSION);
+	console.log('>>>>>>> MATCH', USER_INPUT);
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -56,8 +55,6 @@ const matchAnswer = app => {
 			});
 		}
 	});
-
-	// app.ask('<speak>Ill come back to you</speak>', ['fallback']);	
 };
 
 function getQuestion(session, callback) {
@@ -125,14 +122,11 @@ function checkAnswer(session, answer, callback) {
 }
 
 const actionMap = new Map();
-// actionMap.set(Actions.INIT, testFunction);
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
-  // console.log(`Request headers: ${JSON.stringify(request.headers)}`);
-  // console.log(`Request body: ${JSON.stringify(request.body)}`);
   app.handleRequest(actionMap);
 });
 
