@@ -37,6 +37,8 @@ const matchAnswer = app => {
 
 	// console.log('>>>>>>> MATCH', USER_INPUT);
 
+	console.log('CONTEXT::', app.getContexts())
+
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		console.log('DEBUG::', answers);
