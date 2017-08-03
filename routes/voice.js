@@ -27,7 +27,7 @@ if (!Object.values) {
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
-		app.ask(obj.ssml, ['fallback']);
+		app.ask(obj.ssml);
 	});
 };
 
@@ -56,19 +56,19 @@ const matchAnswer = app => {
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
     			app.setContext(Contexts.GAME, 1000);
-				app.ask(obj.ssml, ['fallback']);
+				app.ask(obj.ssml);
 			});
 		} else {
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
+				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0) {
-				return app.ask(responses.misunderstood(false).ssml, ['fallback']);
+				return app.ask(responses.misunderstood(false).ssml);
 			}
 
-			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml, ['fallback']);
+			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
 		}
 	});
 };
