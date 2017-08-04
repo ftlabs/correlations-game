@@ -65,6 +65,9 @@ const matchAnswer = app => {
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
+				if(expectedAnswers.length === 0) {
+					app.setContext(Contexts.MISUNDERSTOOD, 1);
+				}
 				return app.ask(responses.misunderstood(false).ssml);
 			}
 
