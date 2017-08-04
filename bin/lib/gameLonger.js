@@ -272,27 +272,27 @@ class Game{
 				if (chainLengths.length < 4) {
 					debug(`promiseNextCandidateQuestion: reject name=${name}: chainLengths.length(${chainLengths.length}) < 4`);
 					this.blacklistCandidate(question.seedPerson);
-					return(  this.promiseNextCandidateQuestion() );
+					return this.promiseNextCandidateQuestion();
 				}
 				const nextAnswers = this.filterCandidates( chainLengths[1].entities );
 				if (nextAnswers.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${name}: nextAnswers.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
-					return( this.promiseNextCandidateQuestion() );
+					return this.promiseNextCandidateQuestion();
 				}
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
 				const wrongAnswers1 = this.filterCandidates( chainLengths[2].entities );
 				if (wrongAnswers1.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers1.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
-					return( this.promiseNextCandidateQuestion() );
+					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
 				const wrongAnswers2 = this.filterCandidates( chainLengths[3].entities );
 				if (wrongAnswers2.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${name}: wrongAnswers2.length === 0`);
 					this.blacklistCandidate(question.seedPerson);
-					return( this.promiseNextCandidateQuestion() );
+					return this.promiseNextCandidateQuestion();
 				}
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
 				// yay, means we have all the bits needed for a valid question
@@ -483,19 +483,19 @@ function getAQuestionToAnswer(gameUUID){
 		}
 
 		if(selectedGame.isQuestionSet){
-			return({
+			return {
 				seed : selectedGame.seedPerson,
 				options : selectedGame.answersReturned,
 				intervalDays : selectedGame.intervalDays,
 				questionNum : selectedGame.distance + 1,
 				globalHighestScore : GAMES_STATS.maxScore,
-			});
+			};
 		} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
 			return selectedGame.promiseNextCandidateQuestion()
 			.catch( err => {
 				debug(`ERROR: getAQuestionToAnswer: err=${JSON.stringify(err)}`);
-				return( undefined );
+				return undefined;
 			})
 			.then(questionData => {
 				debug(`getAQuestionToAnswer: questionData=${JSON.stringify(questionData, null, 2)}`);
@@ -512,14 +512,14 @@ function getAQuestionToAnswer(gameUUID){
 						})
 						.then(function(){
 							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
-							return({
+							return {
 								limitReached : true,
 								score        : selectedGame.distance,
 								history      : selectedGame.history,
 								achievedHighestScore     : selectedGame.achievedHighestScore,
 								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
 								globalHighestScore : GAMES_STATS.maxScore,
-							});
+							};
 						})
 						;
 					})
@@ -534,14 +534,14 @@ function getAQuestionToAnswer(gameUUID){
 					})
 					.then(function(){
 						debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
-						return({
+						return {
 							seed         : selectedGame.seedPerson,
 							options      : selectedGame.answersReturned,
 							limitReached : false,
 							intervalDays : selectedGame.intervalDays,
 							questionNum  : selectedGame.distance + 1,
 							globalHighestScore : GAMES_STATS.maxScore,
-						});
+						};
 					})
 					;
 				}
