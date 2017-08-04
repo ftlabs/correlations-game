@@ -9,7 +9,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		phrase = `Sorry, I did not understand that. The possible answers were: `;
 		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
-			phrase += `${(i + 1)}) ${options[i]}. `;
+			phrase += `\n ${(i + 1)}) ${options[i]}. `;
 			phraseSSML += `<break time="0.5s" />${(i + 1)}) ${options[i]}. `;
 		}
 
@@ -55,7 +55,7 @@ function askThePlayerAQuestion(data){
 	let ssml = `<speak>${phrase}`;
 
 	Object.keys(data.options).forEach((key, index) => {
-		displayText += (index + 1) + ') ' + data.options[key].printValue + '. \n';
+		displayText += '\n' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 		ssml += '<break time="0.5s"/>' + (index + 1) + ') ' + data.options[key].printValue + '. ';
 	});
 
