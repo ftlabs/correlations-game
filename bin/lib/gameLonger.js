@@ -258,17 +258,12 @@ class Game{
 			throw `ERROR: invalid GAME_VARIANT: this.variant=${this.variant}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`;
 		}
 
-		return new Promise( (resolve, reject) => {
-				if(seedPerson === undefined){
-					debug('NO_VALID_SEEDPERSON');
-					reject('NO_VALID_SEEDPERSON');
-				}
+		if(seedPerson === undefined){
+			return Promise.resolve(undefined);
+		}
 
-				correlations_service.calcChainLengthsFrom(seedPerson)
-					.then(chainLengths => resolve(chainLengths))
-					.catch(err => reject(err))
-				;
-			})
+		return correlations_service.calcChainLengthsFrom(seedPerson)
+				
 			.then(chainLengths => {
 
 				if (chainLengths.length < 4) {
@@ -509,7 +504,7 @@ function getAQuestionToAnswer(gameUUID){
 						if(questionData === undefined){
 							debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} is out of connections`);
 
-							selectedGame.finish()
+							return selectedGame.finish()
 								.then( () => {
 									return Game.writeToDB(selectedGame)
 										.then(function(){
