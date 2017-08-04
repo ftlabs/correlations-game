@@ -140,16 +140,26 @@ router.post('/answer', (req, res) => {
 					message : 'An error occurred as we tried to get the question.'
 				});
 			})
+		;
 	}
 
 });
 
-router.get('/correct', (req, res) => {
-	res.render('correct', {theme : 'green'});
-});
+router.get('/answer', (req, res) => {
 
-router.get('/incorrect', (req, res) => {
-	res.render('incorrect', {theme : 'red'});
+	games.check(req.cookies['ftlabsCorrelationsGameUUID'])
+		.then(gameExists => {
+			if(gameExists){
+				res.redirect('/question');
+			} else {
+				res.redirect('/');
+			}
+		})
+		.catch(err => {
+			debug('\t>>>> err:', err);
+		})
+	;
+
 });
 
 router.get('/stats', (req, res) => {
