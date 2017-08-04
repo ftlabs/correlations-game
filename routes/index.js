@@ -133,6 +133,13 @@ router.post('/answer', (req, res) => {
 					res.render('incorrect', {result});
 				}
 			})
+			.catch( err => {
+				debug(err);
+				res.json({
+					status : 'err',
+					message : 'An error occurred as we tried to get the question.'
+				});
+			})
 	}
 
 });

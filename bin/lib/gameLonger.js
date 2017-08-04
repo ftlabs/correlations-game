@@ -627,7 +627,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	debug(`checkIfAGameExistsForAGivenUUID: Checking gameUUID ${gameUUID}`);
 
-	return new Promise( (resolve) => {
+	return new Promise( (resolve, reject) => {
 
 		if(gameUUID === undefined){
 			resolve(false);
@@ -644,7 +644,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 				})
 				.catch(err => {
 					debug(`checkIfAGameExistsForAGivenUUID: Unable to check if game (${gameUUID}) exists`, err);
-					throw err;
+					reject(err);
 				})
 			;
 		}
