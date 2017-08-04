@@ -47,6 +47,8 @@ function processResultForDisplay( result ){
 		} else {
 			result.highestScoreMessage = `Congratulations: you have equalled the current highest score.`;
 		}
+	} else if( result.globalHighestScore > 0 ){
+		result.highestScoreMessage = `The overall highest score is ${result.globalHighestScore}.`;
 	} else {
 		result.highestScoreMessage = '';
 	}

@@ -491,6 +491,7 @@ function getAQuestionToAnswer(gameUUID){
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
 					questionNum : selectedGame.distance + 1,
+					globalHighestScore : GAMES_STATS.maxScore,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -512,6 +513,7 @@ function getAQuestionToAnswer(gameUUID){
 									history      : selectedGame.history,
 									achievedHighestScore     : selectedGame.achievedHighestScore,
 									achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
+									globalHighestScore : GAMES_STATS.maxScore,
 								});
 							})
 							.catch(err => {
@@ -533,6 +535,7 @@ function getAQuestionToAnswer(gameUUID){
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
 								questionNum  : selectedGame.distance + 1,
+								globalHighestScore : GAMES_STATS.maxScore,
 							});
 						})
 						.catch(err => {
@@ -604,12 +607,13 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					debug(`answerAQuestion: handling an incorrect answer`);
 
 					result.correct = false;
-					result.achievedHighestScore      = selectedGame.achievedHighestScore;
-					result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
 					debug(`answerAQuestion: incorrect answer: result=${JSON.stringify(result,null,2)}` );
 
 					if (selectedGame.state === 'finished') {
 						debug(`answerAQuestion: incorrect but repeated. Echo the previous end-of-game summary, without updating any stats.`);
+						result.achievedHighestScore      = selectedGame.achievedHighestScore;
+						result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+						result.globalHighestScore        = GAMES_STATS.maxScore;
 						resolve(result);
 					} else {
 						debug(`answerAQuestion: incorrect. updating stats.`);
@@ -617,6 +621,10 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						.then( () => {
 							Game.writeToDB(selectedGame)
 								.then(function(){
+									// NB: these vals need to be set *after* .finish()
+									result.achievedHighestScore      = selectedGame.achievedHighestScore;
+									result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+									result.globalHighestScore        = GAMES_STATS.maxScore;
 									resolve(result);
 								})
 								.catch(err => {
