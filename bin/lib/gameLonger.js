@@ -543,6 +543,7 @@ function getAQuestionToAnswer(gameUUID){
 }
 
 function answerAQuestion(gameUUID, submittedAnswer){
+	debug(`answerAQuestion: gameUUID=${gameUUID}, submittedAnswer=${JSON.stringify(submittedAnswer)}`);
 
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
@@ -569,7 +570,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
 				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
-
+					debug(`answerAQuestion: handling a correct answer`);
 					selectedGame.distance += 1;
 					selectedGame.clearQuestion();
 
@@ -577,7 +578,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						.then(function(){
 							result.correct = true;
 							result.score   += 1;
-							debug(`answerAQuestion: result=${JSON.stringify(result,null,2)}` );
+							debug(`answerAQuestion: correct answer: result=${JSON.stringify(result,null,2)}` );
 							resolve(result);
 						})
 						.catch(err => {
@@ -586,23 +587,33 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						})
 					;
 
-				} else {
-					selectedGame.finish()
-					.then( () => {
-						Game.writeToDB(selectedGame)
-							.then(function(){
-								result.correct = false;
-								result.achievedHighestScore      = selectedGame.achievedHighestScore;
-								result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
-								resolve(result);
-							})
-							.catch(err => {
-								debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
-								throw err;
-							})
+				} else { // answer was incorrect
+					debug(`answerAQuestion: handling an incorrect answer`);
+
+					result.correct = false;
+					result.achievedHighestScore      = selectedGame.achievedHighestScore;
+					result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+					debug(`answerAQuestion: incorrect answer: result=${JSON.stringify(result,null,2)}` );
+
+					if (selectedGame.state === 'finished') {
+						debug(`answerAQuestion: incorrect but repeated. Echo the previous end-of-game summary, without updating any stats.`);
+						resolve(result);
+					} else {
+						debug(`answerAQuestion: incorrect. updating stats.`);
+						selectedGame.finish()
+						.then( () => {
+							Game.writeToDB(selectedGame)
+								.then(function(){
+									resolve(result);
+								})
+								.catch(err => {
+									debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
+									throw err;
+								})
+							;
+						})
 						;
-					})
-					;
+					}
 				}
 
 			} );
