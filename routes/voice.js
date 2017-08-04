@@ -109,7 +109,11 @@ function getQuestion(session, callback) {
 
 			callback(responses.askQuestion(preparedData));
 		}
-	});
+	})
+	.catch(err => {
+		debug(`ERROR: getQuestion: err=${err}`);
+	})
+	;
 }
 
 function getExpectedAnswers(session) {
