@@ -569,6 +569,11 @@ function answerAQuestion(gameUUID, submittedAnswer){
 				};
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
+
+				if(selectedGame.nextAnswer === undefined){
+					throw 'NO_VALID_ANSWER';
+				}
+
 				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
 					debug(`answerAQuestion: handling a correct answer`);
 					selectedGame.distance += 1;

@@ -135,10 +135,16 @@ router.post('/answer', (req, res) => {
 			})
 			.catch( err => {
 				debug(err);
-				res.json({
-					status : 'err',
-					message : 'An error occurred as we tried to get the question.'
-				});
+
+				if(err === 'NO_VALID_ANSWER'){
+					res.redirect('/question');
+				} else {
+					res.json({
+						status : 'err',
+						message : 'An error occurred as we tried to get the question.'
+					});
+				}
+
 			})
 		;
 	}
