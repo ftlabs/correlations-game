@@ -81,7 +81,7 @@ class Game{
 
 		// pre-pop the blacklist with the barnier list
 		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
-		
+
 		const missing_fields = [];
 
     // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
@@ -270,7 +270,7 @@ class Game{
 				;
 			})
 			.then(chainLengths => {
-				
+
 				if (chainLengths.length < 4) {
 					debug(`promiseNextCandidateQuestion: reject seedPerson=${seedPerson}: chainLengths.length(${chainLengths.length}) < 4`);
 					this.blacklistCandidate(seedPerson);
@@ -299,7 +299,7 @@ class Game{
 					this.blacklistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
-				
+
 				question.seedPerson = seedPerson;
 				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
 				// yay, means we have all the bits needed for a valid question
