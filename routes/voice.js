@@ -24,7 +24,9 @@ const optionsSynonyms = [
 	[
 		'1',
 		'one',
-		'won'
+		'won',
+		'huan',
+		'juan'
 	],
 
 	[
