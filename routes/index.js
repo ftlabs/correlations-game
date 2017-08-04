@@ -47,6 +47,8 @@ function processResultForDisplay( result ){
 		} else {
 			result.highestScoreMessage = `Congratulations: you have equalled the current highest score.`;
 		}
+	} else if( result.globalHighestScore > 0 ){
+		result.highestScoreMessage = `The overall highest score is ${result.globalHighestScore}.`;
 	} else {
 		result.highestScoreMessage = '';
 	}
@@ -137,13 +139,13 @@ router.post('/answer', (req, res) => {
 
 });
 
-router.get('/correct', (req, res) => {
-	res.render('correct', {theme : 'green'});
-});
-
-router.get('/incorrect', (req, res) => {
-	res.render('incorrect', {theme : 'red'});
-});
+// router.get('/correct', (req, res) => {
+// 	res.render('correct', {theme : 'green'});
+// });
+//
+// router.get('/incorrect', (req, res) => {
+// 	res.render('incorrect', {theme : 'red'});
+// });
 
 router.get('/stats', (req, res) => {
 	res.json(games.stats());

@@ -483,6 +483,7 @@ function getAQuestionToAnswer(gameUUID){
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
 					questionNum : selectedGame.distance + 1,
+					globalHighestScore : GAMES_STATS.maxScore,
 				});
 			} else {
 				// if we are here, we need to pick our seed, nextAnswer, answersReturned
@@ -504,6 +505,7 @@ function getAQuestionToAnswer(gameUUID){
 									history      : selectedGame.history,
 									achievedHighestScore     : selectedGame.achievedHighestScore,
 									achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
+									globalHighestScore : GAMES_STATS.maxScore,
 								});
 							})
 							.catch(err => {
@@ -525,6 +527,7 @@ function getAQuestionToAnswer(gameUUID){
 								limitReached : false,
 								intervalDays : selectedGame.intervalDays,
 								questionNum  : selectedGame.distance + 1,
+								globalHighestScore : GAMES_STATS.maxScore,
 							});
 						})
 						.catch(err => {
@@ -565,6 +568,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					seedPerson      : selectedGame.seedPerson,
 					submittedAnswer : submittedAnswer,
 					history         : selectedGame.history,
+					globalHighestScore : GAMES_STATS.maxScore,
 				};
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
