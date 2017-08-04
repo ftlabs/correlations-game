@@ -49,7 +49,17 @@ if (!Object.values) {
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
-		app.ask(obj.ssml);
+		let richResponse;
+    	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+    		richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.displayText)
+				.addSuggestions(['1', '2', '3']);
+    	} else {
+    		richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.ssml);
+    	}
+    	
+		app.ask(richResponse);
 	});
 };
 
@@ -79,14 +89,22 @@ const matchAnswer = app => {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);
 
-    			if(addSuggestions) {
-    				const richResponse = app.buildRichResponse()
-    					.addSimpleResponse(obj.ssml)
-    					.addSuggestions(['1', '2', '3']);
-    				app.ask(richResponse);
+    			let richResponse;
+    			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+    				if(addSuggestions) {
+    					richResponse = app.buildRichResponse()
+	    					.addSimpleResponse(obj.displayText)
+	    					.addSuggestions(['1', '2', '3']);
+    				} else {
+    					richResponse = app.buildRichResponse()
+    						.addSimpleResponse(obj.displayText);
+    				}
     			} else {
-					app.ask(obj.ssml);
+					richResponse = app.buildRichResponse()
+						.addSimpleResponse(obj.ssml);
     			}
+
+    			app.ask(richResponse)
 			});
 		} else {
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
