@@ -528,6 +528,10 @@ function getAQuestionToAnswer(gameUUID){
 					selectedGame.acceptQuestionData( questionData );
 
 					return Game.writeToDB(selectedGame, process.env.GAME_TABLE)
+					.catch(err => {
+						debug(`getAQuestionToAnswer: Unable to save game state whilst returning answers`, err);
+						throw err;
+					})
 					.then(function(){
 						debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on generation of answers.`);
 						return({
@@ -538,10 +542,6 @@ function getAQuestionToAnswer(gameUUID){
 							questionNum  : selectedGame.distance + 1,
 							globalHighestScore : GAMES_STATS.maxScore,
 						});
-					})
-					.catch(err => {
-						debug(`getAQuestionToAnswer: Unable to save game state whilst returning answers`, err);
-						throw err;
 					})
 					;
 				}
