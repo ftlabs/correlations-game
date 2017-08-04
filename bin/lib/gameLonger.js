@@ -118,7 +118,10 @@ class Game{
 		}
 	}
 
-	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
+	addToBlacklist(name) {
+		debug(`addToBlacklist: name=${name}`);
+		return this.blacklist.push( name.toLowerCase() );
+	};
 	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
 	filterOutBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
 	isCandidate(name) { return this.remainingCandidatesByName.hasOwnProperty( name ); };
@@ -131,6 +134,11 @@ class Game{
 				return;
 			}
 			const candName = cand[0];
+
+			if (candName.match(/[^:a-zA-Z ]/) !== null ) { // just ignore any names containing non-letters (apart from colon and spaces)
+				this.addToBlacklist(candName);
+			}
+
 			if (! this.isBlacklisted(candName)) {
 				this.remainingCandidatesWithConnections.push(cand);
 				this.remainingCandidatesByName[candName] = cand;
@@ -546,6 +554,7 @@ function getAQuestionToAnswer(gameUUID){
 }
 
 function answerAQuestion(gameUUID, submittedAnswer){
+	debug(`answerAQuestion: gameUUID=${gameUUID}, submittedAnswer=${JSON.stringify(submittedAnswer)}`);
 
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
@@ -568,12 +577,16 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					seedPerson      : selectedGame.seedPerson,
 					submittedAnswer : submittedAnswer,
 					history         : selectedGame.history,
-					globalHighestScore : GAMES_STATS.maxScore,
 				};
 
 				function normaliseName(name) { return name.replace('.', '').replace('-', ' ').toLowerCase(); }
-				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
 
+				if(selectedGame.nextAnswer === undefined){
+					throw 'NO_VALID_ANSWER';
+				}
+
+				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
+					debug(`answerAQuestion: handling a correct answer`);
 					selectedGame.distance += 1;
 					selectedGame.clearQuestion();
 
@@ -581,7 +594,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						.then(function(){
 							result.correct = true;
 							result.score   += 1;
-							debug(`answerAQuestion: result=${JSON.stringify(result,null,2)}` );
+							debug(`answerAQuestion: correct answer: result=${JSON.stringify(result,null,2)}` );
 							resolve(result);
 						})
 						.catch(err => {
@@ -590,23 +603,38 @@ function answerAQuestion(gameUUID, submittedAnswer){
 						})
 					;
 
-				} else {
-					selectedGame.finish()
-					.then( () => {
-						Game.writeToDB(selectedGame)
-							.then(function(){
-								result.correct = false;
-								result.achievedHighestScore      = selectedGame.achievedHighestScore;
-								result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
-								resolve(result);
-							})
-							.catch(err => {
-								debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
-								throw err;
-							})
+				} else { // answer was incorrect
+					debug(`answerAQuestion: handling an incorrect answer`);
+
+					result.correct = false;
+					debug(`answerAQuestion: incorrect answer: result=${JSON.stringify(result,null,2)}` );
+
+					if (selectedGame.state === 'finished') {
+						debug(`answerAQuestion: incorrect but repeated. Echo the previous end-of-game summary, without updating any stats.`);
+						result.achievedHighestScore      = selectedGame.achievedHighestScore;
+						result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+						result.globalHighestScore        = GAMES_STATS.maxScore;
+						resolve(result);
+					} else {
+						debug(`answerAQuestion: incorrect. updating stats.`);
+						selectedGame.finish()
+						.then( () => {
+							Game.writeToDB(selectedGame)
+								.then(function(){
+									// NB: these vals need to be set *after* .finish()
+									result.achievedHighestScore      = selectedGame.achievedHighestScore;
+									result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+									result.globalHighestScore        = GAMES_STATS.maxScore;
+									resolve(result);
+								})
+								.catch(err => {
+									debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
+									throw err;
+								})
+							;
+						})
 						;
-					})
-					;
+					}
 				}
 
 			} );
@@ -620,7 +648,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 
 	debug(`checkIfAGameExistsForAGivenUUID: Checking gameUUID ${gameUUID}`);
 
-	return new Promise( (resolve) => {
+	return new Promise( (resolve, reject) => {
 
 		if(gameUUID === undefined){
 			resolve(false);
@@ -637,7 +665,7 @@ function checkIfAGameExistsForAGivenUUID(gameUUID){
 				})
 				.catch(err => {
 					debug(`checkIfAGameExistsForAGivenUUID: Unable to check if game (${gameUUID}) exists`, err);
-					throw err;
+					reject(err);
 				})
 			;
 		}

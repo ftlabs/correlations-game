@@ -135,7 +135,38 @@ router.post('/answer', (req, res) => {
 					res.render('incorrect', {result});
 				}
 			})
+			.catch( err => {
+				debug(err);
+
+				if(err === 'NO_VALID_ANSWER'){
+					res.redirect('/question');
+				} else {
+					res.json({
+						status : 'err',
+						message : 'An error occurred as we tried to get the question.'
+					});
+				}
+
+			})
+		;
 	}
+
+});
+
+router.get('/answer', (req, res) => {
+
+	games.check(req.cookies['ftlabsCorrelationsGameUUID'])
+		.then(gameExists => {
+			if(gameExists){
+				res.redirect('/question');
+			} else {
+				res.redirect('/');
+			}
+		})
+		.catch(err => {
+			debug('\t>>>> err:', err);
+		})
+	;
 
 });
 
