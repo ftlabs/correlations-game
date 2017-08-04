@@ -495,7 +495,7 @@ function getAQuestionToAnswer(gameUUID){
 			return selectedGame.promiseNextCandidateQuestion()
 			.catch( err => {
 				debug(`ERROR: getAQuestionToAnswer: err=${JSON.stringify(err)}`);
-				return undefined;
+				throw err;
 			})
 			.then(questionData => {
 				debug(`getAQuestionToAnswer: questionData=${JSON.stringify(questionData, null, 2)}`);

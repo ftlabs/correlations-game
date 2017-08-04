@@ -110,10 +110,7 @@ router.get('/question', (req, res) => {
 		})
 		.catch(err => {
 			debug(err);
-			res.json({
-				status : 'err',
-				message : 'An error occurred as we tried to get the question.'
-			});
+			res.render('indexAfterError');
 		})
 
 });
