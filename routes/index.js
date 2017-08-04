@@ -139,14 +139,6 @@ router.post('/answer', (req, res) => {
 
 });
 
-// router.get('/correct', (req, res) => {
-// 	res.render('correct', {theme : 'green'});
-// });
-//
-// router.get('/incorrect', (req, res) => {
-// 	res.render('incorrect', {theme : 'red'});
-// });
-
 router.get('/stats', (req, res) => {
 	res.json(games.stats());
 });
