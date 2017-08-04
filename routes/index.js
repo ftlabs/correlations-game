@@ -76,8 +76,9 @@ router.get('/question', (req, res) => {
 			}
 		})
 		.then(result => {
-
-			if(result.limitReached === true){
+			if(result === undefined) {
+				res.redirect('/');
+			} else if(result.limitReached === true){
 				processResultForDisplay(result);
 				res.render('winner', result);
 			} else {
