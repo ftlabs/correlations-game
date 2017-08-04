@@ -118,7 +118,10 @@ class Game{
 		}
 	}
 
-	addToBlacklist(name) { return this.blacklist.push( name.toLowerCase() ) };
+	addToBlacklist(name) {
+		debug(`addToBlacklist: name=${name}`);
+		return this.blacklist.push( name.toLowerCase() );
+	};
 	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
 	filterOutBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
 	isCandidate(name) { return this.remainingCandidatesByName.hasOwnProperty( name ); };
@@ -131,6 +134,11 @@ class Game{
 				return;
 			}
 			const candName = cand[0];
+
+			if (candName.match(/[^:a-zA-Z ]/) !== null ) { // just ignore any names containing non-letters (apart from colon and spaces)
+				this.addToBlacklist(candName);
+			}
+
 			if (! this.isBlacklisted(candName)) {
 				this.remainingCandidatesWithConnections.push(cand);
 				this.remainingCandidatesByName[candName] = cand;
