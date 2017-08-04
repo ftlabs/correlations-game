@@ -26,11 +26,13 @@ intervalDays - how many days of articles are covered by the current correlations
 history - record the sequence of questionData items for a summary at the end of a game
 achievedHighestScore, achievedHighestScoreFirst - set when finishing a question, based on current best score
 */
+const GAMES_STATS_ID = 'UUID_FOR_GAMES_STATS';
 
-const GAMES_STATS = {
+let GAMES_STATS = {
 	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
 	maxScore    : 0,
+	uuid        : GAMES_STATS_ID,
 }
 
 const GAME_VARIANT = {
@@ -83,10 +85,7 @@ class Game{
 		const missing_fields = [];
 
     // handle when we are re-building a Game instance from a simple obj (e.g. from the DB)
-		if( config === undefined ) {
-			GAMES_STATS.counts.created += 1;
-		} else {
-			GAMES_STATS.counts.cloned += 1;
+		if( config !== undefined ) {
 			if (userUUID !== config['uuid']) {
 				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
 			}
@@ -329,51 +328,92 @@ class Game{
 
 	finish(){
 		this.state = 'finished';
-		GAMES_STATS.counts.finished += 1;
+		return this.updateScoreStats();
+	}
 
+	updateScoreStats() {
 		const score = this.distance;
-		if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
-			GAMES_STATS.scoreCounts[score] = 0;
-		}
-		GAMES_STATS.scoreCounts[score] += 1;
-		GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+		return Game.updateGamesStats( stats => {
+			GAMES_STATS.counts.finished += 1;
 
-		this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
-		this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
+			if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
+				GAMES_STATS.scoreCounts[score] = 0;
+			}
+			GAMES_STATS.scoreCounts[score] += 1;
+			GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+		})
+		.then( () => {
+			this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
+			this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
+		})
+		;
+	}
+
+	updateClonedCount() {
+		return Game.updateGamesStats( stats => { stats.counts.cloned += 1;} );
+	}
+	updateCreatedCount() {
+		return Game.updateGamesStats( stats => { stats.counts.created += 1;} );
 	}
 
 	static readFromDB( uuid ){
-		const config = { uuid : uuid };
-		return database.read(config, process.env.GAME_TABLE)
+		return database.read({ uuid : uuid }, process.env.GAME_TABLE)
 		.then( data => {
 			if (data.Item === undefined) {
 				return undefined;
+			} else if (uuid === GAMES_STATS_ID) {
+				return data.Item;
 			} else {
-				let game = new Game(data.Item.uuid, data.Item);
-				if (game.hasOwnProperty('missing_fields')) {
+				let clonedGame = undefined;
+				try {
+					clonedGame = new Game(data.Item.uuid, data.Item);
+				} catch( err ) {
+					debug(`ERROR: readFromDB: cloning game failed: err=${err}`);
+					clonedGame = undefined;
+				}
+
+				if (clonedGame === undefined) {
+					return undefined;
+				} else if (clonedGame.hasOwnProperty('missing_fields')) {
 					debug(`WARNING: readFromDB: missing_fields ==> corrupt data.Item retrieved from db, so returning undefined to trigger starting a new game`);
 					return undefined;
 				} else {
-					return game;
+					return clonedGame.updateClonedCount()
+					.then( () => { return clonedGame; } )
+					;
 				}
-				return (game.hasOwnProperty('missing_fields')) ? undefined : game ;
 			}
 		})
 		;
 	}
 
-	static writeToDB( game ) {
+	static writeToDB( objWithUuid ) {
 		return new Promise( (resolve, reject) => {
-			const objType = typeof game;
-			if (! objType === 'Game') {
-				reject( `Game.writeToDB must be passed an obj of type Game, but it was type: ${objType}` );
+			if (! objWithUuid.hasOwnProperty('uuid')) {
+				reject( `Game.writeToDB must be passed an obj with a uuid field, objWithUuid=${JSON.stringify(objWithUuid)}` );
 			} else {
-				database.write(game, process.env.GAME_TABLE)
+				database.write(objWithUuid, process.env.GAME_TABLE)
 				.then( () => { resolve(); })
 				;
 			}
 		})
 		;
+	}
+
+	static updateGamesStats( fn ){
+		return database.read({uuid: GAMES_STATS_ID}, process.env.GAME_TABLE)
+		.then( data  => { return (data !== undefined) ? data.Item : undefined; })
+		.then( stats => { if (stats !== undefined) { GAMES_STATS = stats; } } )
+		.then( ()    => {
+			debug(`updateGamesStats: invoking update fn`);
+			fn(GAMES_STATS);
+		})
+		.then( ()    => { database.write(GAMES_STATS, process.env.GAME_TABLE) } )
+		.then( ()    => { debug(`updateGamesStats: eof`); })
+		.catch( err => {
+			debug `ERROR: Game.updateGamesStats: err=${err}`;
+			throw err;
+		})
 	}
 
 } // eof Class Game
@@ -388,7 +428,8 @@ function createANewGame(userUUID){
 	const newGame = new Game(userUUID);
 	debug(`createANewGame: newGame=${JSON.stringify(newGame)}`);
 
-	return correlations_service.biggestIsland()
+	return newGame.updateCreatedCount()
+		.then( () => { return correlations_service.biggestIsland(); } )
 		.then(island => {	newGame.addCandidates(island) })
 		.then( () => { return correlations_service.summary() } )
 		.then( summary => {
@@ -452,25 +493,26 @@ function getAQuestionToAnswer(gameUUID){
 					if(questionData === undefined){
 						debug(`getAQuestionToAnswer: Game ${selectedGame.uuid} is out of connections`);
 
-						selectedGame.finish();
-
-						Game.writeToDB(selectedGame)
-						.then(function(){
-							debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
-							resolve({
-								limitReached : true,
-								score        : selectedGame.distance,
-								history      : selectedGame.history,
-								achievedHighestScore     : selectedGame.achievedHighestScore,
-								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
+						selectedGame.finish()
+						.then( () => {
+							Game.writeToDB(selectedGame)
+							.then(function(){
+								debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
+								resolve({
+									limitReached : true,
+									score        : selectedGame.distance,
+									history      : selectedGame.history,
+									achievedHighestScore     : selectedGame.achievedHighestScore,
+									achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
+								});
+							})
+							.catch(err => {
+								debug(`getAQuestionToAnswer: Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
+								throw err;
 							});
+							;
 						})
-						.catch(err => {
-							debug(`getAQuestionToAnswer: Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
-							throw err;
-						});
 						;
-
 					} else {
 						selectedGame.acceptQuestionData( questionData );
 
@@ -545,21 +587,22 @@ function answerAQuestion(gameUUID, submittedAnswer){
 					;
 
 				} else {
-					selectedGame.finish();
-
-					Game.writeToDB(selectedGame)
-						.then(function(){
-							result.correct = false;
-							result.achievedHighestScore      = selectedGame.achievedHighestScore;
-							result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
-							resolve(result);
-						})
-						.catch(err => {
-							debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
-							throw err;
-						})
+					selectedGame.finish()
+					.then( () => {
+						Game.writeToDB(selectedGame)
+							.then(function(){
+								result.correct = false;
+								result.achievedHighestScore      = selectedGame.achievedHighestScore;
+								result.achievedHighestScoreFirst = selectedGame.achievedHighestScoreFirst;
+								resolve(result);
+							})
+							.catch(err => {
+								debug(`answerAQuestion: Unable to save game state (${selectedGame.uuid}) on incorrect answering of question`, err);
+								throw err;
+							})
+						;
+					})
 					;
-
 				}
 
 			} );
