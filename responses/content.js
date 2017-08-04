@@ -29,8 +29,8 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
 
 	return {
-		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. ${newQuestion.displayText}`,
-		speech : `Correct. They were connected in the FT article, titled: ${articleHeadline}. ${newQuestion.speech}`,
+		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. \n ${newQuestion.displayText}`,
+		speech : `Correct. They were connected in the FT article, titled: ${articleHeadline}. \n ${newQuestion.speech}`,
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
 	};
 
@@ -62,7 +62,7 @@ function askThePlayerAQuestion(data){
 	ssml += '</speak>';
 
 	return {
-		displayText: displayText,
+		displayText: 'Test ' + displayText,
 		speech : displayText,
 		ssml: ssml
 	};
