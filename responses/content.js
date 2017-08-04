@@ -10,7 +10,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
 			phrase += `${(i + 1)}) ${options[i]}. `;
-			phraseSSML += `<break time=0.5s />${(i + 1)}) ${options[i]}. `;
+			phraseSSML += `<break time="0.5s" />${(i + 1)}) ${options[i]}. `;
 		}
 
 	} else {
