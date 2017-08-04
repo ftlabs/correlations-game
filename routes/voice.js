@@ -20,6 +20,28 @@ const Contexts = {
 	MISUNDERSTOOD: 'Misunderstood'
 };
 
+const optionsSynonyms = [
+	[
+		'1',
+		'one',
+		'won',
+		'huan',
+		'juan'
+	],
+
+	[
+		'2',
+		'two',
+		'to',
+		'too'
+	],
+
+	[
+		'3',
+		'three'
+	]
+]
+
 if (!Object.values) {
   Object.values = o => Object.keys(o).map(k => o[k]);
 }
@@ -41,11 +63,11 @@ const matchAnswer = app => {
 			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
 		});
 
-		if (USER_INPUT.startsWith('1') || USER_INPUT.toLowerCase().startsWith('one')) {
+		if (checkString(USER_INPUT.toLowerCase(), 0)) {
 			USER_INPUT = expectedAnswers[0];
-		} else if (USER_INPUT.startsWith('2') || USER_INPUT.toLowerCase().startsWith('two')) {
+		} else if (checkString(USER_INPUT.toLowerCase(), 1)) {
 			USER_INPUT = expectedAnswers[1];
-		} else if (USER_INPUT.startsWith('3') || USER_INPUT.toLowerCase().startsWith('three')) {
+		} else if (checkString(USER_INPUT.toLowerCase(), 2)) {
 			USER_INPUT = expectedAnswers[2];
 		}
 
@@ -65,6 +87,9 @@ const matchAnswer = app => {
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
+				if(expectedAnswers.length === 0) {
+					app.setContext(Contexts.MISUNDERSTOOD, 1);
+				}
 				return app.ask(responses.misunderstood(false).ssml);
 			}
 
@@ -135,6 +160,16 @@ function checkAnswer(session, answer, callback) {
 			}
 		})
 	;
+}
+
+function checkString(input, option) {
+	for(let i = 0; i < optionsSynonyms[option].length; ++i) {
+		if(input.startsWith(optionsSynonyms[option][i])) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 const actionMap = new Map();
