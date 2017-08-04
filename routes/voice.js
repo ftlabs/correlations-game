@@ -76,9 +76,17 @@ const matchAnswer = app => {
 			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
 			USER_INPUT.toLowerCase() === expectedAnswers[2]
 		) {
-			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);
-				app.ask(obj.ssml);
+
+    			if(addSuggestions) {
+    				const richResponse = app.buildRichResponse()
+    					.addSimpleResponse(obj.ssml)
+    					.addSuggestions(['1', '2', '3']);
+    				app.ask(richResponse);
+    			} else {
+					app.ask(obj.ssml);
+    			}
 			});
 		} else {
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
@@ -153,10 +161,10 @@ function checkAnswer(session, answer, callback) {
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
+					callback(responses.correctAnswer(result.linkingArticles[0].title, obj), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title), false);
 			}
 		})
 	;
