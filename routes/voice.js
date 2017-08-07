@@ -96,13 +96,17 @@ const matchAnswer = app => {
 	    					.addSimpleResponse(obj.displayText)
 	    					.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
-						      .addButton('Read more', obj.link)
+						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse(obj.question)
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
-    						.addSimpleResponse(obj.displayText);
+    						.addSimpleResponse(obj.displayText)
+    						.addBasicCard(app.buildBasicCard(obj.article)
+						      .setTitle(obj.article)
+						      .addButton('Read article', obj.link)
+						    );
     				}
     			} else {
 					richResponse = app.buildRichResponse()

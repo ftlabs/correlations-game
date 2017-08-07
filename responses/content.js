@@ -42,12 +42,14 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleData){
 
 	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article: ${articleData.title}.`;
+	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
 
 	return {
-		displayText : textPhrase,
+		displayText : displayPhrase,
 		speech : voicePhrase,
 		ssml : `<speak>${voicePhrase}</speak>`,
+		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`
 	};
 
