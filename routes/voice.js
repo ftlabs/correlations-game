@@ -52,7 +52,7 @@ const returnQuestion = app => {
 		let richResponse;
     	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     		richResponse = app.buildRichResponse()
-				.addSimpleResponse({speech: obj.ssml, displayText: obj.displayText})
+				.addSimpleResponse(obj.displayText)
 				.addSuggestions(['1', '2', '3']);
     	} else {
     		richResponse = app.buildRichResponse()
@@ -93,11 +93,11 @@ const matchAnswer = app => {
     			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
-	    					.addSimpleResponse({speech: obj.ssml, displayText: obj.displayText})
+	    					.addSimpleResponse(obj.displayText)
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
-    						.addSimpleResponse({speech: obj.ssml, displayText: obj.displayText});
+    						.addSimpleResponse(obj.displayText);
     				}
     			} else {
 					richResponse = app.buildRichResponse()
