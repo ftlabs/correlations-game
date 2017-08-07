@@ -32,7 +32,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 	return {
 		displayText : `Correct. They were connected in the FT article:`,
 		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}.`,
-		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/>`,
+		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
 		question: newQuestion

@@ -98,7 +98,7 @@ const matchAnswer = app => {
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
 						    )
-						    .addSimpleResponse(obj.question)
+						    .addSimpleResponse({speech: obj.question.speech, displayText: obj.question.displayText, ssml: '<speak>' + obj.question.ssml})
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
