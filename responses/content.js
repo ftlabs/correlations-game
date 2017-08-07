@@ -62,7 +62,7 @@ function askThePlayerAQuestion(data){
 	ssml += '</speak>';
 
 	return {
-		displayText: 'Test ' + displayText,
+		displayText: displayText,
 		speech : displayText,
 		ssml: ssml
 	};
