@@ -30,11 +30,11 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 	return {
 		displayText : `Correct. They were connected in the FT article:`,
-		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}. \n ${newQuestion.speech}`,
-		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`,
+		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}.`,
+		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		question: newQuestion.displayText
+		question: newQuestion
 	};
 
 }

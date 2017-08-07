@@ -110,7 +110,8 @@ const matchAnswer = app => {
     				}
     			} else {
 					richResponse = app.buildRichResponse()
-						.addSimpleResponse(obj.ssml);
+						.addSimpleResponse(obj.ssml)
+						.addSimpleResponse(obj.question.ssml.replace('<speak>', ''));
     			}
 
     			app.ask(richResponse)
