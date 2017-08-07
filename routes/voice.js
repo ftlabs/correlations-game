@@ -93,7 +93,7 @@ const matchAnswer = app => {
     			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
-	    					.addSimpleResponse(obj.displayText)
+	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText})
 	    					.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
