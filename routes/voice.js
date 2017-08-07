@@ -94,7 +94,7 @@ const matchAnswer = app => {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse(obj.displayText)
-	    					.addBasicCard(app.buildBasicCard()
+	    					.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read more', obj.link)
 						    )
