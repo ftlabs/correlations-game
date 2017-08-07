@@ -160,7 +160,11 @@ function getQuestion(session, callback) {
 
 			callback(responses.askQuestion(preparedData));
 		}
-	});
+	})
+	.catch(err => {
+		debug('HANDLED REJECTION', err);
+	})
+	;
 }
 
 function getExpectedAnswers(session) {
