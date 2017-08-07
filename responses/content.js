@@ -63,7 +63,7 @@ function askThePlayerAQuestion(data){
 
 	Object.keys(data.options).forEach((key, index) => {
 		displayText += `\n ${(index + 1)}) ${data.options[key].printValue}. `;
-		ssml += `<break time="0.5s"/> ${optionNum[i]}) ${data.options[key].printValue}. `;
+		ssml += `<break time="0.5s"/> ${optionNum[index]}) ${data.options[key].printValue}. `;
 	});
 
 	ssml += '</speak>';
