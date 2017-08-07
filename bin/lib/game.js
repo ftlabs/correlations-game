@@ -48,6 +48,16 @@ if(process.env.GAME_VARIANT !== undefined){
 	}
 }
 
+const GAME_DISTANCE_OF_WRONG1 = ( process.env.GAME_DISTANCE_OF_WRONG1 !== undefined )? parseInt(process.env.GAME_DISTANCE_OF_WRONG1) : 2;
+const GAME_DISTANCE_OF_WRONG2 = ( process.env.GAME_DISTANCE_OF_WRONG2 !== undefined )? parseInt(process.env.GAME_DISTANCE_OF_WRONG2) : 3;
+
+if (GAME_DISTANCE_OF_WRONG1 < 1) {
+	throw `ERROR: process.env.GAME_DISTANCE_OF_WRONG1(${process.env.GAME_DISTANCE_OF_WRONG1}) should be >= 1`
+}
+if (GAME_DISTANCE_OF_WRONG2 < 1) {
+	throw `ERROR: process.env.GAME_DISTANCE_OF_WRONG2(${process.env.GAME_DISTANCE_OF_WRONG2}) should be >= 1`
+}
+
 const MAX_CANDIDATES = parseInt( (process.env.MAX_CANDIDATES === undefined)? -1 : process.env.MAX_CANDIDATES );
 
 class Game{
@@ -65,6 +75,8 @@ class Game{
 		this.variant   = GAME_VARIANT.default;
 		this.max_candidates = MAX_CANDIDATES;
 		this.firstFewMax = parseInt( (process.env.FIRST_FEW_MAX === undefined)? 5 : process.env.FIRST_FEW_MAX );
+		this.distance_of_wrong1 = GAME_DISTANCE_OF_WRONG1;
+		this.distance_of_wrong2 = GAME_DISTANCE_OF_WRONG2;
 
 		// details+context of the current question
 		this.seedPerson          = undefined;
@@ -255,45 +267,73 @@ class Game{
 			throw `ERROR: invalid GAME_VARIANT: this.variant=${this.variant}: should be one of ${JSON.stringify(Object.keys(GAME_VARIANT))}`;
 		}
 
+		// If we cannot produce a valid seedPerson,
+		// it means we cannot proceed with the game so it ends with a undefined question.
+
 		if(seedPerson === undefined){
 			return Promise.resolve(undefined);
 		}
 
-		return correlations_service.calcChainLengthsFrom(seedPerson)
-				
-			.then(chainLengths => {
+		// Attempt to construct all the bits for a full valid question.
+		// If we can't find any of the bits, we bail.
+		// We bail by blacklisting the current seedPerson,
+		// and starting again with a recursive call to promiseNextCandidateQuestion
 
+		return correlations_service.calcChainLengthsFrom(seedPerson)
+			.then(chainLengths => {
+				question.seedPerson = seedPerson;
+				debug(`promiseNextCandidateQuestion: seedPerson=${seedPerson}, chainLengths.length=${chainLengths.length}`);
+
+				// bail if there are not enough links in the chainlengths to construct a full question
 				if (chainLengths.length < 4) {
 					debug(`promiseNextCandidateQuestion: reject seedPerson=${seedPerson}: chainLengths.length(${chainLengths.length}) < 4`);
 					this.blacklistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 
+				// bail if there are no valid direct correlations
 				const nextAnswers = this.filterCandidates( chainLengths[1].entities );
 				if (nextAnswers.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: nextAnswers.length === 0`);
 					this.blacklistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
-
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
-				const wrongAnswers1 = this.filterCandidates( chainLengths[2].entities );
-				if (wrongAnswers1.length === 0) {
+
+				// bail if we can't find a valid wrong answer, starting with furthest (aka wrongest) possible wrong answers
+				let wrongAnswers1 = undefined;
+				// loop until we find a non-empty list of possible valid answers
+				for (var w = 1+this.distance_of_wrong1; w > 1; w--) {
+					debug(`promiseNextCandidateQuestion: wrongAnswers1: w=${w}`);
+					if( chainLengths.length <= w ) { continue; }
+					wrongAnswers1 = this.filterCandidates( chainLengths[w].entities );
+					debug(`promiseNextCandidateQuestion: wrongAnswers1: wrongAnswers1=${JSON.stringify(wrongAnswers1)},\n chainLengths[w].entities=${JSON.stringify(chainLengths[w].entities)}`);
+					if (wrongAnswers1.length > 0) { break; }
+				}
+				if (wrongAnswers1 === undefined || wrongAnswers1.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: wrongAnswers1.length === 0`);
 					this.blacklistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
+				const firstWrongAnswer = this.pickFromFirstFew( wrongAnswers1 );
+				question.wrongAnswers.push( firstWrongAnswer );
 
-				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers1 ) );
-				const wrongAnswers2 = this.filterCandidates( chainLengths[3].entities );
-				if (wrongAnswers2.length === 0) {
+				// bail if we can't find another valid wrong answer
+				let wrongAnswers2;
+				for (var w = 1+this.distance_of_wrong2; w > 1; w--) {
+					debug(`promiseNextCandidateQuestion: wrongAnswers2: w=${w}`);
+					if( chainLengths.length <= w ) { continue; }
+					wrongAnswers2 = this.filterCandidates( chainLengths[w].entities ).filter( name => { return (name !== firstWrongAnswer); } );
+					if( wrongAnswers2.length > 0) { break; }
+				}
+				if (wrongAnswers2 === undefined || wrongAnswers2.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: wrongAnswers2.length === 0`);
 					this.blacklistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
+				const secondWrongAnswer = this.pickFromFirstFew( wrongAnswers2 )
+				question.wrongAnswers.push( secondWrongAnswer );
 
-				question.seedPerson = seedPerson;
-				question.wrongAnswers.push( this.pickFromFirstFew( wrongAnswers2 ) );
 				// yay, means we have all the bits needed for a valid question
 				question.answersReturned = question.wrongAnswers.slice(0);
 				question.answersReturned.push(question.nextAnswer);

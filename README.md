@@ -90,7 +90,6 @@ The following env params may be set:
 
 ... to explore alternative game mechanics
 
-* GAME=LONGER
 * MAX_CANDIDATES=10 # to limit the game size (default is -1, meaning no limit)
 * FIRST_FEW_MAX=5 # which subset of the most-connected candidates to choose from
 * GAME_VARIANT=any_seed # which is the default
@@ -99,6 +98,8 @@ The following env params may be set:
    * any_seed_kill_answer    # pick any candidate, blacklist candidate and answer
    * seed_from_answer        # pick initial any candidate then only from answer, blacklist candidate
    * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
+* GAME_DISTANCE_OF_WRONG1=2 # how many chainLengths away to start looking for the first wrong answer - the further away, the 'easier' the question becomes because the wrong answers are 'wronger'
+* GAME_DISTANCE_OF_WRONG2=3 # ditto the 2nd wrong answer. Too far is bad because the number of candidates per link drops drastically after 3.
 
 ### routes
 
