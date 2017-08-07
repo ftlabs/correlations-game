@@ -111,7 +111,7 @@ const matchAnswer = app => {
     			} else {
 					richResponse = app.buildRichResponse()
 						.addSimpleResponse(obj.ssml);
-						
+
 					if(addSuggestions) {
 						richResponse.addSimpleResponse(obj.question.ssml);
 					}
@@ -120,19 +120,22 @@ const matchAnswer = app => {
     			app.ask(richResponse)
 			});
 		} else {
+			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
+				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
 				if(expectedAnswers.length === 0) {
 					app.setContext(Contexts.MISUNDERSTOOD, 1);
 				}
-				return app.ask(responses.misunderstood(false).ssml);
+				
+				response = responses.misunderstood(false);
+				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
 
-			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
+			app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 		}
 	});
 };
