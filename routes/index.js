@@ -1,10 +1,11 @@
 const debug = require('debug')('correlations-game:routes:index');
 const express = require('express');
 const router = express.Router();
+const S3O = require('@financial-times/s3o-middleware');
 
 const games = require('../bin/lib/game');
 
-router.get('/', (req, res) => {
+router.get('/', S3O, (req, res) => {
 
 	if (process.env.DATABASE === 'PRETEND') {
 		res.clearCookie('ftlabsCorrelationsGameUUID');
@@ -56,7 +57,9 @@ function processResultForDisplay( result ){
 	return result;
 }
 
-router.get('/question', (req, res) => {
+router.post('/', S3O);
+
+router.get('/question', S3O, (req, res) => {
 
 	games.check(req.cookies['ftlabsCorrelationsGameUUID'])
 		.then(gameIsInProgress => {
@@ -117,7 +120,7 @@ router.get('/question', (req, res) => {
 
 });
 
-router.post('/answer', (req, res) => {
+router.post('/answer', S3O, (req, res) => {
 
 	debug(req.body.answer);
 
@@ -153,7 +156,7 @@ router.post('/answer', (req, res) => {
 
 });
 
-router.get('/answer', (req, res) => {
+router.get('/answer', S3O, (req, res) => {
 
 	games.check(req.cookies['ftlabsCorrelationsGameUUID'])
 		.then(gameExists => {
@@ -170,7 +173,7 @@ router.get('/answer', (req, res) => {
 
 });
 
-router.get('/stats', (req, res) => {
+router.get('/stats', S3O, (req, res) => {
 	res.json(games.stats());
 });
 
