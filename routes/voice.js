@@ -2,7 +2,7 @@
 const debug = require('debug')('correlations-game:routes:voice');
 const express = require('express');
 const router = express.Router();
-const games = (process.env.GAME === 'LONGER') ? require('../bin/lib/gameLonger') : require('../bin/lib/game');
+const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const { ApiAiApp } = require('actions-on-google');
 
@@ -38,7 +38,8 @@ const optionsSynonyms = [
 
 	[
 		'3',
-		'three'
+		'three',
+		'tree'
 	]
 ]
 
