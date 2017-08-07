@@ -307,7 +307,6 @@ class Game{
 					debug(`promiseNextCandidateQuestion: wrongAnswers1: w=${w}`);
 					if( chainLengths.length <= w ) { continue; }
 					wrongAnswers1 = this.filterCandidates( chainLengths[w].entities );
-					debug(`promiseNextCandidateQuestion: wrongAnswers1: wrongAnswers1=${JSON.stringify(wrongAnswers1)},\n chainLengths[w].entities=${JSON.stringify(chainLengths[w].entities)}`);
 					if (wrongAnswers1.length > 0) { break; }
 				}
 				if (wrongAnswers1 === undefined || wrongAnswers1.length === 0) {
