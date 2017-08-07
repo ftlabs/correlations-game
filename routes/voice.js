@@ -110,8 +110,11 @@ const matchAnswer = app => {
     				}
     			} else {
 					richResponse = app.buildRichResponse()
-						.addSimpleResponse(obj.ssml)
-						.addSimpleResponse(obj.question.ssml);
+						.addSimpleResponse(obj.ssml);
+						
+					if(addSuggestions) {
+						richResponse.addSimpleResponse(obj.question.ssml);
+					}
     			}
 
     			app.ask(richResponse)
