@@ -94,6 +94,10 @@ const matchAnswer = app => {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse(obj.displayText)
+	    					.addBasicCard(app.buildBasicCard(obj.displayText)
+						      .setTitle('Math & prime numbers')
+						      .addButton('Read more', obj.link)
+						    )
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
@@ -181,13 +185,12 @@ function getExpectedAnswers(session) {
 function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
-			console.log('ARTICLE::', result.linkingArticles[0]);
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0].title, obj), true);
+					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title), false);
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0]), false);
 			}
 		})
 	;

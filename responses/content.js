@@ -26,25 +26,27 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 
 }
 
-function theAnswerGivenWasCorrect(articleHeadline, newQuestion){
+function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 	return {
-		displayText : `Correct. They were connected in the FT article: ${articleHeadline}. \n ${newQuestion.displayText}`,
-		speech : `Correct. They were connected in the FT article, titled: ${articleHeadline}. \n ${newQuestion.speech}`,
-		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleHeadline}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`
+		displayText : `Correct. They were connected in the FT article: ${articleData.title}. \n ${newQuestion.displayText}`,
+		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}. \n ${newQuestion.speech}`,
+		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`,
+		link: `https://ft.com/${articleData.id}`
 	};
 
 }
 
-function theAnswerGivenWasNotCorrect(expectedAnswer, articleHeadline){
+function theAnswerGivenWasNotCorrect(expectedAnswer, articleData){
 
-	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article: ${articleHeadline}.`;
-	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleHeadline}.`;
+	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article: ${articleData.title}.`;
+	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
 
 	return {
 		displayText : textPhrase,
 		speech : voicePhrase,
-		ssml : `<speak>${voicePhrase}</speak>`
+		ssml : `<speak>${voicePhrase}</speak>`,
+		link: `https://ft.com/${articleData.id}`
 	};
 
 }
