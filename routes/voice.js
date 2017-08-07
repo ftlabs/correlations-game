@@ -93,7 +93,7 @@ const matchAnswer = app => {
     			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
-	    					.addSimpleResponse({speech: obj.ssml, displayText:obj.displayText})
+	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
 	    					.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
@@ -102,7 +102,7 @@ const matchAnswer = app => {
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
-    						.addSimpleResponse({speech: obj.ssml, displayText:obj.displayText})
+    						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssm: obj.ssml})
     						.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
