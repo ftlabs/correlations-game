@@ -2,25 +2,28 @@ const debug = require('debug')('responses:content');
 const optionNum = ["one", "two", "three"];
 
 function inputWasNotUnderstood(isRepeating, input = null, options = null){
-	let phrase, phraseSSML;
+	let phrase, displayPhrase, phraseSSML;
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 
 	if(isRepeating) {
 		phrase = `Sorry, I did not understand that. The possible answers were: `;
+		displayPhrase = phrase;
 		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
-			phrase += `\n ${(i + 1)}) ${options[i]}. `;
+			phrase += `\n ${optionNum[i]}) ${options[i]}. `;
+			displayPhrase += `\n ${(i + 1)}) ${options[i]}. `;
 			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i]}. `;
 		}
 
 	} else {
 		phrase = `Sorry, I'm not sure what you said. For instructions, say "help".`;
 		phraseSSML = phrase;
+		displayPhrase = phrase;
 	}
 
 	return {
-		displayText : phrase,
+		displayText : displayPhrase,
 		speech : phrase,
 		ssml : `<speak>${phraseSSML}</speak>`
 	};
