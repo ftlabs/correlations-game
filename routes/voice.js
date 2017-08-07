@@ -102,7 +102,7 @@ const matchAnswer = app => {
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
-    						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssm: obj.ssml})
+    						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
     						.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
