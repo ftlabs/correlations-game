@@ -50,7 +50,17 @@ if (!Object.values) {
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
 	getQuestion(app.body_.sessionId, obj => {
-		app.ask(obj.ssml);
+		let richResponse;
+    	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+    		richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.displayText)
+				.addSuggestions(['1', '2', '3']);
+    	} else {
+    		richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.ssml);
+    	}
+    	
+		app.ask(richResponse);
 	});
 };
 
@@ -77,24 +87,56 @@ const matchAnswer = app => {
 			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
 			USER_INPUT.toLowerCase() === expectedAnswers[2]
 		) {
-			checkAnswer(SESSION, 'people:' + USER_INPUT, obj => {
+			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);
-				app.ask(obj.ssml);
+
+    			let richResponse;
+    			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+    				if(addSuggestions) {
+    					richResponse = app.buildRichResponse()
+	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
+	    					.addBasicCard(app.buildBasicCard(obj.article)
+						      .setTitle(obj.article)
+						      .addButton('Read article', obj.link)
+						    )
+						    .addSimpleResponse({speech: obj.question.displayText, displayText: obj.question.displayText, ssml: obj.question.ssml})
+	    					.addSuggestions(['1', '2', '3']);
+    				} else {
+    					richResponse = app.buildRichResponse()
+    						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
+    						.addBasicCard(app.buildBasicCard(obj.article)
+						      .setTitle(obj.article)
+						      .addButton('Read article', obj.link)
+						    );
+    				}
+    			} else {
+					richResponse = app.buildRichResponse()
+						.addSimpleResponse(obj.ssml);
+
+					if(addSuggestions) {
+						richResponse.addSimpleResponse(obj.question.ssml);
+					}
+    			}
+
+    			app.ask(richResponse)
 			});
 		} else {
+			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
+				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
 				if(expectedAnswers.length === 0) {
 					app.setContext(Contexts.MISUNDERSTOOD, 1);
 				}
-				return app.ask(responses.misunderstood(false).ssml);
+				
+				response = responses.misunderstood(false);
+				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
 
-			app.ask(responses.misunderstood(true, USER_INPUT, expectedAnswers).ssml);
+			app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 		}
 	});
 };
@@ -158,10 +200,10 @@ function checkAnswer(session, answer, callback) {
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0].title, obj));
+					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0].title));
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0]), false);
 			}
 		})
 	;
