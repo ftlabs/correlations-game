@@ -29,10 +29,12 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 	return {
-		displayText : `Correct. They were connected in the FT article: ${articleData.title}. \n ${newQuestion.displayText}`,
+		displayText : `Correct. They were connected in the FT article:`,
 		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}. \n ${newQuestion.speech}`,
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/> ${newQuestion.ssml.replace('<speak>', '')}`,
-		link: `https://ft.com/${articleData.id}`
+		article: articleData.title,
+		link: `https://ft.com/${articleData.id}`,
+		question: newQuestion.displayText
 	};
 
 }

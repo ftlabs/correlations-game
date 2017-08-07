@@ -94,10 +94,11 @@ const matchAnswer = app => {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse(obj.displayText)
-	    					.addBasicCard(app.buildBasicCard(obj.displayText)
-						      .setTitle('Math & prime numbers')
+	    					.addBasicCard(app.buildBasicCard()
+						      .setTitle(obj.article)
 						      .addButton('Read more', obj.link)
 						    )
+						    .addSimpleResponse(obj.question)
 	    					.addSuggestions(['1', '2', '3']);
     				} else {
     					richResponse = app.buildRichResponse()
