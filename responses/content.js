@@ -1,4 +1,5 @@
 const debug = require('debug')('responses:content');
+const optionNum = ["one", "two", "three"];
 
 function inputWasNotUnderstood(isRepeating, input = null, options = null){
 	let phrase, phraseSSML;
@@ -10,7 +11,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
 			phrase += `\n ${(i + 1)}) ${options[i]}. `;
-			phraseSSML += `<break time="0.5s" />${(i + 1)}) ${options[i]}. `;
+			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i]}. `;
 		}
 
 	} else {
@@ -41,7 +42,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleData){
 
-	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article: ${articleData.title}.`;
+	const textPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
 
