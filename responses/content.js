@@ -43,16 +43,24 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 }
 
-function theAnswerGivenWasNotCorrect(expectedAnswer, articleData){
+function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
+	let scorePhrase = `You made ${scoreData.score} connections.`;
+
+	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
+		scorePhrase += 'Well done, this is the highest score!';
+	} else {
+		scorePhrase += `The record to beat is ${scoreData.scoreMax}`;
+	}
 
 	return {
 		displayText : displayPhrase,
 		speech : voicePhrase,
 		ssml : `<speak>${voicePhrase}</speak>`,
 		article: articleData.title,
-		link: `https://ft.com/${articleData.id}`
+		link: `https://ft.com/${articleData.id}`,
+		score: scorePhrase
 	};
 
 }
