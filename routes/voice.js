@@ -109,7 +109,8 @@ const matchAnswer = app => {
     						.addBasicCard(app.buildBasicCard(obj.article)
 						      .setTitle(obj.article)
 						      .addButton('Read article', obj.link)
-						    );
+						    )
+						    .addSimpleResponse(obj.score);
     				}
     			} else {
 					richResponse = app.buildRichResponse()
@@ -117,6 +118,8 @@ const matchAnswer = app => {
 
 					if(addSuggestions) {
 						richResponse.addSimpleResponse(obj.question.ssml);
+					} else {
+						richResponse.addSimpleResponse(obj.score);
 					}
     			}
 
@@ -197,6 +200,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
+
 			spoor({
 				'category': 'GAME',
 				'action': 'gamewon',
@@ -207,8 +211,8 @@ function getQuestion(session, callback) {
 					'uuid' : session
 				}
 			});
+			callback(responses.win({score: data.score}));
 
-			callback(responses.win());
 		} else {
 			const preparedData = {};
 
@@ -266,7 +270,7 @@ function checkAnswer(session, answer, callback) {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0]), false);
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
 		})
 	;
