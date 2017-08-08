@@ -26,7 +26,7 @@ function readFromDatabase(item, table){
 		const storedItem = STORE_BY_UUID[item.uuid];
 		if (storedItem === undefined) {
 			debug(`readFromDatabase: no item found`);
-			return undefined;
+			return {};
 		} else {
 			debug(`readFromDatabase: found storedItem: uuid=${storedItem.uuid}, distance=${storedItem.distance}`);
 			return {Item : storedItem};
