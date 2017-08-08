@@ -54,7 +54,7 @@ const returnQuestion = app => {
     	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     		richResponse = app.buildRichResponse()
 				.addSimpleResponse(obj.displayText)
-				.addSuggestions(['1', '2', '3']);
+				.addSuggestions(obj.chips);
     	} else {
     		richResponse = app.buildRichResponse()
 				.addSimpleResponse(obj.ssml);

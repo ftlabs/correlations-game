@@ -78,7 +78,7 @@ function askThePlayerAQuestion(data){
 	const phrase = `Who was mentioned in a recent article with ${data.seed.printValue}?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
-	let chips =[]
+	let chips = [];
 
 	Object.keys(data.options).forEach((key, index) => {
 		if(index === 2) {
