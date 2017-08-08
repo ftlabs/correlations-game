@@ -71,21 +71,22 @@ const matchAnswer = app => {
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
-			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+			answers[key] = {original: answers[key], match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+			return answers[key];
 		});
 
 		if (checkString(USER_INPUT.toLowerCase(), 0)) {
-			USER_INPUT = expectedAnswers[0];
+			USER_INPUT = expectedAnswers[0].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 1)) {
-			USER_INPUT = expectedAnswers[1];
+			USER_INPUT = expectedAnswers[1].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 2)) {
-			USER_INPUT = expectedAnswers[2];
+			USER_INPUT = expectedAnswers[2].match;
 		}
 
 		if (
-			USER_INPUT.toLowerCase() === expectedAnswers[0] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[2]
+			USER_INPUT.toLowerCase() === expectedAnswers[0].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[1].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[2].match
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);

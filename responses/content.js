@@ -12,9 +12,9 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		for(let i = 0; i < options.length; ++i) {
 
 			if(i === 2) {
-				phrase += `or ${capitaliseName(options[i])}?`;
+				phrase += `or ${options[i].original}?`;
 			} else {
-				phrase += `${capitaliseName(options[i])}, `;
+				phrase += `${options[i].original}, `;
 			}
 			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i]}. `;
 		}
@@ -107,17 +107,6 @@ function theGameHasBeenWon(scoreData){
 		speech : phrase,
 		ssml : `<speak>${phrase}</speak>`
 	};
-}
-
-function capitaliseName(name) {
-	let outputName = name.split(' ');
-	for(let i = 0; i < outputName.length; ++i) {
-		outputName[i].charAt(0).toUpperCase();
-	}
-
-	console.log('CAPSSS::', outputName);
-
-	return outputName.join(' ');
 }
 
 module.exports = {
