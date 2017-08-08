@@ -115,6 +115,8 @@ function capitaliseName(name) {
 		outputName[i].charAt(0).toUpperCase();
 	}
 
+	console.log('CAPSSS::', outputName);
+
 	return outputName.join(' ');
 }
 
