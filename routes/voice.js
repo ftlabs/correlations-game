@@ -71,7 +71,7 @@ const matchAnswer = app => {
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
-			answers[key] = {original: answers[key], match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
 			return answers[key];
 		});
 

@@ -16,7 +16,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 			} else {
 				phrase += `${options[i].original}, `;
 			}
-			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i]}. `;
+			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i].original}. `;
 		}
 
 	} else {
