@@ -160,6 +160,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
+			console.log('RESULTS WIN::', data);
 			callback(responses.win());
 		} else {
 			const preparedData = {};
@@ -201,7 +202,6 @@ function getExpectedAnswers(session) {
 function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
-			console.log('RESULT:::', result);
 			if(result.correct === true){
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
