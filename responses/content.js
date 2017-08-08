@@ -56,8 +56,10 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 		}
 		
 	} else {
-		scorePhrase += ` The record to beat is ${scoreData.scoreMax}`;
+		scorePhrase += ` The record to beat is ${scoreData.scoreMax}.`;
 	}
+
+	scorePhrase += ' Would you like to start a new game?'
 
 	return {
 		displayText : displayPhrase,
@@ -92,7 +94,7 @@ function askThePlayerAQuestion(data){
 
 function theGameHasBeenWon(scoreData){
 
-	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers.`;
+	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers. Would you like to start a new game?`;
 
 	return {
 		displayText : phrase,
