@@ -43,16 +43,31 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 }
 
-function theAnswerGivenWasNotCorrect(expectedAnswer, articleData){
+function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
+	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
+
+	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
+		if(scoreData.first) {
+			scorePhrase += ' You are the first to achieve this high score.';
+		} else {
+			scorePhrase += ' You have matched the current highest score.';
+		}
+		
+	} else {
+		scorePhrase += ` The record to beat is ${scoreData.scoreMax}.`;
+	}
+
+	scorePhrase += ' Would you like to start a new game?'
 
 	return {
 		displayText : displayPhrase,
 		speech : voicePhrase,
 		ssml : `<speak>${voicePhrase}</speak>`,
 		article: articleData.title,
-		link: `https://ft.com/${articleData.id}`
+		link: `https://ft.com/${articleData.id}`,
+		score: scorePhrase
 	};
 
 }
@@ -77,9 +92,9 @@ function askThePlayerAQuestion(data){
 
 }
 
-function theGameHasBeenWon(){
+function theGameHasBeenWon(scoreData){
 
-	const phrase = 'You have reached the end of the chain. There are no more connections to be made.';
+	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers. Would you like to start a new game?`;
 
 	return {
 		displayText : phrase,
