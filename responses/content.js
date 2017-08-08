@@ -40,7 +40,8 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		question: newQuestion
+		question: newQuestion,
+		chips: newQuestion.chips
 	};
 
 }
