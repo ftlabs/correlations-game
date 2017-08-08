@@ -78,6 +78,7 @@ function askThePlayerAQuestion(data){
 	const phrase = `Who was mentioned in a recent article with ${data.seed.printValue}?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
+	let chips =[]
 
 	Object.keys(data.options).forEach((key, index) => {
 		if(index === 2) {
@@ -85,6 +86,7 @@ function askThePlayerAQuestion(data){
 		} else {
 			displayText += `${data.options[key].printValue}, `;
 		}
+		chips.push(data.options[key].printValue);
 		ssml += `<break time="0.5s"/> ${optionNum[index]}) ${data.options[key].printValue}. `;
 	});
 
@@ -93,7 +95,8 @@ function askThePlayerAQuestion(data){
 	return {
 		displayText: displayText,
 		speech : displayText,
-		ssml: ssml
+		ssml: ssml,
+		chips: chips
 	};
 
 }
