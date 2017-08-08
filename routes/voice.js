@@ -148,6 +148,8 @@ const matchAnswer = app => {
 				response = responses.misunderstood(false);
 				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
+
+			app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 		}
 	});
 };
