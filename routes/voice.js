@@ -160,8 +160,7 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
-			console.log('RESULTS WIN::', data);
-			callback(responses.win());
+			callback(responses.win({score: data.score}));
 		} else {
 			const preparedData = {};
 
@@ -207,7 +206,7 @@ function checkAnswer(session, answer, callback) {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore}), false);
+				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
 		})
 	;

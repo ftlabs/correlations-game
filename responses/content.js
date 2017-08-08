@@ -49,9 +49,14 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	let scorePhrase = `You made ${scoreData.score} connections.`;
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
-		scorePhrase += 'Well done, this is the highest score!';
+		if(scoreData.first) {
+			scorePhrase += ' You are the first to achieve this high score.';
+		} else {
+			scorePhrase += ' You have matched the current highest score.';
+		}
+		
 	} else {
-		scorePhrase += `The record to beat is ${scoreData.scoreMax}`;
+		scorePhrase += ` The record to beat is ${scoreData.scoreMax}`;
 	}
 
 	return {
@@ -85,9 +90,9 @@ function askThePlayerAQuestion(data){
 
 }
 
-function theGameHasBeenWon(){
+function theGameHasBeenWon(scoreData){
 
-	const phrase = 'You have reached the end of the chain. There are no more connections to be made.';
+	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers.`;
 
 	return {
 		displayText : phrase,
