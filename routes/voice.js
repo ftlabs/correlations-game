@@ -127,9 +127,17 @@ const matchAnswer = app => {
 			});
 		} else {
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+			let richResponse = app.buildRichResponse();
+
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+				if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+					richResponse.addSimpleResponse(response.displayText)
+					.addSuggestions(response.chips);
+				} else {
+					richResponse.addSimpleResponse(response.ssml);
+				}
+				return app.ask(richResponse);
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
@@ -140,8 +148,6 @@ const matchAnswer = app => {
 				response = responses.misunderstood(false);
 				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
-
-			app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 		}
 	});
 };

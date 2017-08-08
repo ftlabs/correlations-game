@@ -3,6 +3,7 @@ const optionNum = ["one", "two", "three"];
 
 function inputWasNotUnderstood(isRepeating, input = null, options = null){
 	let phrase, phraseSSML;
+	let chips = [];
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 
@@ -16,6 +17,8 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 			} else {
 				phrase += `${options[i].original}, `;
 			}
+			
+			chips.push(options[i].original);
 			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i].original}. `;
 		}
 
@@ -27,7 +30,8 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 	return {
 		displayText : phrase,
 		speech : phrase,
-		ssml : `<speak>${phraseSSML}</speak>`
+		ssml : `<speak>${phraseSSML}</speak>`,
+		chips: chips
 	};
 
 }
