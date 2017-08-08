@@ -46,7 +46,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
-	let scorePhrase = `You made ${scoreData.score} connections.`;
+	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
