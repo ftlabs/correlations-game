@@ -78,7 +78,11 @@ function askThePlayerAQuestion(data){
 	let ssml = `<speak>${phrase}`;
 
 	Object.keys(data.options).forEach((key, index) => {
-		displayText += `\n ${(index + 1)}) ${data.options[key].printValue}. `;
+		if(index === 2) {
+			displayText += `or ${data.options[key].printValue}?`;
+		} else {
+			displayText += `${data.options[key].printValue},`;
+		}
 		ssml += `<break time="0.5s"/> ${optionNum[index]}) ${data.options[key].printValue}. `;
 	});
 
