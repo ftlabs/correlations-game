@@ -6,6 +6,8 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const { ApiAiApp } = require('actions-on-google');
 
+const spoor = require('../bin/lib/log-to-spoor');
+
 process.env.DEBUG = 'actions-on-google:*';
 
 const Actions = {
@@ -121,6 +123,21 @@ const matchAnswer = app => {
     			app.ask(richResponse)
 			});
 		} else {
+
+			spoor({
+				'category': 'GAME',
+				'action': 'answermisunderstood',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'user' : {
+					'uuid' : SESSION
+				},
+				'context' : {
+					'input' : USER_INPUT
+				}
+			});
+
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
@@ -145,8 +162,31 @@ function getQuestion(session, callback) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
+			spoor({
+				'category': 'GAME',
+				'action': 'questionasked',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'user' : {
+					'uuid' : session
+				}
+			});
+
 			return games.question(session);
 		} else {
+
+			spoor({
+				'category': 'GAME',
+				'action': 'gamestarted',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'user' : {
+					'uuid' : session
+				}
+			});
+
 			return games.new(session)
 			.then(gameUUID => {
 				return gameUUID;
@@ -157,6 +197,17 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
+			spoor({
+				'category': 'GAME',
+				'action': 'gamewon',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'user' : {
+					'uuid' : session
+				}
+			});
+
 			callback(responses.win());
 		} else {
 			const preparedData = {};
@@ -196,6 +247,18 @@ function getExpectedAnswers(session) {
 }
 
 function checkAnswer(session, answer, callback) {
+
+	spoor({
+		'category': 'GAME',
+		'action': 'answergiven',
+		'system' : {
+			'source': 'ftlabs-correlations-game'
+		},
+		'user' : {
+			'uuid' : session
+		}
+	});
+
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){

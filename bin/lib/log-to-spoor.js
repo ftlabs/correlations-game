@@ -1,18 +1,9 @@
 const debug = require('debug')('bin:middleware:log-requests');
 const fetch = require('node-fetch');
 
-module.exports = (req, res, next) => {
+module.exports = function(data){
 
-	debug('Logging request to:', req.originalUrl);
-	next();
-
-	const data = {
-		'category': 'request',
-		'action': req.originalUrl,
-		'system': {
-			'source': 'ftlabs-correlations-game'
-		}
-	};
+	debug('Sending data to spoor', data);
 
 	return fetch('https://spoor-api.ft.com/ingest', {
 			method: 'POST',
@@ -25,12 +16,15 @@ module.exports = (req, res, next) => {
 		})
 		.then(res => {
 			if(res.ok){
-				return res.text();
+				return res.json();
 			} else {
 				throw res;
 			}
 		})
-		.then(r => debug(r))
+		.then(r => {
+			debug('Data successfully submitted to Spoor', r);
+			return r;
+		})
 		.catch(err => {
 			debug('Request to Spoor failed:', err);
 		})
