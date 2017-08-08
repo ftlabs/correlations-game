@@ -3,6 +3,10 @@ const fetch = require('node-fetch');
 
 module.exports = function(data){
 
+	if(!data){
+		return Promise.resolve({'status' : 'Failed. Invalid data passed.'});
+	}
+
 	debug('Sending data to spoor', data);
 
 	return fetch('https://spoor-api.ft.com/ingest', {
