@@ -96,8 +96,9 @@ const matchAnswer = app => {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
-	    					.addBasicCard(app.buildBasicCard(obj.article)
+	    					.addBasicCard(app.buildBasicCard()
 						      .setTitle(obj.article)
+						      .setImage(obj.image, obj.article)
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse({speech: obj.question.displayText, displayText: obj.question.displayText, ssml: obj.question.ssml})
@@ -105,8 +106,9 @@ const matchAnswer = app => {
     				} else {
     					richResponse = app.buildRichResponse()
     						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
-    						.addBasicCard(app.buildBasicCard(obj.article)
+    						.addBasicCard(app.buildBasicCard()
 						      .setTitle(obj.article)
+						      .setImage(obj.image, obj.article)
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse(obj.score);
