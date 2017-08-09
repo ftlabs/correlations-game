@@ -69,7 +69,7 @@ const returnQuestion = app => {
 const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
-	debug('APP >>>', JSON.stringify(app, null, 2) );
+	debug('APP:>>>', app );
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
