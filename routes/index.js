@@ -57,7 +57,9 @@ function processResultForDisplay( result ){
 	return result;
 }
 
-router.post('^/|question', S3O);
+router.post('^(/|/question)', (req, res) => {
+	res.send(req.originalUrl);
+});
 
 router.get('/question', S3O, (req, res) => {
 
