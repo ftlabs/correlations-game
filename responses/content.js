@@ -2,30 +2,36 @@ const debug = require('debug')('responses:content');
 const optionNum = ["one", "two", "three"];
 
 function inputWasNotUnderstood(isRepeating, input = null, options = null){
-	let phrase, displayPhrase, phraseSSML;
+	let phrase, phraseSSML;
+	let chips = [];
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 
 	if(isRepeating) {
 		phrase = `Sorry, I did not understand that. The possible answers were: `;
-		displayPhrase = phrase;
 		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
-			phrase += `\n ${optionNum[i]}) ${options[i]}. `;
-			displayPhrase += `\n ${(i + 1)}) ${options[i]}. `;
-			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i]}. `;
+
+			if(i === 2) {
+				phrase += `or ${options[i].original}?`;
+			} else {
+				phrase += `${options[i].original}, `;
+			}
+			
+			chips.push(options[i].original);
+			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i].original}. `;
 		}
 
 	} else {
 		phrase = `Sorry, I'm not sure what you said. For instructions, say "help".`;
 		phraseSSML = phrase;
-		displayPhrase = phrase;
 	}
 
 	return {
-		displayText : displayPhrase,
+		displayText : phrase,
 		speech : phrase,
-		ssml : `<speak>${phraseSSML}</speak>`
+		ssml : `<speak>${phraseSSML}</speak>`,
+		chips: chips
 	};
 
 }
@@ -38,7 +44,8 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		question: newQuestion
+		question: newQuestion,
+		chips: newQuestion.chips
 	};
 
 }
@@ -76,9 +83,15 @@ function askThePlayerAQuestion(data){
 	const phrase = `Who was mentioned in a recent article with ${data.seed.printValue}?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
+	let chips = [];
 
 	Object.keys(data.options).forEach((key, index) => {
-		displayText += `\n ${(index + 1)}) ${data.options[key].printValue}. `;
+		if(index === 2) {
+			displayText += `or ${data.options[key].printValue}?`;
+		} else {
+			displayText += `${data.options[key].printValue}, `;
+		}
+		chips.push(data.options[key].printValue);
 		ssml += `<break time="0.5s"/> ${optionNum[index]}) ${data.options[key].printValue}. `;
 	});
 
@@ -87,7 +100,8 @@ function askThePlayerAQuestion(data){
 	return {
 		displayText: displayText,
 		speech : displayText,
-		ssml: ssml
+		ssml: ssml,
+		chips: chips
 	};
 
 }

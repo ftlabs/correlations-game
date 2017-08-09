@@ -54,7 +54,7 @@ const returnQuestion = app => {
     	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     		richResponse = app.buildRichResponse()
 				.addSimpleResponse(obj.displayText)
-				.addSuggestions(['1', '2', '3']);
+				.addSuggestions(obj.chips);
     	} else {
     		richResponse = app.buildRichResponse()
 				.addSimpleResponse(obj.ssml);
@@ -71,21 +71,22 @@ const matchAnswer = app => {
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
-			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+			return answers[key];
 		});
 
 		if (checkString(USER_INPUT.toLowerCase(), 0)) {
-			USER_INPUT = expectedAnswers[0];
+			USER_INPUT = expectedAnswers[0].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 1)) {
-			USER_INPUT = expectedAnswers[1];
+			USER_INPUT = expectedAnswers[1].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 2)) {
-			USER_INPUT = expectedAnswers[2];
+			USER_INPUT = expectedAnswers[2].match;
 		}
 
 		if (
-			USER_INPUT.toLowerCase() === expectedAnswers[0] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[2]
+			USER_INPUT.toLowerCase() === expectedAnswers[0].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[1].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[2].match
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);
@@ -100,7 +101,7 @@ const matchAnswer = app => {
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse({speech: obj.question.displayText, displayText: obj.question.displayText, ssml: obj.question.ssml})
-	    					.addSuggestions(['1', '2', '3']);
+	    					.addSuggestions(obj.chips);
     				} else {
     					richResponse = app.buildRichResponse()
     						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
@@ -125,9 +126,17 @@ const matchAnswer = app => {
 			});
 		} else {
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+			let richResponse = app.buildRichResponse();
+
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+				if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+					richResponse.addSimpleResponse(response.displayText)
+					.addSuggestions(response.chips);
+				} else {
+					richResponse.addSimpleResponse(response.ssml);
+				}
+				return app.ask(richResponse);
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
