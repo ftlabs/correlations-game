@@ -38,6 +38,8 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 
 function theAnswerGivenWasCorrect(articleData, newQuestion){
 
+	console.log('DEBUG CONTENT::', articleData.imageUrl);
+
 	return {
 		displayText : `Correct. They were connected in the FT article:`,
 		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}.`,
