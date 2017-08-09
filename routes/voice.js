@@ -70,7 +70,7 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 	debug('APP:>>>', app );
-
+	process.exit();
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
