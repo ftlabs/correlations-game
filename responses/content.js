@@ -39,6 +39,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 	console.log('DEBUG CONTENT::', articleData.imageUrl);
+	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl.replace('http', 'https'):undefined;
 
 	return {
 		displayText : `Correct. They were connected in the FT article:`,
@@ -46,7 +47,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		image: articleData.imageUrl.replace('http', 'https'),
+		image: illustration,
 		question: newQuestion,
 		chips: newQuestion.chips
 	};
@@ -57,6 +58,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
+	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl.replace('http', 'https'):undefined;
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
@@ -77,7 +79,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 		ssml : `<speak>${voicePhrase}</speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		image: articleData.imageUrl.replace('http', 'https'),
+		image: illustration,
 		score: scorePhrase
 	};
 
