@@ -7,5 +7,8 @@
 {{/each}}
 </ul>
 
-<p>You have achieved {{ result.score }} {{ result.consecutiveWording }} so far.
-<p><a href="/question">Next question...</a></p>
+<p>You have achieved {{ result.score }} {{ result.consecutiveWording }} so far.</p>
+
+<form action="/question">
+  <button type="submit" style="margin-top:0.5em; font-size:large; border-radius:10px;">Next question...!</button>
+</form>
