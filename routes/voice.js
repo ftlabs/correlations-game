@@ -70,6 +70,10 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 	debug('APP>>>', app);
+
+	debug('CAPS>>>',app.getSurfaceCapabilities());
+	debug('INTYPE>>>',app.getInputType());
+
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
