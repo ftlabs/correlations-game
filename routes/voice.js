@@ -212,6 +212,7 @@ function getExpectedAnswers(session) {
 function checkAnswer(session, answer, callback) {
 	games.answer(session, answer)
 		.then(result => {
+			console.log('ARTICLE DATA::', result.linkingArticles);
 			if(result.correct === true){
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
