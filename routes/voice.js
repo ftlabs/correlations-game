@@ -94,12 +94,12 @@ const matchAnswer = app => {
     			let richResponse;
     			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     				if(addSuggestions) {
-    					console.log('DEBUG IMAGE::', obj.image);
+    					console.log('DEBUG IMAGE::', obj, obj.image);
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
 	    					.addBasicCard(app.buildBasicCard()
 						      .setTitle(obj.article)
-						      .setImage(obj.image)
+						      .setImage(obj.image, obj.article)
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse({speech: obj.question.displayText, displayText: obj.question.displayText, ssml: obj.question.ssml})

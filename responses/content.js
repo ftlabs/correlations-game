@@ -46,7 +46,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		image: articleData.imageUrl,
+		image: articleData.imageUrl.replace('http', 'https'),
 		question: newQuestion,
 		chips: newQuestion.chips
 	};
@@ -77,7 +77,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 		ssml : `<speak>${voicePhrase}</speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
-		image: articleData.imageUrl,
+		image: articleData.imageUrl.replace('http', 'https'),
 		score: scorePhrase
 	};
 
