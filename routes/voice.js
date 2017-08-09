@@ -69,6 +69,7 @@ const returnQuestion = app => {
 const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
+	debug('APP >>>', JSON.stringify(app, null, 2) );
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -293,7 +294,6 @@ actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
   const app = new ApiAiApp({ request, response });
-  debug('APP >>>', JSON.stringify(app, null, 2) );
   app.handleRequest(actionMap);
 });
 
