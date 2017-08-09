@@ -70,8 +70,6 @@ const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
 	const INPUT_TYPE = app.getInputType();
-	
-	debug('APP>>>', app);
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -305,14 +303,6 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
-
-	debug('Request:', request);
-	debug('Request Body:', request.body);
-	debug('Request Body originalRequest:', request.body.originalRequest);
-	debug('Request Body originalRequest.data:', request.body.originalRequest.data);
-	debug('Request Body originalRequest.data.surface:', request.body.originalRequest.data.surface);
-	debug('Request Body originalRequest.data.surface.capabilities:', request.body.originalRequest.data.surface.capabilities);
-	debug('Device ID(?):', request.body.originalRequest.data.device);
 
 	const app = new ApiAiApp({ request, response });
 	app.handleRequest(actionMap);
