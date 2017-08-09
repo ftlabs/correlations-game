@@ -94,6 +94,7 @@ const matchAnswer = app => {
     			let richResponse;
     			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
     				if(addSuggestions) {
+    					console.log('DEBUG IMAGE::', obj.image);
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
 	    					.addBasicCard(app.buildBasicCard()
