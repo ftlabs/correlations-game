@@ -38,7 +38,6 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 
 function theAnswerGivenWasCorrect(articleData, newQuestion){
 
-	console.log('DEBUG CONTENT::', articleData.imageUrl);
 	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:process.env.FT_LOGO;
 
 	return {
