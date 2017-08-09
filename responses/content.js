@@ -39,7 +39,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 	console.log('DEBUG CONTENT::', articleData.imageUrl);
-	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl.replace('http', 'https'):undefined;
+	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:undefined;
 
 	return {
 		displayText : `Correct. They were connected in the FT article:`,
@@ -58,7 +58,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
 	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
-	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl.replace('http', 'https'):undefined;
+	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:undefined;
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
