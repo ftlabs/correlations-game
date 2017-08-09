@@ -293,8 +293,10 @@ actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
 
-	debug(request);
-	debug(request.body);
+	debug('Request:', request);
+	debug('Request Body:', request.body);
+	debug('Device(?):', request.body.device);
+
 	const app = new ApiAiApp({ request, response });
 	app.handleRequest(actionMap);
 
