@@ -295,7 +295,7 @@ router.post('/googlehome', (request, response) => {
 
 	debug('Request:', request);
 	debug('Request Body:', request.body);
-	debug('Device(?):', request.body.device);
+	debug('Device(?):', request.body.originalRequest.data.device);
 
 	const app = new ApiAiApp({ request, response });
 	app.handleRequest(actionMap);
