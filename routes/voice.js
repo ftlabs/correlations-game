@@ -63,16 +63,15 @@ const returnQuestion = app => {
     	}
     	
 		app.ask(richResponse);
-	});
+	}, app.getInputType());
 };
 
 const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
+	const INPUT_TYPE = app.getInputType();
+	
 	debug('APP>>>', app);
-
-	debug('CAPS>>>',app.getSurfaceCapabilities());
-	debug('INTYPE>>>',app.getInputType());
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -128,7 +127,7 @@ const matchAnswer = app => {
     			}
 
     			app.ask(richResponse)
-			});
+			}, INPUT_TYPE);
 		} else {
 
 			spoor({
@@ -141,7 +140,8 @@ const matchAnswer = app => {
 					'uuid' : SESSION
 				},
 				'context' : {
-					'input' : USER_INPUT
+					'input' : USER_INPUT,
+					'input-type' : INPUT_TYPE
 				}
 			});
 
@@ -165,7 +165,7 @@ const matchAnswer = app => {
 	});
 };
 
-function getQuestion(session, callback) {
+function getQuestion(session, callback, inputType) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
@@ -177,6 +177,9 @@ function getQuestion(session, callback) {
 				},
 				'user' : {
 					'uuid' : session
+				},
+				'context' : {
+					'input-type' : inputType
 				}
 			});
 
@@ -213,6 +216,9 @@ function getQuestion(session, callback) {
 				},
 				'user' : {
 					'uuid' : session
+				},
+				'context' : {
+					'input-type' : inputType
 				}
 			});
 			callback(responses.win({score: data.score}));
@@ -254,7 +260,7 @@ function getExpectedAnswers(session) {
 	});
 }
 
-function checkAnswer(session, answer, callback) {
+function checkAnswer(session, answer, callback, inputType) {
 
 	spoor({
 		'category': 'GAME',
@@ -264,6 +270,9 @@ function checkAnswer(session, answer, callback) {
 		},
 		'user' : {
 			'uuid' : session
+		},
+		'context' : {
+			'input-type' : inputType
 		}
 	});
 
@@ -272,7 +281,7 @@ function checkAnswer(session, answer, callback) {
 			if(result.correct === true){
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
-				});
+				}, inputType);
 			} else {
 				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
