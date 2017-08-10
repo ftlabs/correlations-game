@@ -54,8 +54,8 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 }
 
 function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
-	const displayPhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled:`;
-	const voicePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}.`;
+	const displayPhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled:`;
+	const voicePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`;
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
 	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:process.env.FT_LOGO;
 
