@@ -214,10 +214,10 @@ function checkAnswer(session, answer, callback) {
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
+					callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
 				});
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
+				callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
 		})
 	;

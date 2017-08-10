@@ -36,14 +36,14 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 
 }
 
-function theAnswerGivenWasCorrect(articleData, newQuestion){
+function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:process.env.FT_LOGO;
 
 	return {
-		displayText : `Correct. They were connected in the FT article:`,
-		speech : `Correct. They were connected in the FT article, titled: ${articleData.title}.`,
-		ssml : `<speak>Correct. They were connected in the FT article, titled: ${articleData.title}. <break time="1s"/></speak>`,
+		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article:`,
+		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
+		ssml : `<speak>Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
 		image: illustration,
@@ -53,9 +53,9 @@ function theAnswerGivenWasCorrect(articleData, newQuestion){
 
 }
 
-function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
-	const displayPhrase  = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article:`;
-	const voicePhrase = `Sorry, that is incorrect. The correct answer was ${expectedAnswer.replace('people:', '')}. They were connected in the FT article, titled: ${articleData.title}.`;
+function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
+	const displayPhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled:`;
+	const voicePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}.`;
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
 	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:process.env.FT_LOGO;
 
@@ -85,7 +85,7 @@ function theAnswerGivenWasNotCorrect(expectedAnswer, articleData, scoreData){
 }
 
 function askThePlayerAQuestion(data){
-	const phrase = `Who was mentioned in a recent article with ${data.seed.printValue}?`;
+	const phrase = `${data.seed.printValue} was mentioned in an article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
