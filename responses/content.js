@@ -41,9 +41,9 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 	const illustration = (articleData.imageUrl !== undefined)?articleData.imageUrl:process.env.FT_LOGO;
 
 	return {
-		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article:`,
-		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
-		ssml : `<speak>Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seedPerson.replace('people:', '')} in the FT article titled: ${articleData.title}. <break time="1s"/></speak>`,
+		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
+		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
+		ssml : `<speak>Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}. <break time="1s"/></speak>`,
 		article: articleData.title,
 		link: `https://ft.com/${articleData.id}`,
 		image: illustration,
