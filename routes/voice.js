@@ -49,16 +49,24 @@ if (!Object.values) {
 
 const getHelp = app => {
 	let richResponse;
-	const helpBody = responses.help();
-	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
-		richResponse = app.buildRichResponse()
-			.addSimpleResponse(helpBody.displayText)
-	} else {
-		richResponse = app.buildRichResponse()
-			.addSimpleResponse(helpBody.ssml);
-	}
-	
-	app.ask(richResponse);
+
+	games.check(app.body_.sessionId)
+		.then(gameExists => {
+			
+			const helpBody = responses.help(gameExists);
+			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(helpBody.displayText)
+			} else {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(helpBody.ssml);
+			}
+			
+			app.ask(richResponse);
+
+		})
+	;
+
 
 };
 
