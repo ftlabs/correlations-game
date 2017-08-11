@@ -49,6 +49,11 @@ if (!Object.values) {
 
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
+
+	const USER_INPUT = app.body_.result.resolvedQuery;
+
+	debug('USER_INPUT for question:', USER_INPUT);
+
 	getQuestion(app.body_.sessionId, obj => {
 		let richResponse;
     	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
