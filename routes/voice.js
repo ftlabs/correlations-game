@@ -189,7 +189,7 @@ function getQuestion(session, callback) {
 				};
 			});
 
-			callback(responses.askQuestion(preparedData));
+			callback( responses.askQuestion(preparedData, data.questionNum) );
 		}
 	})
 	.catch(err => {
