@@ -25,11 +25,16 @@ achievedHighestScore, achievedHighestScoreFirst - set when finishing a question,
 */
 const GAMES_STATS_ID = 'UUID_FOR_GAMES_STATS';
 
+const MaxScoreResetAfterMillis = 1000 * 60 * 60 * 24;
+
 let GAMES_STATS = {
 	counts      : { created : 0, finished : 0, cloned: 0 },
 	scoreCounts : { 0 : 0 }, // { score : count } - prime it with a count of 0 so there is always a counted score
 	maxScore    : 0,
 	uuid        : GAMES_STATS_ID,
+	maxScoreSetMillis : 0, // epoch millis for when the current high score was set.
+	maxScoreSetDate : undefined, // display date set after an update
+	maxScoreResetAfterMillis : MaxScoreResetAfterMillis, // i.e. reset the highscore if it has not been matched or improved after 24hrs
 }
 
 const GAME_VARIANT = {
@@ -381,18 +386,45 @@ class Game{
 
 	updateScoreStats() {
 		const score = this.distance;
+		const nowMillis = Date.now();
 		return Game.updateGamesStats( function(){
 			GAMES_STATS.counts.finished += 1;
 
-			if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
-				GAMES_STATS.scoreCounts[score] = 0;
+			{ // ensure we have these vals in place
+				if (! GAMES_STATS.scoreCounts.hasOwnProperty(score)) {
+					GAMES_STATS.scoreCounts[score] = 0;
+				}
+
+				if (! GAMES_STATS.hasOwnProperty('maxScoreSetMillis')) {
+					GAMES_STATS.maxScoreSetMillis = nowMillis;
+				}
+
+				if (! GAMES_STATS.hasOwnProperty('maxScoreResetAfterMillis')) {
+					GAMES_STATS.maxScoreResetAfterMillis = MaxScoreResetAfterMillis;
+				}
 			}
+
 			GAMES_STATS.scoreCounts[score] += 1;
-			GAMES_STATS.maxScore = Math.max(GAMES_STATS.maxScore, score);
+
+			if (score > GAMES_STATS.maxScore) {           // new high score!
+				GAMES_STATS.maxScoreSetMillis = nowMillis;
+				GAMES_STATS.maxScore = score;
+			} else if( score === 0 ){                     // yeah well, best forgotten
+				// make no changes to high score
+			} else if (score === GAMES_STATS.maxScore) {  // same high score, more recent timestamp
+				GAMES_STATS.maxScoreSetMillis = nowMillis;
+			} else if ((nowMillis - GAMES_STATS.maxScoreSetMillis) > GAMES_STATS.maxScoreResetAfterMillis) {
+																										// high score is too old, so the new score is the high score
+				GAMES_STATS.maxScoreSetMillis = nowMillis;
+				GAMES_STATS.maxScore = score;
+			}
+
+			GAMES_STATS.maxScoreSetDate = new Date(GAMES_STATS.maxScoreSetMillis).toString(); // human-readable age/date of when the high score was set
+
 		})
 		.then( () => {
 			this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
-			this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.scoreCounts[score]===1);
+			this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.maxScoreSetMillis === nowMillis);
 		})
 		;
 	}
@@ -726,10 +758,14 @@ function getGameDetails(gameUUID){
 }
 
 function getStats(){
-	return {
-		correlations_service : correlations_service.stats(),
-		games                : GAMES_STATS,
-	}
+	return Game.updateGamesStats( () => {} ) // just ensure that we have the latest from the DB
+	.then( () => {
+		return {
+			correlations_service : correlations_service.stats(),
+			games                : GAMES_STATS,
+		};
+	})
+	;
 }
 
 module.exports = {

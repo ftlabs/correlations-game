@@ -32,7 +32,6 @@ function calcFnStats(fnName){
 			avg    : sumDurations / mostRecentDurations.length,
 			max    : Math.max(...mostRecentDurations),
 			min    : Math.min(...mostRecentDurations),
-			window : CALL_STATS_WINDOW,
 		}
 	}
 }
@@ -49,13 +48,16 @@ function updateStats(fnName, startTimeMillis){
 }
 
 function generateStats(){
-	const stats = {};
+	const callStats = {};
 
 	Object.keys(CALL_STATS).sort().forEach(fnName => {
-		stats[fnName] = calcFnStats(fnName);
+		callStats[fnName] = calcFnStats(fnName);
 	});
 
-	return stats;
+	return {
+		statsWindow: CALL_STATS_WINDOW,
+		callStats: callStats,
+	};
 }
 
 function getAllOfTheIslandsInTheCorrelationsService(){
