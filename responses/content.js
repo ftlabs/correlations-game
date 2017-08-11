@@ -128,8 +128,8 @@ function getTheInstructionsForPlayingTheGame(gameInProgress){
 	let SSMLPhrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news. Once you've started a game, a question will be asked like the following. Who was recently mentioned in an article with Person A<break time="0.5s" />1. Person B.<break time="0.5s" /> 2. Person C.<break time="0.5s" />3. Person D.<break time="0.5s" />Only one of the options is correct.<break time="0.5s" />Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it.<break time="0.5s" /> If you are right, you'll be asked about another person. If you are wrong, it's game over <break time="0.5s" /> you can say "New Game", "Let's go again", or "Start" to begin a new game. At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game.<break time="0.5s" />If you would like to hear the question again, just say "repeat".<break time="0.5s" /> To hear these instructions at any point in the game, just say "help". `
 
 	if(!gameInProgress){
-		phrase += `To play a game say "Start" or "Play"`;
-		SSMLPhrase += `<break time="0.5s" />To play a game say "Start" or "Play"`;
+		phrase += `If you would like to play a game now, say "Start" or "Play"`;
+		SSMLPhrase += `<break time="1.5s" />If you would like to play a game now, say "Start" or "Play"`;
 	} else {
 		phrase += `Would you like to continue your game?`;
 		SSMLPhrase += `<break time="0.5s" />Would you like to continue your game?`;
