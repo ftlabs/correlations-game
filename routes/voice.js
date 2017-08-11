@@ -47,6 +47,21 @@ if (!Object.values) {
   Object.values = o => Object.keys(o).map(k => o[k]);
 }
 
+const getHelp = app => {
+	let richResponse;
+	const helpBody = responses.help();
+	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+		richResponse = app.buildRichResponse()
+			.addSimpleResponse(helpBody.displayText)
+	} else {
+		richResponse = app.buildRichResponse()
+			.addSimpleResponse(helpBody.ssml);
+	}
+	
+	app.ask(richResponse);
+
+};
+
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
 
@@ -54,19 +69,26 @@ const returnQuestion = app => {
 
 	debug('USER_INPUT for question:', USER_INPUT);
 
-	getQuestion(app.body_.sessionId, obj => {
-		let richResponse;
-    	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
-    		richResponse = app.buildRichResponse()
-				.addSimpleResponse(obj.displayText)
-				.addSuggestions(obj.chips);
-    	} else {
-    		richResponse = app.buildRichResponse()
-				.addSimpleResponse(obj.ssml);
-    	}
-    	
-		app.ask(richResponse);
-	});
+	if(USER_INPUT === 'help'){
+		getHelp(app);
+	} else {
+
+		getQuestion(app.body_.sessionId, obj => {
+			let richResponse;
+			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(obj.displayText)
+					.addSuggestions(obj.chips);
+			} else {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(obj.ssml);
+			}
+			
+			app.ask(richResponse);
+		});
+
+	}
+
 };
 
 const matchAnswer = app => {

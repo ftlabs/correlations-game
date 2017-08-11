@@ -122,10 +122,23 @@ function theGameHasBeenWon(scoreData){
 	};
 }
 
+function getTheInstructionsForPlayingTheGame(){
+
+	const phrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news. Once you've started a game, a question will be asked like the following... Who was recently mentioned in an article with Person A 1. Person 1. 2. Person 2. 3. Person 3. Only one of the options is correct. Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it. If you are right, you'll be asked about another person. If you are wrong, it's game over - you can say "New Game", "Let's go again", or "Start" to begin a new game. At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game. If you would like to hear the question again, just say "repeat". To hear these instructions again say "again". To play a game say "Start" or "Play"`;
+
+	return {
+		displayText : phrase,
+		speech : phrase,
+		ssml : `<speak>${phrase}</speak>`
+	};
+
+}
+
 module.exports = {
 	misunderstood : inputWasNotUnderstood,
 	correctAnswer : theAnswerGivenWasCorrect,
 	incorrectAnswer : theAnswerGivenWasNotCorrect,
 	askQuestion : askThePlayerAQuestion,
-	win : theGameHasBeenWon
+	win : theGameHasBeenWon,
+	help : getTheInstructionsForPlayingTheGame
 };
