@@ -57,7 +57,9 @@ function processResultForDisplay( result ){
 	return result;
 }
 
-router.post('/', S3O);
+router.post('^(/|/question)', (req, res) => {
+	res.send(req.originalUrl);
+});
 
 router.get('/question', S3O, (req, res) => {
 
@@ -117,7 +119,7 @@ router.get('/question', S3O, (req, res) => {
 				message : 'An error occurred as we tried to get the question.'
 			});
 		})
-
+	;
 });
 
 router.post('/answer', S3O, (req, res) => {
