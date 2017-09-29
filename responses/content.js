@@ -38,8 +38,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
-	const illustration = (articleData.mainImageUrl !== undefined)?articleData.mainImageUrl:process.env.FT_LOGO;
-	console.log('DATA::', illustration, '::', articleData);
+	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
 	
 	return {
 		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
@@ -58,9 +57,8 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 	const displayPhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled:`;
 	const voicePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`;
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
-	const illustration = (articleData.mainImageUrl !== undefined)?articleData.mainImageUrl:process.env.FT_LOGO;
-	console.log('DATA::', illustration, '::', articleData);
-	
+	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
+
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
 			scorePhrase += ' You are the first to achieve this high score.';
