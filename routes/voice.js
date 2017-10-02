@@ -49,21 +49,53 @@ if (!Object.values) {
   Object.values = o => Object.keys(o).map(k => o[k]);
 }
 
+const getHelp = app => {
+	let richResponse;
+
+	games.check(app.body_.sessionId)
+		.then(gameExists => {
+			
+			const helpBody = responses.help(gameExists);
+			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(helpBody.displayText)
+			} else {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(helpBody.ssml);
+			}
+			
+			app.ask(richResponse);
+
+		})
+	;
+
+
+};
+
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
-	getQuestion(app.body_.sessionId, obj => {
-		let richResponse;
-    	if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
-    		richResponse = app.buildRichResponse()
-				.addSimpleResponse(obj.displayText)
-				.addSuggestions(['1', '2', '3']);
-    	} else {
-    		richResponse = app.buildRichResponse()
-				.addSimpleResponse(obj.ssml);
-    	}
-    	
-		app.ask(richResponse);
-	}, app.getInputType());
+	const USER_INPUT = app.body_.result.resolvedQuery;
+
+	debug('USER_INPUT for question:', USER_INPUT);
+
+	if(USER_INPUT === 'help'){
+		getHelp(app);
+	} else {
+
+		getQuestion(app.body_.sessionId, obj => {
+			let richResponse;
+			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(obj.displayText)
+					.addSuggestions(obj.chips);
+			} else {
+				richResponse = app.buildRichResponse()
+					.addSimpleResponse(obj.ssml);
+			}
+			
+			app.ask(richResponse);
+		}, app.getInputType());
+	}
 };
 
 const matchAnswer = app => {
@@ -74,21 +106,22 @@ const matchAnswer = app => {
 	getExpectedAnswers(SESSION)
 	.then(answers => {
 		const expectedAnswers = Object.keys(answers).map(key => {
-			return answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase();
+			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+			return answers[key];
 		});
 
 		if (checkString(USER_INPUT.toLowerCase(), 0)) {
-			USER_INPUT = expectedAnswers[0];
+			USER_INPUT = expectedAnswers[0].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 1)) {
-			USER_INPUT = expectedAnswers[1];
+			USER_INPUT = expectedAnswers[1].match;
 		} else if (checkString(USER_INPUT.toLowerCase(), 2)) {
-			USER_INPUT = expectedAnswers[2];
+			USER_INPUT = expectedAnswers[2].match;
 		}
 
 		if (
-			USER_INPUT.toLowerCase() === expectedAnswers[0] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[1] ||
-			USER_INPUT.toLowerCase() === expectedAnswers[2]
+			USER_INPUT.toLowerCase() === expectedAnswers[0].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[1].match ||
+			USER_INPUT.toLowerCase() === expectedAnswers[2].match
 		) {
 			checkAnswer(SESSION, 'people:' + USER_INPUT, (obj, addSuggestions) => {
     			app.setContext(Contexts.GAME, 1000);
@@ -98,17 +131,19 @@ const matchAnswer = app => {
     				if(addSuggestions) {
     					richResponse = app.buildRichResponse()
 	    					.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
-	    					.addBasicCard(app.buildBasicCard(obj.article)
+	    					.addBasicCard(app.buildBasicCard()
 						      .setTitle(obj.article)
+						      .setImage(obj.image, obj.article)
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse({speech: obj.question.displayText, displayText: obj.question.displayText, ssml: obj.question.ssml})
-	    					.addSuggestions(['1', '2', '3']);
+	    					.addSuggestions(obj.chips);
     				} else {
     					richResponse = app.buildRichResponse()
     						.addSimpleResponse({speech: obj.speech, displayText:obj.displayText, ssml: obj.ssml})
-    						.addBasicCard(app.buildBasicCard(obj.article)
+    						.addBasicCard(app.buildBasicCard()
 						      .setTitle(obj.article)
+						      .setImage(obj.image, obj.article)
 						      .addButton('Read article', obj.link)
 						    )
 						    .addSimpleResponse(obj.score);
@@ -144,9 +179,17 @@ const matchAnswer = app => {
 			});
 
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+			let richResponse = app.buildRichResponse();
+
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
 				app.setContext(Contexts.MISUNDERSTOOD, 3);
-				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+				if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+					richResponse.addSimpleResponse(response.displayText)
+					.addSuggestions(response.chips);
+				} else {
+					richResponse.addSimpleResponse(response.ssml);
+				}
+				return app.ask(richResponse);
 			}
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()).lifespan === 0 || expectedAnswers.length === 0) {
@@ -238,7 +281,7 @@ function getQuestion(session, callback, inputType) {
 				};
 			});
 
-			callback(responses.askQuestion(preparedData));
+			callback( responses.askQuestion(preparedData, data.questionNum) );
 		}
 	})
 	.catch(err => {
@@ -278,10 +321,10 @@ function checkAnswer(session, answer, callback, inputType) {
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
-					callback(responses.correctAnswer(result.linkingArticles[0], obj), true);
+					callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
 				}, inputType);
 			} else {
-				callback(responses.incorrectAnswer(result.expected, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
+				callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
 		})
 	;

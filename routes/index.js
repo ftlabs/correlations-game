@@ -57,7 +57,7 @@ function processResultForDisplay( result ){
 	return result;
 }
 
-router.post('/', S3O);
+router.post('^(/|/question)', S3O);
 
 router.get('/question', S3O, (req, res) => {
 
@@ -117,7 +117,7 @@ router.get('/question', S3O, (req, res) => {
 				message : 'An error occurred as we tried to get the question.'
 			});
 		})
-
+	;
 });
 
 router.post('/answer', S3O, (req, res) => {
@@ -174,7 +174,22 @@ router.get('/answer', S3O, (req, res) => {
 });
 
 router.get('/stats', S3O, (req, res) => {
-	res.json(games.stats());
+	games.stats()
+	.then( stats => {
+		res.json(stats);
+	})
+	.catch(err => {
+		debug(JSON.stringify(err));
+		res.json({
+			status : 'err',
+			message : 'An error occurred as we tried to get the stats.'
+		});
+	})
+	;
+});
+
+router.post('/stats', S3O, (req, res) => {
+	res.redirect('/stats');
 });
 
 module.exports = router;
