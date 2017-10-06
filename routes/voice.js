@@ -171,10 +171,6 @@ const matchAnswer = app => {
 				},
 				'user' : {
 					'uuid' : SESSION
-				},
-				'context' : {
-					'input' : USER_INPUT,
-					'input-type' : INPUT_TYPE
 				}
 			});
 
@@ -218,9 +214,6 @@ function getQuestion(session, callback, inputType) {
 				},
 				'user' : {
 					'uuid' : session
-				},
-				'context' : {
-					'input-type' : inputType
 				}
 			});
 
@@ -257,9 +250,6 @@ function getQuestion(session, callback, inputType) {
 				},
 				'user' : {
 					'uuid' : session
-				},
-				'context' : {
-					'input-type' : inputType
 				}
 			});
 			callback(responses.win({score: data.score}));
@@ -311,9 +301,6 @@ function checkAnswer(session, answer, callback, inputType) {
 		},
 		'user' : {
 			'uuid' : session
-		},
-		'context' : {
-			'input-type' : inputType
 		}
 	});
 
