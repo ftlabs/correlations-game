@@ -228,7 +228,7 @@ function getQuestion(session, callback, inputType) {
 				'action': 'gamestarted',
 				'system' : {
 					'source': 'ftlabs-correlations-game'
-				}
+				},
 				'context': {
 					'sessionId': session
 				}
