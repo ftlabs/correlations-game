@@ -169,8 +169,10 @@ const matchAnswer = app => {
 				'system' : {
 					'source': 'ftlabs-correlations-game'
 				},
-				'user' : {
-					'uuid' : SESSION
+				'context' : {
+					'sessionId': SESSION,
+					'input' : USER_INPUT,
+					'inputType' : INPUT_TYPE
 				}
 			});
 
@@ -212,8 +214,9 @@ function getQuestion(session, callback, inputType) {
 				'system' : {
 					'source': 'ftlabs-correlations-game'
 				},
-				'user' : {
-					'uuid' : session
+				'context' : {
+					'sessionId': session,
+					'inputType' : inputType
 				}
 			});
 
@@ -225,9 +228,9 @@ function getQuestion(session, callback, inputType) {
 				'action': 'gamestarted',
 				'system' : {
 					'source': 'ftlabs-correlations-game'
-				},
-				'user' : {
-					'uuid' : session
+				}
+				'context': {
+					'sessionId': session
 				}
 			});
 
@@ -248,8 +251,9 @@ function getQuestion(session, callback, inputType) {
 				'system' : {
 					'source': 'ftlabs-correlations-game'
 				},
-				'user' : {
-					'uuid' : session
+				'context' : {
+					'sessionId': session,
+					'inputType' : inputType
 				}
 			});
 			callback(responses.win({score: data.score}));
@@ -299,8 +303,9 @@ function checkAnswer(session, answer, callback, inputType) {
 		'system' : {
 			'source': 'ftlabs-correlations-game'
 		},
-		'user' : {
-			'uuid' : session
+		'context' : {
+			'sessionId': session,
+			'inputType' : inputType
 		}
 	});
 

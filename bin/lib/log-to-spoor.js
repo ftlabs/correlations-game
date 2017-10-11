@@ -26,11 +26,11 @@ module.exports = function(data){
 			}
 		})
 		.then(r => {
-			debug('Data successfully submitted to Spoor', r);
+			console.log('Data successfully submitted to Spoor', r);
 			return r;
 		})
 		.catch(err => {
-			debug('Request to Spoor failed:', err);
+			console.log('Request to Spoor failed:', err);
 		})
 	;
 
