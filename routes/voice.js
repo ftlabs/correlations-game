@@ -170,6 +170,7 @@ const matchAnswer = app => {
 					'source': 'ftlabs-correlations-game'
 				},
 				'context' : {
+					'product': 'ftlabs',
 					'sessionId': SESSION,
 					'input' : USER_INPUT,
 					'inputType' : INPUT_TYPE
@@ -215,6 +216,7 @@ function getQuestion(session, callback, inputType) {
 					'source': 'ftlabs-correlations-game'
 				},
 				'context' : {
+					'product': 'ftlabs',
 					'sessionId': session,
 					'inputType' : inputType
 				}
@@ -230,6 +232,7 @@ function getQuestion(session, callback, inputType) {
 					'source': 'ftlabs-correlations-game'
 				},
 				'context': {
+					'product': 'ftlabs',
 					'sessionId': session
 				}
 			});
@@ -252,6 +255,7 @@ function getQuestion(session, callback, inputType) {
 					'source': 'ftlabs-correlations-game'
 				},
 				'context' : {
+					'product': 'ftlabs',
 					'sessionId': session,
 					'inputType' : inputType
 				}
@@ -304,6 +308,7 @@ function checkAnswer(session, answer, callback, inputType) {
 			'source': 'ftlabs-correlations-game'
 		},
 		'context' : {
+			'product': 'ftlabs',
 			'sessionId': session,
 			'inputType' : inputType
 		}
