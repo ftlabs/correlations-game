@@ -7,7 +7,7 @@ module.exports = function(data){
 		return Promise.resolve({'status' : 'Failed. Invalid data passed.'});
 	}
 
-	debug('Sending data to spoor', data);
+	consolt.log('Sending data to spoor', data);
 
 	return fetch('https://spoor-api.ft.com/ingest', {
 			method: 'POST',
