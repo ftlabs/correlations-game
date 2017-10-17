@@ -15,7 +15,7 @@ module.exports = function(data){
 				'Accept': 'application/json',
 				'Content-Type': 'application/json',
 				'Content-Length': new Buffer(JSON.stringify(data)).length,
-				'spoor-ticket': '07235218-afa1-4033-9afa-3be3ce8175ac'
+				'User-Agent': 'ft-labs/v1.0'
 			},
 			body: JSON.stringify(data)
 		})
