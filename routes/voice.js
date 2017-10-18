@@ -173,6 +173,7 @@ const matchAnswer = app => {
 					'product': 'ftlabs',
 					'sessionId': SESSION,
 					'input' : USER_INPUT,
+					'expectedInput': JSON.stringify(expectedAnswers),
 					'inputType' : INPUT_TYPE
 				}
 			});
@@ -283,7 +284,7 @@ function getQuestion(session, callback, inputType) {
 		}
 	})
 	.catch(err => {
-		debug('HANDLED REJECTION', err);
+		console.log('HANDLED REJECTION', err);
 	})
 	;
 }
