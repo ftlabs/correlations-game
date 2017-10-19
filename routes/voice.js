@@ -111,7 +111,9 @@ const matchAnswer = app => {
 	const INPUT_TYPE = app.getInputType();
 
 	getExpectedAnswers(SESSION)
-	.then(answers => {
+	.then(data => {
+		const answers = data.answersReturned;
+		console.log('DATA::', data);
 		const expectedAnswers = Object.keys(answers).map(key => {
 			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
 			return answers[key];
@@ -300,10 +302,7 @@ function getExpectedAnswers(session) {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			return games.get(session).then(data => {
-				console.log('DEBUG::', data);
-				data.answersReturned
-			});
+			return games.get(session).then(data => {data});
 		} else {
 			return [];
 		}
