@@ -6,6 +6,8 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const { ApiAiApp } = require('actions-on-google');
 
+const spoor = require('../bin/lib/log-to-spoor');
+
 process.env.DEBUG = 'actions-on-google:*';
 
 const Actions = {
@@ -72,7 +74,6 @@ const getHelp = app => {
 
 const returnQuestion = app => {
 	app.setContext(Contexts.GAME, 1000);
-
 	const USER_INPUT = app.body_.result.resolvedQuery;
 
 	debug('USER_INPUT for question:', USER_INPUT);
@@ -93,15 +94,14 @@ const returnQuestion = app => {
 			}
 			
 			app.ask(richResponse);
-		});
-
+		}, app.getInputType());
 	}
-
 };
 
 const matchAnswer = app => {
 	let USER_INPUT = app.body_.result.resolvedQuery;
 	const SESSION = app.body_.sessionId;
+	const INPUT_TYPE = app.getInputType();
 
 	getExpectedAnswers(SESSION)
 	.then(answers => {
@@ -160,8 +160,24 @@ const matchAnswer = app => {
     			}
 
     			app.ask(richResponse)
-			});
+			}, INPUT_TYPE);
 		} else {
+
+			spoor({
+				'category': 'GAME',
+				'action': 'answermisunderstood',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': SESSION,
+					'input' : USER_INPUT,
+					'expectedInput': JSON.stringify(expectedAnswers),
+					'inputType' : INPUT_TYPE
+				}
+			});
+
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
 			let richResponse = app.buildRichResponse();
 
@@ -190,12 +206,38 @@ const matchAnswer = app => {
 	});
 };
 
-function getQuestion(session, callback) {
+function getQuestion(session, callback, inputType) {
 	games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress){
+			spoor({
+				'category': 'GAME',
+				'action': 'questionasked',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session,
+					'inputType' : inputType
+				}
+			});
+
 			return games.question(session);
 		} else {
+
+			spoor({
+				'category': 'GAME',
+				'action': 'gamestarted',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context': {
+					'product': 'ftlabs',
+					'sessionId': session
+				}
+			});
+
 			return games.new(session)
 			.then(gameUUID => {
 				return gameUUID;
@@ -206,7 +248,21 @@ function getQuestion(session, callback) {
 	})
 	.then(data => {
 		if(data.limitReached === true){
+
+			spoor({
+				'category': 'GAME',
+				'action': 'gamewon',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session,
+					'inputType' : inputType
+				}
+			});
 			callback(responses.win({score: data.score}));
+
 		} else {
 			const preparedData = {};
 
@@ -228,7 +284,7 @@ function getQuestion(session, callback) {
 		}
 	})
 	.catch(err => {
-		debug('HANDLED REJECTION', err);
+		console.log('HANDLED REJECTION', err);
 	})
 	;
 }
@@ -244,13 +300,27 @@ function getExpectedAnswers(session) {
 	});
 }
 
-function checkAnswer(session, answer, callback) {
+function checkAnswer(session, answer, callback, inputType) {
+
+	spoor({
+		'category': 'GAME',
+		'action': 'answergiven',
+		'system' : {
+			'source': 'ftlabs-correlations-game'
+		},
+		'context' : {
+			'product': 'ftlabs',
+			'sessionId': session,
+			'inputType' : inputType
+		}
+	});
+
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
-				});
+				}, inputType);
 			} else {
 				callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
@@ -274,8 +344,10 @@ actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
 
 router.post('/googlehome', (request, response) => {
-  const app = new ApiAiApp({ request, response });
-  app.handleRequest(actionMap);
+
+	const app = new ApiAiApp({ request, response });
+	app.handleRequest(actionMap);
+
 });
 
 module.exports = router;
