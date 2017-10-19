@@ -54,8 +54,6 @@ const getHelp = app => {
 	let richResponse;
 	const session = app.body_.sessionId;
 
-	console.log('getHelp', app.body_.result.resolvedQuery);
-
 	games.check(app.body_.sessionId)
 		.then(gameExists => {
 			
@@ -68,20 +66,21 @@ const getHelp = app => {
 					.addSimpleResponse(helpBody.ssml);
 			}
 
-			spoor({
-				'category': 'GAME',
-				'action': 'useraskedforhelp',
-				'system' : {
-					'source': 'ftlabs-correlations-game'
-				},
-				'context' : {
-					'product': 'ftlabs',
-					'sessionId': session
-				}
-			});	
 			app.ask(richResponse);
 		})
 	;
+
+	spoor({
+		'category': 'GAME',
+		'action': 'useraskedforhelp',
+		'system' : {
+			'source': 'ftlabs-correlations-game'
+		},
+		'context' : {
+			'product': 'ftlabs',
+			'sessionId': session
+		}
+	});	
 
 };
 
@@ -90,7 +89,6 @@ const returnQuestion = app => {
 	const USER_INPUT = app.body_.result.resolvedQuery;
 
 	debug('USER_INPUT for question:', USER_INPUT);
-	console.log('returnQuestion', USER_INPUT)
 
 	getQuestion(app.body_.sessionId, obj => {
 		let richResponse;
@@ -302,7 +300,10 @@ function getExpectedAnswers(session) {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			return games.get(session).then(data => data.answersReturned);
+			return games.get(session).then(data => {
+				console.log('DEBUG::', data);
+				data.answersReturned
+			});
 		} else {
 			return [];
 		}
@@ -356,7 +357,6 @@ actionMap.set(Actions.HELP, getHelp);
 router.post('/googlehome', (request, response) => {
 
 	const app = new ApiAiApp({ request, response });
-	console.log('APP:', app);
 	app.handleRequest(actionMap);
 
 });

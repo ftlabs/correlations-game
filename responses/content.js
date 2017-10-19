@@ -4,12 +4,13 @@ const optionNum = ["one", "two", "three"];
 function inputWasNotUnderstood(isRepeating, input = null, options = null){
 	let phrase, phraseSSML;
 	let chips = [];
+	const seedPerson = "Test person";
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 
 	if(isRepeating) {
-		phrase = `Sorry, I did not understand that. The possible answers were: `;
-		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
+		phrase = `Sorry, I did not understand that. For ${seedPerson}, the possible answers were: `;
+		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> For ${seedPerson}, the possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
 
 			if(i === 2) {
@@ -23,7 +24,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 		}
 
 	} else {
-		phrase = `Sorry, I'm not sure what you said. For instructions, say "help".`;
+		phrase = `Sorry, I'm not sure what you said. For instructions, use "Help".`;
 		phraseSSML = phrase;
 	}
 
@@ -85,7 +86,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 }
 
 function askThePlayerAQuestion(data, idx){
-	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an article with which one of the following people?`;
+	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
@@ -127,42 +128,42 @@ function getTheInstructionsForPlayingTheGame(gameInProgress){
 	let phrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news.
 	Once you've started a game, a question will be asked like the following.
 	Who was recently mentioned in an article with Angela Merkel?
-	1, Theresa May. 2, Sadiq Khan. 3, Richard Branson.
+	1) Theresa May. 2) Sadiq Khan. 3) Richard Branson.
 	Only one of the options is correct.
-	Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it.
+	Once the question has been asked, you can answer by either giving the name, or the number that preceded it.
 	If you are right, you'll be asked about another person.
-	If you are wrong, it's game over - you can say "New Game", "Let's go again", or "Start" to begin a new game.
-	At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game.
-	If you would like to hear the question again, just say "repeat".
-	To hear these instructions at any point in the game, just say "help".`;
+	If you are wrong, it's game over - you can use "Start" or "Play" to begin a new game.
+	At any point in the game, you can use "Disconnect" or "Stop" to quit playing.
+	If you would like to hear the question again, use "Repeat".
+	To get these instructions again at any point, use "Help".`;
 
 	let SSMLPhrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news.
 	Once you've started a game, a question will be asked like the following.
 	Who was recently mentioned in an article with Angela Merkel?
 	<break time="0.5s" />
-	1, Theresa May.
+	One, Theresa May.
 	<break time="0.5s" />
-	2, Sadiq Khan.
+	Two, Sadiq Khan.
 	<break time="0.5s" />
-	3, Richard Branson.
+	Three, Richard Branson.
 	<break time="0.5s" />
 	Only one of the options is correct.
 	<break time="0.5s" />
-	Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it.
+	Once the question has been asked, you can answer by either giving the name, or by the number that preceded it.
 	<break time="0.5s" />
 	If you are right, you'll be asked about another person.
 	If you are wrong, it's game over.
 	<break time="0.5s" />
-	You can say "New Game", "Let's go again", or "Start" to begin a new game.
-	At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game.
+	You can say "Play" or "Start" to begin a new game.
+	At any point in the game, you can say "Disconnect" or "Stop" to quit playing.
 	<break time="0.5s" />
-	If you would like to hear the question again, just say "repeat".
+	If you would like to hear the question again, say "repeat".
 	<break time="0.5s" />
-	To hear these instructions at any point in the game, just say "help". `
+	To hear these instructions again at any point,  say "help". `
 
 	if(!gameInProgress){
-		phrase += `If you would like to play a game now, say "Start" or "Play"`;
-		SSMLPhrase += `<break time="1.5s" />If you would like to play a game now, say "Start" or "Play"`;
+		phrase += `Would you like to play now?`;
+		SSMLPhrase += `<break time="1.5s" />Would you like to play now?`;
 	} else {
 		phrase += `Would you like to continue your game?`;
 		SSMLPhrase += `<break time="0.5s" />Would you like to continue your game?`;
