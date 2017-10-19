@@ -1,4 +1,4 @@
-const debug = require('debug')('bin:lib:gameLonger');
+const debug = require('debug')('bin:lib:game');
 
 // const database = require('./database');
 const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
@@ -53,6 +53,14 @@ if(process.env.GAME_VARIANT !== undefined){
 	}
 }
 
+// Using the chain of sets of correlations from the seed person,
+// from how many links away from the seed should the 2 'wrong' people be picked?
+// The 'correct' answer is from the first link, 0, aka the set of people directly correlated with the seed person.
+// From link 1, the people are only indirectly correlated with the seed person (they correlate with a person who correlates with the seed person).
+// From link 2, it is one layer of indirection further away from the seed person. Etc.
+// The values for these two vars helps set the difficulty of the game.
+// Too small, and the wrong answers can be tricky to spot, since on another day they may well correlate directly with the seed person, but just not right now.
+// Too large, and the wrong answers are very obviously wrong.
 const GAME_DISTANCE_OF_WRONG1 = ( process.env.GAME_DISTANCE_OF_WRONG1 !== undefined )? parseInt(process.env.GAME_DISTANCE_OF_WRONG1) : 2;
 const GAME_DISTANCE_OF_WRONG2 = ( process.env.GAME_DISTANCE_OF_WRONG2 !== undefined )? parseInt(process.env.GAME_DISTANCE_OF_WRONG2) : 3;
 
@@ -72,7 +80,7 @@ class Game{
 
 		// context of current game
 		this.state     = 'new';
-		this.distance  = 0;
+		this.score     = 0; // was called 'distance'
 		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.remainingCandidatesByName = {}; // to be populated in createANewGame
@@ -103,8 +111,13 @@ class Game{
 			if (userUUID !== config['uuid']) {
 				throw `Game.constructor: config defined, but mistmatched uuids: userUUID=${userUUID}, config.uuid=${config.uuid}, config=${JSON.stringify(config)}`;
 			}
+			// a temp fix to bridge the period when stored games might use 'distance' instead of 'score'
+			if( config.hasOwnProperty('distance') && !config.hasOwnProperty('score') ){
+				config['score'] = config['distance'];
+			}
+
 			[
-				'uuid', 'player', 'state', 'distance', 'blacklist',
+				'uuid', 'player', 'state', 'score', 'blacklist',
 				'remainingCandidatesWithConnections', 'remainingCandidatesByName',
 				'history', 'isQuestionSet',
 				'variant', 'max_candidates', 'firstFewMax'
@@ -385,7 +398,7 @@ class Game{
 	}
 
 	updateScoreStats() {
-		const score = this.distance;
+		const score = this.score;
 		const nowMillis = Date.now();
 		return Game.updateGamesStats( function(){
 			GAMES_STATS.counts.finished += 1;
@@ -560,7 +573,7 @@ function getAQuestionToAnswer(gameUUID){
 					seed : selectedGame.seedPerson,
 					options : selectedGame.answersReturned,
 					intervalDays : selectedGame.intervalDays,
-					questionNum : selectedGame.distance + 1,
+					questionNum : selectedGame.score + 1,
 					globalHighestScore : GAMES_STATS.maxScore,
 				};
 			} else {
@@ -579,7 +592,7 @@ function getAQuestionToAnswer(gameUUID){
 											debug(`getAQuestionToAnswer: Game state (${selectedGame.uuid}) successfully updated on completion.`);
 											return {
 												limitReached : true,
-												score        : selectedGame.distance,
+												score        : selectedGame.score,
 												history      : selectedGame.history,
 												achievedHighestScore     : selectedGame.achievedHighestScore,
 												achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
@@ -604,7 +617,7 @@ function getAQuestionToAnswer(gameUUID){
 										options      : selectedGame.answersReturned,
 										limitReached : false,
 										intervalDays : selectedGame.intervalDays,
-										questionNum  : selectedGame.distance + 1,
+										questionNum  : selectedGame.score + 1,
 										globalHighestScore : GAMES_STATS.maxScore,
 									};
 								})
@@ -640,7 +653,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 			return new Promise( (resolve) => {
 				const result = {
 					correct         : undefined,
-					score           : selectedGame.distance,
+					score           : selectedGame.score,
 					expected        : selectedGame.nextAnswer,
 					linkingArticles : selectedGame.linkingArticles,
 					seedPerson      : selectedGame.seedPerson,
@@ -656,7 +669,7 @@ function answerAQuestion(gameUUID, submittedAnswer){
 
 				if(normaliseName(submittedAnswer) === normaliseName(selectedGame.nextAnswer)){
 					debug(`answerAQuestion: handling a correct answer`);
-					selectedGame.distance += 1;
+					selectedGame.score += 1;
 					selectedGame.clearQuestion();
 
 					Game.writeToDB(selectedGame)
