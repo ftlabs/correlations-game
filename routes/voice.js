@@ -54,6 +54,8 @@ const getHelp = app => {
 	let richResponse;
 	const session = app.body_.sessionId;
 
+	console.log('getHelp', app.body_.result.resolvedQuery);
+
 	games.check(app.body_.sessionId)
 		.then(gameExists => {
 			
@@ -88,6 +90,7 @@ const returnQuestion = app => {
 	const USER_INPUT = app.body_.result.resolvedQuery;
 
 	debug('USER_INPUT for question:', USER_INPUT);
+	console.log('returnQuestion', USER_INPUT)
 
 	getQuestion(app.body_.sessionId, obj => {
 		let richResponse;
