@@ -8,8 +8,8 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPe
 	console.log('EXPECTED:', options);
 
 	if(isRepeating) {
-		phrase = `Sorry, I did not understand that. For ${seedPerson}, the possible answers were: `;
-		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> For ${seedPerson}, the possible answers were: `;
+		phrase = `Sorry, I did not understand that. For ${seedPerson.replace('people:', '')}, the possible answers were: `;
+		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> For ${seedPerson.replace('people:', '')}, the possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
 
 			if(i === 2) {

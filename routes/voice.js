@@ -112,7 +112,6 @@ const matchAnswer = app => {
 
 	getExpectedAnswers(SESSION)
 	.then(data => {
-		console.log('DATA::', data);
 		const answers = data.answersReturned;
 		const seed = data.seedPerson;
 
