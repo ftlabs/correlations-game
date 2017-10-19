@@ -1,10 +1,9 @@
 const debug = require('debug')('responses:content');
 const optionNum = ["one", "two", "three"];
 
-function inputWasNotUnderstood(isRepeating, input = null, options = null){
+function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPerson = null){
 	let phrase, phraseSSML;
 	let chips = [];
-	const seedPerson = "Test person";
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 

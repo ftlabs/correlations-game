@@ -114,6 +114,8 @@ const matchAnswer = app => {
 	.then(data => {
 		console.log('DATA::', data);
 		const answers = data.answersReturned;
+		const seed = data.seedPerson;
+
 		const expectedAnswers = Object.keys(answers).map(key => {
 			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
 			return answers[key];
@@ -187,7 +189,7 @@ const matchAnswer = app => {
 				}
 			});
 
-			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers, seed);
 			let richResponse = app.buildRichResponse();
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
