@@ -14,7 +14,8 @@ const Actions = {
   INIT: 		'correlations.welcome',
   QUESTION: 	'correlations.question',
   ANSWER:   	'correlations.answer',
-  NOTHEARD:  	'correlations.misunderstood'
+  NOTHEARD:  	'correlations.misunderstood',
+  HELP: 		'correlations.help' 
 };
 
 const Contexts = {
@@ -51,6 +52,7 @@ if (!Object.values) {
 
 const getHelp = app => {
 	let richResponse;
+	const session = app.body_.sessionId;
 
 	games.check(app.body_.sessionId)
 		.then(gameExists => {
@@ -63,12 +65,21 @@ const getHelp = app => {
 				richResponse = app.buildRichResponse()
 					.addSimpleResponse(helpBody.ssml);
 			}
-			
-			app.ask(richResponse);
 
+			spoor({
+				'category': 'GAME',
+				'action': 'useraskedforhelp',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session
+				}
+			});	
+			app.ask(richResponse);
 		})
 	;
-
 
 };
 
@@ -78,24 +89,19 @@ const returnQuestion = app => {
 
 	debug('USER_INPUT for question:', USER_INPUT);
 
-	if(USER_INPUT === 'help'){
-		getHelp(app);
-	} else {
-
-		getQuestion(app.body_.sessionId, obj => {
-			let richResponse;
-			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
-				richResponse = app.buildRichResponse()
-					.addSimpleResponse(obj.displayText)
-					.addSuggestions(obj.chips);
-			} else {
-				richResponse = app.buildRichResponse()
-					.addSimpleResponse(obj.ssml);
-			}
-			
-			app.ask(richResponse);
-		}, app.getInputType());
-	}
+	getQuestion(app.body_.sessionId, obj => {
+		let richResponse;
+		if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+			richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.displayText)
+				.addSuggestions(obj.chips);
+		} else {
+			richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.ssml);
+		}
+		
+		app.ask(richResponse);
+	}, app.getInputType());
 };
 
 const matchAnswer = app => {
@@ -342,6 +348,7 @@ const actionMap = new Map();
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
+actionMap.set(Actions.HELP, getHelp);
 
 router.post('/googlehome', (request, response) => {
 
