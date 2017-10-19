@@ -33,6 +33,7 @@ let GAMES_STATS = {
 	maxScore    : 0,
 	uuid        : GAMES_STATS_ID,
 	maxScoreSetMillis : 0, // epoch millis for when the current high score was set.
+	maxScoreSetMillisPrev : undefined, // epoch millis for when the prev current high score was set, so we can tell if it has changed.
 	maxScoreSetDate : undefined, // display date set after an update
 	maxScoreResetAfterMillis : MaxScoreResetAfterMillis, // i.e. reset the highscore if it has not been matched or improved after 24hrs
 }
@@ -421,14 +422,17 @@ class Game{
 
 			if (score > GAMES_STATS.maxScore) {           // new high score!
 				GAMES_STATS.maxScoreSetMillis = nowMillis;
+				GAMES_STATS.maxScoreSetMillisPrev = undefined;
 				GAMES_STATS.maxScore = score;
 			} else if( score === 0 ){                     // yeah well, best forgotten
 				// make no changes to high score
 			} else if (score === GAMES_STATS.maxScore) {  // same high score, more recent timestamp
+				GAMES_STATS.maxScoreSetMillisPrev = GAMES_STATS.maxScoreSetMillis;
 				GAMES_STATS.maxScoreSetMillis = nowMillis;
 			} else if ((nowMillis - GAMES_STATS.maxScoreSetMillis) > GAMES_STATS.maxScoreResetAfterMillis) {
 																										// high score is too old, so the new score is the high score
 				GAMES_STATS.maxScoreSetMillis = nowMillis;
+				GAMES_STATS.maxScoreSetMillisPrev = undefined;
 				GAMES_STATS.maxScore = score;
 			}
 
@@ -437,7 +441,7 @@ class Game{
 		})
 		.then( () => {
 			this.achievedHighestScore      = (score>0 && score === GAMES_STATS.maxScore);
-			this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.maxScoreSetMillis === nowMillis);
+			this.achievedHighestScoreFirst = (this.achievedHighestScore && GAMES_STATS.maxScoreSetMillisPrev === undefined);
 		})
 		;
 	}
