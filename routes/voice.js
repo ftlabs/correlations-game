@@ -14,7 +14,8 @@ const Actions = {
   INIT: 		'correlations.welcome',
   QUESTION: 	'correlations.question',
   ANSWER:   	'correlations.answer',
-  NOTHEARD:  	'correlations.misunderstood'
+  NOTHEARD:  	'correlations.misunderstood',
+  HELP: 		'correlations.help' 
 };
 
 const Contexts = {
@@ -51,6 +52,7 @@ if (!Object.values) {
 
 const getHelp = app => {
 	let richResponse;
+	const session = app.body_.sessionId;
 
 	games.check(app.body_.sessionId)
 		.then(gameExists => {
@@ -63,12 +65,22 @@ const getHelp = app => {
 				richResponse = app.buildRichResponse()
 					.addSimpleResponse(helpBody.ssml);
 			}
-			
-			app.ask(richResponse);
 
+			app.ask(richResponse);
 		})
 	;
 
+	spoor({
+		'category': 'GAME',
+		'action': 'useraskedforhelp',
+		'system' : {
+			'source': 'ftlabs-correlations-game'
+		},
+		'context' : {
+			'product': 'ftlabs',
+			'sessionId': session
+		}
+	});	
 
 };
 
@@ -78,24 +90,19 @@ const returnQuestion = app => {
 
 	debug('USER_INPUT for question:', USER_INPUT);
 
-	if(USER_INPUT === 'help'){
-		getHelp(app);
-	} else {
-
-		getQuestion(app.body_.sessionId, obj => {
-			let richResponse;
-			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
-				richResponse = app.buildRichResponse()
-					.addSimpleResponse(obj.displayText)
-					.addSuggestions(obj.chips);
-			} else {
-				richResponse = app.buildRichResponse()
-					.addSimpleResponse(obj.ssml);
-			}
-			
-			app.ask(richResponse);
-		}, app.getInputType());
-	}
+	getQuestion(app.body_.sessionId, obj => {
+		let richResponse;
+		if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
+			richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.displayText)
+				.addSuggestions(obj.chips);
+		} else {
+			richResponse = app.buildRichResponse()
+				.addSimpleResponse(obj.ssml);
+		}
+		
+		app.ask(richResponse);
+	}, app.getInputType());
 };
 
 const matchAnswer = app => {
@@ -104,7 +111,10 @@ const matchAnswer = app => {
 	const INPUT_TYPE = app.getInputType();
 
 	getExpectedAnswers(SESSION)
-	.then(answers => {
+	.then(data => {
+		const answers = data.answersReturned;
+		const seed = data.seedPerson;
+
 		const expectedAnswers = Object.keys(answers).map(key => {
 			answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
 			return answers[key];
@@ -178,7 +188,7 @@ const matchAnswer = app => {
 				}
 			});
 
-			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers);
+			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers, seed);
 			let richResponse = app.buildRichResponse();
 
 			if(app.getContext(Contexts.MISUNDERSTOOD.toLowerCase()) === null && expectedAnswers.length > 0) {
@@ -293,7 +303,7 @@ function getExpectedAnswers(session) {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			return games.get(session).then(data => data.answersReturned);
+			return games.get(session).then(data => data);
 		} else {
 			return [];
 		}
@@ -342,6 +352,7 @@ const actionMap = new Map();
 actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
+actionMap.set(Actions.HELP, getHelp);
 
 router.post('/googlehome', (request, response) => {
 

@@ -1,15 +1,15 @@
 const debug = require('debug')('responses:content');
 const optionNum = ["one", "two", "three"];
 
-function inputWasNotUnderstood(isRepeating, input = null, options = null){
+function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPerson = null){
 	let phrase, phraseSSML;
 	let chips = [];
 	console.log('HEARD:', input);
 	console.log('EXPECTED:', options);
 
 	if(isRepeating) {
-		phrase = `Sorry, I did not understand that. The possible answers were: `;
-		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> The possible answers were: `;
+		phrase = `Sorry, I did not understand that. For ${seedPerson.replace('people:', '')}, the possible answers were: `;
+		phraseSSML = `Sorry, I did not understand that. Try selecting numbers instead of names. <break time="0.5s" /> For ${seedPerson.replace('people:', '')}, the possible answers were: `;
 		for(let i = 0; i < options.length; ++i) {
 
 			if(i === 2) {
@@ -17,13 +17,13 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 			} else {
 				phrase += `${options[i].original}, `;
 			}
-			
+
 			chips.push(options[i].original);
-			phraseSSML += `<break time="0.5s" />${optionNum[i]}) ${options[i].original}. `;
+			phraseSSML += `<break time="0.5s" />${optionNum[i]}, ${options[i].original}. `;
 		}
 
 	} else {
-		phrase = `Sorry, I'm not sure what you said. For instructions, say "help".`;
+		phrase = `Sorry, I'm not sure what you said. For instructions, use "Help".`;
 		phraseSSML = phrase;
 	}
 
@@ -39,7 +39,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null){
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
-	
+
 	return {
 		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
 		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
@@ -61,13 +61,13 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
-			scorePhrase += ' You are the first to achieve this high score.';
+			scorePhrase += ' You are the first to achieve this high score today.';
 		} else {
-			scorePhrase += ' You have matched the current highest score.';
+			scorePhrase += ' You have matched the current highest score today.';
 		}
-		
+
 	} else {
-		scorePhrase += ` The record to beat is ${scoreData.scoreMax}.`;
+		scorePhrase += ` The record to beat today is ${scoreData.scoreMax}.`;
 	}
 
 	scorePhrase += ' Would you like to start a new game?'
@@ -85,7 +85,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 }
 
 function askThePlayerAQuestion(data, idx){
-	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an article with which one of the following people?`;
+	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
@@ -124,12 +124,45 @@ function theGameHasBeenWon(scoreData){
 
 function getTheInstructionsForPlayingTheGame(gameInProgress){
 
-	let phrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news. Once you've started a game, a question will be asked like the following. Who was recently mentioned in an article with Person A 1. Person B. 2. Person B. 3. Person C. Only one of the options is correct. Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it. If you are right, you'll be asked about another person. If you are wrong, it's game over - you can say "New Game", "Let's go again", or "Start" to begin a new game. At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game. If you would like to hear the question again, just say "repeat". To hear these instructions at any point in the game, just say "help". `;
-	let SSMLPhrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news. Once you've started a game, a question will be asked like the following. Who was recently mentioned in an article with Person A<break time="0.5s" />1. Person B.<break time="0.5s" /> 2. Person C.<break time="0.5s" />3. Person D.<break time="0.5s" />Only one of the options is correct.<break time="0.5s" />Once the question has been asked, you can answer by either saying the name, or by saying the number that preceded it.<break time="0.5s" /> If you are right, you'll be asked about another person. If you are wrong, it's game over <break time="0.5s" /> you can say "New Game", "Let's go again", or "Start" to begin a new game. At any point in the game, you can say "Disconnect" or "Stop" to stop playing the game.<break time="0.5s" />If you would like to hear the question again, just say "repeat".<break time="0.5s" /> To hear these instructions at any point in the game, just say "help". `
+	let phrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news.
+	Once you've started a game, a question will be asked like the following.
+	Who was recently mentioned in an article with Angela Merkel?
+	1) Theresa May. 2) Sadiq Khan. 3) Richard Branson.
+	Only one of the options is correct.
+	Once the question has been asked, you can answer by either giving the name, or the number that preceded it.
+	If you are right, you'll be asked about another person.
+	If you are wrong, it's game over - you can use "Start" or "Play" to begin a new game.
+	At any point in the game, you can use "Disconnect" or "Stop" to quit playing.
+	If you would like to hear the question again, use "Repeat".
+	To get these instructions again at any point, use "Help".`;
+
+	let SSMLPhrase = `"Make Connections" is a quiz game that tests your knowledge of people in the news.
+	Once you've started a game, a question will be asked like the following.
+	Who was recently mentioned in an article with Angela Merkel?
+	<break time="0.5s" />
+	One, Theresa May.
+	<break time="0.5s" />
+	Two, Sadiq Khan.
+	<break time="0.5s" />
+	Three, Richard Branson.
+	<break time="0.5s" />
+	Only one of the options is correct.
+	<break time="0.5s" />
+	Once the question has been asked, you can answer by either giving the name, or by the number that preceded it.
+	<break time="0.5s" />
+	If you are right, you'll be asked about another person.
+	If you are wrong, it's game over.
+	<break time="0.5s" />
+	You can say "Play" or "Start" to begin a new game.
+	At any point in the game, you can say "Disconnect" or "Stop" to quit playing.
+	<break time="0.5s" />
+	If you would like to hear the question again, say "repeat".
+	<break time="0.5s" />
+	To hear these instructions again at any point,  say "help". `
 
 	if(!gameInProgress){
-		phrase += `If you would like to play a game now, say "Start" or "Play"`;
-		SSMLPhrase += `<break time="1.5s" />If you would like to play a game now, say "Start" or "Play"`;
+		phrase += `Would you like to play now?`;
+		SSMLPhrase += `<break time="1.5s" />Would you like to play now?`;
 	} else {
 		phrase += `Would you like to continue your game?`;
 		SSMLPhrase += `<break time="0.5s" />Would you like to continue your game?`;
