@@ -219,7 +219,11 @@ const matchAnswer = app => {
 
 const endGame = app => {
 	console.log(':::END:::');
-	app.tell(`<speak>Thank you for playing. Come back to make new connections soon</speak>`);
+	let response = responses.stop()
+	//TODO: add tracking; 
+	//TODO: add current score;
+	//TODO: add text response;
+	app.tell(response.ssml);
 }
 
 function getQuestion(session, callback, inputType) {
@@ -364,7 +368,6 @@ actionMap.set(Actions.END, endGame);
 router.post('/googlehome', (request, response) => {
 
 	const app = new ApiAiApp({ request, response });
-	console.log('APP::', app);
 	app.handleRequest(actionMap);
 
 });
