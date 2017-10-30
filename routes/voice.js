@@ -235,8 +235,12 @@ const endGame = app => {
 		} else {
 			app.tell(`No current session`);
 		}
+	})
+	.catch(err => {
+		console.log('HANDLED REJECTION', err);
 	});
-	// app.tell(response.ssml);
+	x
+	app.tell(response.ssml);
 }
 
 function getQuestion(session, callback, inputType) {
