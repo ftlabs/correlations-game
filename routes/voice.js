@@ -230,10 +230,11 @@ const endGame = app => {
 	// console.log('BODY:::', app.body_);
 	console.log('RESPONSE:::', response);
 	console.log('SESSION:::', session);	
-	app.tell(`I've stopped`);
-	// return games.check(session)
-	// .then(gameIsInProgress => {
-	// 	console.log('session checked', gameIsInProgress);
+	return games.check(session)
+	.then(gameIsInProgress => {
+		console.log('session checked', gameIsInProgress);
+
+		app.tell(`I've stopped`);
 	// 	if(gameIsInProgress) {
 	// 		return games.get(session).then(data => {
 	// 			console.log(data);
@@ -242,10 +243,10 @@ const endGame = app => {
 	// 	} else {
 	// 		app.tell(`No current session`);
 	// 	}
-	// })
-	// .catch(err => {
-	// 	console.log('HANDLED REJECTION', err);
-	// });
+	})
+	.catch(err => {
+		console.log('HANDLED REJECTION', err);
+	});
 }
 
 function getQuestion(session, callback, inputType) {
