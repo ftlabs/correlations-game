@@ -55,7 +55,7 @@ const getHelp = app => {
 	let richResponse;
 	const session = app.body_.sessionId;
 
-	games.check(app.body_.sessionId)
+	games.check(session)
 		.then(gameExists => {
 			
 			const helpBody = responses.help(gameExists);
@@ -220,6 +220,7 @@ const matchAnswer = app => {
 const endGame = app => {
 	console.log(':::END:::');
 	let response = responses.stop();
+	const session = app.body_.sessionId;
 	//TODO: add tracking; 
 	//TODO: add current score;
 	//TODO: add text response;
@@ -227,10 +228,9 @@ const endGame = app => {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
-			console.log()
 			return games.get(session).then(data => {
 				console.log(data);
-				app.tell(response.ssml);
+				app.tell(`There is game data`);
 			});
 		} else {
 			app.tell(`No current session`);
