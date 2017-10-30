@@ -15,7 +15,8 @@ const Actions = {
   QUESTION: 	'correlations.question',
   ANSWER:   	'correlations.answer',
   NOTHEARD:  	'correlations.misunderstood',
-  HELP: 		'correlations.help' 
+  HELP: 		'correlations.help',
+  END: 			'correlations.end'
 };
 
 const Contexts = {
@@ -216,6 +217,11 @@ const matchAnswer = app => {
 	});
 };
 
+const endGame = app => {
+	console.log(':::END:::');
+	app.tell(`<speak>Thank you for playing. Come back to make new connections soon</speak>`);
+}
+
 function getQuestion(session, callback, inputType) {
 	games.check(session)
 	.then(gameIsInProgress => {
@@ -353,6 +359,7 @@ actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
 actionMap.set(Actions.HELP, getHelp);
+actionMap.set(Actions.end, endGame);
 
 router.post('/googlehome', (request, response) => {
 
