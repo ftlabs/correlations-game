@@ -84,7 +84,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 }
 
-function theGameWasInterrupted(scoreData) {
+function theGameWasInterrupted(scoreData = 0) {
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' } so far.`;
 
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
@@ -135,7 +135,7 @@ function askThePlayerAQuestion(data, idx){
 
 }
 
-function theGameHasBeenWon(scoreData = 0){
+function theGameHasBeenWon(scoreData){
 
 	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers. Would you like to start a new game?`;
 
