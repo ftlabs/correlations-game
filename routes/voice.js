@@ -225,8 +225,10 @@ const endGame = app => {
 	//TODO: add current score;
 	//TODO: add text response;
 	//TODO: see content.js
+	console.log('SESSION:::', session);
 	return games.check(session)
 	.then(gameIsInProgress => {
+		console.log('session checked', gameIsInProgress);
 		if(gameIsInProgress) {
 			return games.get(session).then(data => {
 				console.log(data);
@@ -239,7 +241,7 @@ const endGame = app => {
 	.catch(err => {
 		console.log('HANDLED REJECTION', err);
 	});
-	x
+
 	app.tell(response.ssml);
 }
 
