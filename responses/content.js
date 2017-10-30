@@ -85,7 +85,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 }
 
 function askThePlayerAQuestion(data, idx){
-	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an recent article with which one of the following people?`;
+	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];

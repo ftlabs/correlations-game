@@ -364,6 +364,7 @@ actionMap.set(Actions.end, endGame);
 router.post('/googlehome', (request, response) => {
 
 	const app = new ApiAiApp({ request, response });
+	console.log('APP::', app);
 	app.handleRequest(actionMap);
 
 });
