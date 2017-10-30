@@ -220,30 +220,32 @@ const matchAnswer = app => {
 const endGame = app => {
 	console.log(':::END:::');
 	let response = responses.stop();
-	const session = app.body_.sessionId;
+	// const session = app.body_.sessionId;
+	
 	//TODO: add tracking; 
 	//TODO: add current score;
 	//TODO: add text response;
 	//TODO: see content.js
-	console.log('BODY:::', app.body_);
-	console.log('RESPONSE:::', response);
-	console.log('SESSION:::', session);	
+
+	// console.log('BODY:::', app.body_);
+	// console.log('RESPONSE:::', response);
+	// console.log('SESSION:::', session);	
 	app.tell(response.ssml);
-	return games.check(session)
-	.then(gameIsInProgress => {
-		console.log('session checked', gameIsInProgress);
-		if(gameIsInProgress) {
-			return games.get(session).then(data => {
-				console.log(data);
-				app.tell(`There is game data`);
-			});
-		} else {
-			app.tell(`No current session`);
-		}
-	})
-	.catch(err => {
-		console.log('HANDLED REJECTION', err);
-	});
+	// return games.check(session)
+	// .then(gameIsInProgress => {
+	// 	console.log('session checked', gameIsInProgress);
+	// 	if(gameIsInProgress) {
+	// 		return games.get(session).then(data => {
+	// 			console.log(data);
+	// 			app.tell(`There is game data`);
+	// 		});
+	// 	} else {
+	// 		app.tell(`No current session`);
+	// 	}
+	// })
+	// .catch(err => {
+	// 	console.log('HANDLED REJECTION', err);
+	// });
 }
 
 function getQuestion(session, callback, inputType) {
