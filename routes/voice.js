@@ -219,9 +219,9 @@ const matchAnswer = app => {
 
 const endGame = app => {
 	console.log(':::END:::');
-	let response = responses.stop();
+	// let response = responses.stop();
 	// const session = app.body_.sessionId;
-	
+
 	//TODO: add tracking; 
 	//TODO: add current score;
 	//TODO: add text response;
@@ -230,7 +230,7 @@ const endGame = app => {
 	// console.log('BODY:::', app.body_);
 	// console.log('RESPONSE:::', response);
 	// console.log('SESSION:::', session);	
-	app.tell(response.ssml);
+	app.tell(`I've stopped`);
 	// return games.check(session)
 	// .then(gameIsInProgress => {
 	// 	console.log('session checked', gameIsInProgress);
