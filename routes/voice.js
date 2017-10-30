@@ -224,7 +224,7 @@ const endGame = app => {
 	//TODO: add current score;
 	//TODO: add text response;
 	//TODO: see content.js
-	games.check(session)
+	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
 			console.log()
