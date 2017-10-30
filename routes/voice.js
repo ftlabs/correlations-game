@@ -219,8 +219,8 @@ const matchAnswer = app => {
 
 const endGame = app => {
 	console.log(':::END:::');
-	// let response = responses.stop();
-	// const session = app.body_.sessionId;
+	let response = responses.stop();
+	const session = app.body_.sessionId;
 
 	//TODO: add tracking; 
 	//TODO: add current score;
@@ -228,8 +228,8 @@ const endGame = app => {
 	//TODO: see content.js
 
 	// console.log('BODY:::', app.body_);
-	// console.log('RESPONSE:::', response);
-	// console.log('SESSION:::', session);	
+	console.log('RESPONSE:::', response);
+	console.log('SESSION:::', session);	
 	app.tell(`I've stopped`);
 	// return games.check(session)
 	// .then(gameIsInProgress => {

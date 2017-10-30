@@ -84,7 +84,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 }
 
-function theGameWasInterrupted(scoreData = null) {
+function theGameWasInterrupted(scoreData = 0) {
 	//TODO: handle response if disconnect before a new game or during one.
 	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' } so far.`;
 
