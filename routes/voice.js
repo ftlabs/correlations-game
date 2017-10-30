@@ -219,11 +219,24 @@ const matchAnswer = app => {
 
 const endGame = app => {
 	console.log(':::END:::');
-	let response = responses.stop()
+	let response = responses.stop();
 	//TODO: add tracking; 
 	//TODO: add current score;
 	//TODO: add text response;
-	app.tell(response.ssml);
+	//TODO: see content.js
+	games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			console.log()
+			return games.get(session).then(data => {
+				console.log(data);
+				app.tell(response.ssml);
+			});
+		} else {
+			app.tell(`No current session`);
+		}
+	});
+	// app.tell(response.ssml);
 }
 
 function getQuestion(session, callback, inputType) {
