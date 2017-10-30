@@ -233,16 +233,14 @@ const endGame = app => {
 	return games.check(session)
 	.then(gameIsInProgress => {
 		console.log('session checked', gameIsInProgress);
-
-		app.tell(`I've stopped`);
-	// 	if(gameIsInProgress) {
+		if(gameIsInProgress) {
 	// 		return games.get(session).then(data => {
 	// 			console.log(data);
-	// 			app.tell(`There is game data`);
+				app.tell(`There is game data`);
 	// 		});
-	// 	} else {
-	// 		app.tell(`No current session`);
-	// 	}
+		} else {
+			app.tell(`No current session`);
+		}
 	})
 	.catch(err => {
 		console.log('HANDLED REJECTION', err);
