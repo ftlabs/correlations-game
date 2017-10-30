@@ -359,7 +359,7 @@ actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
 actionMap.set(Actions.HELP, getHelp);
-actionMap.set(Actions.end, endGame);
+actionMap.set(Actions.END, endGame);
 
 router.post('/googlehome', (request, response) => {
 
