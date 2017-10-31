@@ -786,7 +786,6 @@ function getStats(){
 }
 
 function stopCurrentGame(gameUUID) {
-	console.log(':::stopCurrentGame:::')
 	if(gameUUID === undefined){
 		return Promise.reject('No game UUID was passed to the function');
 	}

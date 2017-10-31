@@ -85,7 +85,6 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 }
 
 function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
-	//TODO: handle response if disconnect before a new game or during one.
 	let scorePhrase = 'Thank you for playing.';
 
 	if(gameProgress) {

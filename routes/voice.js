@@ -222,26 +222,20 @@ const endGame = app => {
 	let response;
 	const session = app.body_.sessionId;
 
-	//TODO: add tracking; 
-	//TODO: add current score;
-	//TODO: add text response;
-	//TODO: see content.js
+	//TODO: add tracking;
+	//TODO: add phone response;
 
-	// console.log('BODY:::', app.body_);
-	console.log('RESPONSE:::', response);
-	console.log('SESSION:::', session);	
 	return games.check(session)
 	.then(gameIsInProgress => {
-		console.log('session checked', gameIsInProgress);
 		if(gameIsInProgress) {
 			return games.interrupt(session).then(data => {
 				console.log('DATA:::', data);
-				app.tell(`Trying out the new interruptFunction`)
-				// response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
-				// app.tell(response);
+				response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
+				app.tell(response.ssml);
 			});
 		} else {
-			app.tell(`No current session`);
+			response = responses.stop();
+			app.tell(response.ssml);
 		}
 	})
 	.catch(err => {
