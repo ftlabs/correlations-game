@@ -218,24 +218,45 @@ const matchAnswer = app => {
 };
 
 const endGame = app => {
-	console.log(':::END:::');
 	let response;
 	const session = app.body_.sessionId;
-
-	//TODO: add tracking;
-	//TODO: add phone response;
+	const INPUT_TYPE = app.getInputType();
 
 	return games.check(session)
 	.then(gameIsInProgress => {
 		if(gameIsInProgress) {
 			return games.interrupt(session).then(data => {
-				console.log('DATA:::', data);
 				response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
+				spoor({
+					'category': 'GAME',
+					'action': 'gameinterrupted',
+					'system' : {
+						'source': 'ftlabs-correlations-game'
+					},
+					'context' : {
+						'product': 'ftlabs',
+						'sessionId': session,
+						'inputType': INPUT_TYPE,
+						'latestScore' : data.score
+					}
+				});
 				app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			});
 		} else {
 			response = responses.stop();
 			app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+			spoor({
+				'category': 'GAME',
+				'action': 'sessioninterrupted',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session,
+					'inputType': INPUT_TYPE
+				}
+			});
 		}
 	})
 	.catch(err => {
