@@ -219,7 +219,7 @@ const matchAnswer = app => {
 
 const endGame = app => {
 	console.log(':::END:::');
-	let response = responses.stop();
+	let response;
 	const session = app.body_.sessionId;
 
 	//TODO: add tracking; 
@@ -235,8 +235,9 @@ const endGame = app => {
 		console.log('session checked', gameIsInProgress);
 		if(gameIsInProgress) {
 			return games.get(session).then(data => {
-				console.log(data);
-				app.tell(`There is game data`);
+				console.log('DATA:::', data);
+				response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
+				app.tell(response);
 			});
 		} else {
 			app.tell(`No current session`);

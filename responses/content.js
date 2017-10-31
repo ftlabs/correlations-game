@@ -84,22 +84,26 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 }
 
-function theGameWasInterrupted(scoreData = 0) {
+function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
 	//TODO: handle response if disconnect before a new game or during one.
-	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' } so far.`;
+	let scorePhrase = 'Thank you for playing.';
 
-	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
-		if(scoreData.first) {
-			scorePhrase += ' You are the first to achieve this high score today.';
+	if(gameProgress) {
+		scorePhrase += ` You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' } so far.`;
+
+		if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
+			if(scoreData.first) {
+				scorePhrase += ' You are the first to achieve this high score today.';
+			} else {
+				scorePhrase += ' You have matched the current highest score today.';
+			}
+
 		} else {
-			scorePhrase += ' You have matched the current highest score today.';
+			scorePhrase += ` The record to beat today was ${scoreData.scoreMax}.`;
 		}
-
-	} else {
-		scorePhrase += ` The record to beat today was ${scoreData.scoreMax}.`;
 	}
 
-	scorePhrase += ` Thank you for playing. Come back to make new connections soon`;
+	scorePhrase += ` Come back to make new connections soon.`;
 
 	return {
 		displayText : scorePhrase,
