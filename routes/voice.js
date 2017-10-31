@@ -234,7 +234,7 @@ const endGame = app => {
 	.then(gameIsInProgress => {
 		console.log('session checked', gameIsInProgress);
 		if(gameIsInProgress) {
-			return games.get(session).then(data => {
+			return games.interrupt(session).then(data => {
 				console.log('DATA:::', data);
 				app.tell(`Trying out the new interruptFunction`)
 				// response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
