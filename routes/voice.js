@@ -234,10 +234,10 @@ const endGame = app => {
 	.then(gameIsInProgress => {
 		console.log('session checked', gameIsInProgress);
 		if(gameIsInProgress) {
-	// 		return games.get(session).then(data => {
-	// 			console.log(data);
+			return games.get(session).then(data => {
+				console.log(data);
 				app.tell(`There is game data`);
-	// 		});
+			});
 		} else {
 			app.tell(`No current session`);
 		}
