@@ -231,11 +231,11 @@ const endGame = app => {
 			return games.interrupt(session).then(data => {
 				console.log('DATA:::', data);
 				response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
-				app.tell(response.ssml);
+				app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			});
 		} else {
 			response = responses.stop();
-			app.tell(response.ssml);
+			app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 		}
 	})
 	.catch(err => {
