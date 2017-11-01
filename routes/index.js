@@ -225,7 +225,6 @@ router.get('/__health', (req,res) => {
 function healthCheck1() {
 	return correlations.allIslands()
 	.then(data => {
-		console.log('HealthOK')
 		return {
 			id               : 1,
 			name             : 'checks the correlations:people service is running',
