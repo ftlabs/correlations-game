@@ -213,8 +213,8 @@ router.get('/__health', (req,res) => {
 	res.json(stdResponse);
 });
 
-async function healthCheck1() {
-	return await correlations.allIslands()
+function healthCheck1() {
+	return correlations.allIslands()
 	.then(data => {
 		console.log('HealthOK')
 		return {
