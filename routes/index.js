@@ -199,7 +199,6 @@ router.get('/__gtg', (req,res) => {
 });
 
 router.get('/__health', (req,res) => {
-	console.log('HEALTH::', healthCheck1());
 	const stdResponse = {
 	    schemaVersion : 1,
 	    systemCode    : `ftlabs-correlations-game`,
@@ -208,7 +207,9 @@ router.get('/__health', (req,res) => {
 	    checks        : [],
 	};
 	
-	// stdResponse.checks.push(healthCheck1());
+	stdResponse.checks.push(healthCheck1());
+
+	console.log('REP::', stdResponse);
 	
 	res.json(stdResponse);
 });
