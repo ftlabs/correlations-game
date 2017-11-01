@@ -194,7 +194,8 @@ router.post('/stats', S3O, (req, res) => {
 });
 
 router.get('/__gtg', (req,res) => {
-	res.status(200).end();
+	const status = healthCheck1().ok?200:503;
+	res.status(status).end();
 });
 
 router.get('/__health', (req,res) => {
@@ -213,7 +214,7 @@ router.get('/__health', (req,res) => {
 
 function healthCheck1() {
 	const results = correlations.allIslands();
-	console.log('RESULTS:::');
+	console.log('RESULTS:::', results);
 	return {
 		id               : 1,
 		name             : 'checks the correlations:people service is running',
