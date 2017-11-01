@@ -194,8 +194,13 @@ router.post('/stats', S3O, (req, res) => {
 });
 
 router.get('/__gtg', (req,res) => {
-	// const status = healthCheck1().ok?200:503;
-	res.status(status).end();
+	const status = healthCheck1().then(data => {
+		const status = data.ok?200:503;
+		return res.status(status).end();
+	})
+	.catch(err => {
+		return res.status(503).end();	
+	})
 });
 
 router.get('/__health', (req,res) => {
@@ -208,11 +213,10 @@ router.get('/__health', (req,res) => {
 	};
 	
 	const check = healthCheck1().then(data => {
-		console.log('DATA CHECK::', data);
 		stdResponse.checks.push(data);
-
-		res.json(stdResponse);
+		return res.json(stdResponse);
 	})
+	.catch(err => return res.json(stdResponse));
 	
 });
 
@@ -229,7 +233,8 @@ function healthCheck1() {
 			technicalSummary : 'Fetches a response from the correlations services',
 			panicGuide       : 'check the logs and ftlabs-correlations-people'
 		};
-	});
+	})
+	.catch(err => throw err);
 }
 
 module.exports = router;
