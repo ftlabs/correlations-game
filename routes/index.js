@@ -207,11 +207,13 @@ router.get('/__health', (req,res) => {
 	    checks        : [],
 	};
 	
-	stdResponse.checks.push(healthCheck1());
+	const check = healthCheck1().then(data => {
+		console.log('DATA CHECK::', data);
+		stdResponse.checks.push(data);
 
-	console.log('REP::', stdResponse);
+		res.json(stdResponse);
+	})
 	
-	res.json(stdResponse);
 });
 
 function healthCheck1() {
