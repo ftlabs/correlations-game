@@ -194,7 +194,7 @@ router.post('/stats', S3O, (req, res) => {
 });
 
 router.get('/__gtg', (req,res) => {
-	const status = healthCheck1().ok?200:503;
+	// const status = healthCheck1().ok?200:503;
 	res.status(status).end();
 });
 
@@ -208,23 +208,19 @@ router.get('/__health', (req,res) => {
 	    checks        : [],
 	};
 	
-	stdResponse.checks.push(healthCheck1());
+	// stdResponse.checks.push(healthCheck1());
 	
 	res.json(stdResponse);
 });
 
-function healthCheck1() {
-	return correlations.allIslands()
+async function healthCheck1() {
+	return await correlations.allIslands()
 	.then(data => {
-		console.log('DATA::', data);
-		return data;
-	})
-	.then(hasData => {
-		console.log('healthOK');
+		console.log('HealthOK')
 		return {
 			id               : 1,
 			name             : 'checks the correlations:people service is running',
-			ok               : hasData.length > 0,
+			ok               : data.length > 0,
 			severity         : 1,
 			businessImpact   : 'the FT Labs Google Home game, Make Connections, will be failing',
 			technicalSummary : 'Fetches a response from the correlations services',
