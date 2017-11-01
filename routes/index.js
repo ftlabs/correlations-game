@@ -213,7 +213,10 @@ router.get('/__health', (req,res) => {
 });
 
 function healthCheck1() {
-	const results = correlations.allIslands();
+	const results = correlations.allIslands()
+	.then(data => {
+		console.log('DATA::', data);
+	});
 	console.log('RESULTS:::', results);
 	return {
 		id               : 1,
