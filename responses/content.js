@@ -102,7 +102,7 @@ function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
 		}
 	}
 
-	scorePhrase += ` Come back to make new connections soon.`;
+	scorePhrase += ` There are new connections everyday.`;
 
 	return {
 		displayText : scorePhrase,
