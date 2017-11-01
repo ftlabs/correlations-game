@@ -216,7 +216,9 @@ router.get('/__health', (req,res) => {
 		stdResponse.checks.push(data);
 		return res.json(stdResponse);
 	})
-	.catch(err => return res.json(stdResponse));
+	.catch(err => {
+		return res.json(stdResponse)
+	});
 	
 });
 
@@ -234,7 +236,9 @@ function healthCheck1() {
 			panicGuide       : 'check the logs and ftlabs-correlations-people'
 		};
 	})
-	.catch(err => throw err);
+	.catch(err => {
+		throw err;
+	});
 }
 
 module.exports = router;
