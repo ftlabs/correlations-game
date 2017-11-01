@@ -785,6 +785,42 @@ function getStats(){
 	;
 }
 
+function stopCurrentGame(gameUUID) {
+	if(gameUUID === undefined){
+		return Promise.reject('No game UUID was passed to the function');
+	}
+
+	return Game.readFromDB(gameUUID)
+		.then(selectedGame => {
+			if(selectedGame === undefined){
+				throw `The game UUID '${gameUUID}' is not valid`;
+			}
+
+			return selectedGame.finish()
+				.then( () => {
+					return Game.writeToDB(selectedGame)
+						.then(function(){
+							debug(`stopCurrentGame: Game state (${selectedGame.uuid}) successfully updated on interruption.`);
+							return {
+								limitReached : false,
+								score        : selectedGame.score,
+								history      : selectedGame.history,
+								achievedHighestScore     : selectedGame.achievedHighestScore,
+								achievedHighestScoreFirst: selectedGame.achievedHighestScoreFirst,
+								globalHighestScore : GAMES_STATS.maxScore,
+							};
+						})
+						.catch(err => {
+							debug(`stopCurrentGame: Unable to save game state (${selectedGame.uuid}) at limit reached`, err);
+							throw err;
+						})
+					;
+				})
+			;
+		})
+	;
+}
+
 module.exports = {
 	new        : createANewGame,
 	question   : getAQuestionToAnswer,
@@ -792,4 +828,5 @@ module.exports = {
 	check      : checkIfAGameExistsForAGivenUUID,
 	get        : getGameDetails,
 	stats      : getStats,
+	interrupt  : stopCurrentGame
 };

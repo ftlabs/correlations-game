@@ -15,7 +15,8 @@ const Actions = {
   QUESTION: 	'correlations.question',
   ANSWER:   	'correlations.answer',
   NOTHEARD:  	'correlations.misunderstood',
-  HELP: 		'correlations.help' 
+  HELP: 		'correlations.help',
+  END: 			'correlations.end'
 };
 
 const Contexts = {
@@ -54,7 +55,7 @@ const getHelp = app => {
 	let richResponse;
 	const session = app.body_.sessionId;
 
-	games.check(app.body_.sessionId)
+	games.check(session)
 		.then(gameExists => {
 			
 			const helpBody = responses.help(gameExists);
@@ -216,6 +217,53 @@ const matchAnswer = app => {
 	});
 };
 
+const endGame = app => {
+	let response;
+	const session = app.body_.sessionId;
+	const INPUT_TYPE = app.getInputType();
+
+	return games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			return games.interrupt(session).then(data => {
+				response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst})
+				spoor({
+					'category': 'GAME',
+					'action': 'gameinterrupted',
+					'system' : {
+						'source': 'ftlabs-correlations-game'
+					},
+					'context' : {
+						'product': 'ftlabs',
+						'sessionId': session,
+						'inputType': INPUT_TYPE,
+						'latestScore' : data.score
+					}
+				});
+				app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+			});
+		} else {
+			response = responses.stop();
+			app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
+			spoor({
+				'category': 'GAME',
+				'action': 'sessioninterrupted',
+				'system' : {
+					'source': 'ftlabs-correlations-game'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session,
+					'inputType': INPUT_TYPE
+				}
+			});
+		}
+	})
+	.catch(err => {
+		console.log('HANDLED REJECTION', err);
+	});
+}
+
 function getQuestion(session, callback, inputType) {
 	games.check(session)
 	.then(gameIsInProgress => {
@@ -353,6 +401,7 @@ actionMap.set(Actions.QUESTION, returnQuestion);
 actionMap.set(Actions.ANSWER, matchAnswer);
 actionMap.set(Actions.NOTHEARD, matchAnswer);
 actionMap.set(Actions.HELP, getHelp);
+actionMap.set(Actions.END, endGame);
 
 router.post('/googlehome', (request, response) => {
 

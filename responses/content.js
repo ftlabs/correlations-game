@@ -84,8 +84,36 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 }
 
+function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
+	let scorePhrase = 'Thank you for playing.';
+
+	if(gameProgress) {
+		scorePhrase += ` You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' } so far.`;
+
+		if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
+			if(scoreData.first) {
+				scorePhrase += ' You are the first to achieve this high score today.';
+			} else {
+				scorePhrase += ' You have matched the current highest score today.';
+			}
+
+		} else {
+			scorePhrase += ` The record to beat today was ${scoreData.scoreMax}.`;
+		}
+	}
+
+	scorePhrase += ` Come back to make new connections soon.`;
+
+	return {
+		displayText : scorePhrase,
+		speech : scorePhrase,
+		ssml : `<speak>${scorePhrase}</speak>`
+	};
+
+}
+
 function askThePlayerAQuestion(data, idx){
-	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in an recent article with which one of the following people?`;
+	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
@@ -182,5 +210,6 @@ module.exports = {
 	incorrectAnswer : theAnswerGivenWasNotCorrect,
 	askQuestion : askThePlayerAQuestion,
 	win : theGameHasBeenWon,
-	help : getTheInstructionsForPlayingTheGame
+	help : getTheInstructionsForPlayingTheGame,
+	stop: theGameWasInterrupted
 };
