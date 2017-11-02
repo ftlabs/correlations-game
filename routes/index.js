@@ -206,9 +206,9 @@ router.get('/__gtg', (req,res) => {
 router.get('/__health', (req,res) => {
 	const stdResponse = {
 	    schemaVersion : 1,
-	    systemCode    : `ftlabs-correlations-game`,
-	    name          : `FT Labs Correlations Game`,
-	    description   : `uses the Correlations:people service to create a Google Home game`,
+	    systemCode    : 'ftlabs-correlations-game',
+	    name          : 'FT Labs Correlations Game',
+	    description   : 'uses the FT Labs Correlations:people service to create a Google Home game',
 	    checks        : [],
 	};
 	
@@ -231,7 +231,7 @@ function healthCheck1() {
 			ok               : data.length > 0,
 			severity         : 1,
 			businessImpact   : 'the FT Labs Google Home game, Make Connections, will be failing',
-			technicalSummary : 'Fetches a response from the correlations services',
+			technicalSummary : 'Fetches a response from the FT Labs Correlations services',
 			panicGuide       : 'check the logs and ftlabs-correlations-people'
 		};
 	})
