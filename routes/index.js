@@ -194,13 +194,7 @@ router.post('/stats', S3O, (req, res) => {
 });
 
 router.get('/__gtg', (req,res) => {
-	const status = healthCheck1().then(data => {
-		const status = data.ok?200:503;
-		return res.status(status).end();
-	})
-	.catch(err => {
-		return res.status(503).end();	
-	})
+	return res.status(200).end();
 });
 
 router.get('/__health', (req,res) => {
