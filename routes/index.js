@@ -4,6 +4,7 @@ const router = express.Router();
 const S3O = require('@financial-times/s3o-middleware');
 
 const games = require('../bin/lib/game');
+const correlations = require('../bin/lib/correlations');
 
 router.get('/', S3O, (req, res) => {
 
@@ -191,5 +192,46 @@ router.get('/stats', S3O, (req, res) => {
 router.post('/stats', S3O, (req, res) => {
 	res.redirect('/stats');
 });
+
+router.get('/__gtg', (req,res) => {
+	return res.status(200).end();
+});
+
+router.get('/__health', (req,res) => {
+	const stdResponse = {
+	    schemaVersion : 1,
+	    systemCode    : 'ftlabs-correlations-game',
+	    name          : 'FT Labs Correlations Game',
+	    description   : 'uses the FT Labs Correlations:people service to create a Google Home game',
+	    checks        : [],
+	};
+	
+	const check = healthCheck1().then(data => {
+		stdResponse.checks.push(data);
+		return res.json(stdResponse);
+	})
+	.catch(err => {
+		return res.json(stdResponse)
+	});
+	
+});
+
+function healthCheck1() {
+	return correlations.allIslands()
+	.then(data => {
+		return {
+			id               : 1,
+			name             : 'checks the correlations:people service is running',
+			ok               : data.length > 0,
+			severity         : 1,
+			businessImpact   : 'the FT Labs Google Home game, Make Connections, will be failing',
+			technicalSummary : 'Fetches a response from the FT Labs Correlations services',
+			panicGuide       : 'check the logs and ftlabs-correlations-people'
+		};
+	})
+	.catch(err => {
+		throw err;
+	});
+}
 
 module.exports = router;
