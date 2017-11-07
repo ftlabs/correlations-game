@@ -8,7 +8,8 @@ const Alexa = require('alexa-sdk');
 
 const handlers = {
     'HelloWorldIntent': function () {
-        this.emit(':tell', 'Hello World!');
+        var guessNum = parseInt(this.event.request.intent.slots.number.value);
+        this.emit(':tell', `Hello, you guessed ${guessNum}!`);
     }
 };
 
