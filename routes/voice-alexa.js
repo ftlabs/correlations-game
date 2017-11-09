@@ -8,6 +8,7 @@ const Alexa = require('alexa-sdk');
 
 const GAME_STATES = {
     START: '_STARTMODE',
+    QUIZ: '_QUIZMODE',
     HELP: '_HELPMODE'
 };
 
@@ -39,10 +40,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'StartGame': function() {
         const sessionId = this.event.session.sessionId;
 
-        games.check(sessionId);
-        games.new(sessionId);
-
-        this.response.speak('Thanks for playing!');
+        this.response.speak(`Thanks for playing ${sessionId}!`);
         this.emit(':responseReady');
     }
 });
