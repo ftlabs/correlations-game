@@ -38,8 +38,13 @@ const newSessionHandlers = {
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'WelcomeGame': function () {
-        this.response.speak('Let’s play! Say “start” when ready or help for more instructions.');
-        this.emit(':responseReady');
+        this.emit(':ask', 'Shall we start playing?');
+    },
+    'AMAZON.YesIntent': function() {
+        this.emit('StartGame');
+    },
+    'AMAZON.NoIntent': function() {
+        this.emit(':tell', 'Ok, see you next time!');
     },
     'StartGame': function() {
         const sessionId = this.event.session.sessionId;
