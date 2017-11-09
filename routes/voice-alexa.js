@@ -17,9 +17,13 @@ const newSessionHandlers = {
         this.handler.state = GAME_STATES.START;
         this.emitWithState('WelcomeGame', true);
     },
-    'AMAZON.StartOverIntent': function () {
+    'StartGame': function () {
         this.handler.state = GAME_STATES.START;
         this.emitWithState('StartGame', true);
+    },
+    'AMAZON.StartOverIntent': function () {
+        this.handler.state = GAME_STATES.START;
+        this.emitWithState('WelcomeGame', true);
     },
     'AMAZON.HelpIntent': function () {
         this.handler.state = GAME_STATES.HELP;
