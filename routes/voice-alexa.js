@@ -52,6 +52,9 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         getQuestion(sessionId, (question => {
             this.handler.state = GAME_STATES.QUIZ;        
             this.response.speak(question).listen(question);   
+            Object.assign(this.attributes, {
+                'speechOutput': question,
+            });
             this.emit(':responseReady');        
         }));
     }
@@ -106,7 +109,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 this.emit(':responseReady');                 
             }  
         });    
-    }
+    },
+    'AMAZON.RepeatIntent': function () {
+        // Need to add a different reprompt text
+        this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
+        this.emit(':responseReady');
+    },
 });
 
 function getQuestion(session, callback) {
