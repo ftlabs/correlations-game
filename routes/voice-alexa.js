@@ -98,9 +98,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         this.emit(':ask', richResponse);  
                     }
                 });   
-            } else {
-                console.log(expectedAnswers);
-                
+            } else {                
+                // Response misunderstood
                 let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
                 richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");                
 
@@ -109,12 +108,17 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 this.emit(':responseReady');                 
             }  
         });    
-    },
+    },   
     'AMAZON.RepeatIntent': function () {
         // Need to add a different reprompt text
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
         this.emit(':responseReady');
     },
+    'Unhandled': function () {
+        // Need to add unhandled text to remprompt and make it obvious you were no understand
+        this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);        
+        this.emit(':responseReady');
+    }
 });
 
 function getQuestion(session, callback) {
