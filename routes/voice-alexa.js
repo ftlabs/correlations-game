@@ -38,7 +38,7 @@ const newSessionHandlers = {
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'WelcomeGame': function () {
-        this.emit(':ask', 'Are you ready to make connections?');
+        this.emit(':ask', 'Shall we start playing?');
     },
     'AMAZON.YesIntent': function () {
         this.emit('StartGame');
@@ -83,10 +83,17 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
             checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                 let richResponse = obj.ssml;
+
                 richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
-                                
-                this.response.speak(`You said the answer was ${guessIndex} - ${guess}! ` + richResponse);           
-                this.emit(':responseReady');       
+
+                if (obj.question) {
+                    this.handler.state = GAME_STATES.QUIZ; 
+                    this.response.speak(richResponse + obj.question).listen(obj.question);
+                    this.emit(':responseReady');                       
+                } else {
+                    this.handler.state = GAME_STATES.START;                            
+                    this.emit(':ask', richResponse + "<break time=\"0.5s\"/> Do you want to play again?");  
+                }
             });     
         })    
     }
@@ -152,7 +159,7 @@ function checkAnswer(session, answer, callback) {
             if(result.correct === true){
                 getQuestion(session, obj => {
                     callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
-                }, inputType);
+                });
             } else {
                 callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
             }
