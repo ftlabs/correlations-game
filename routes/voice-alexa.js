@@ -78,12 +78,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 guess = expectedAnswers[parseInt(guess) - 1].match;
             }
 
-            console.log(guessIndex);
-            console.log(guess);
-
             checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                 let richResponse = obj.ssml;
-
                 richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
 
                 if (obj.question) {
@@ -91,8 +87,9 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                     this.response.speak(richResponse + obj.question).listen(obj.question);
                     this.emit(':responseReady');                       
                 } else {
+                    richResponse = richResponse + " " + obj.score;
                     this.handler.state = GAME_STATES.START;                            
-                    this.emit(':ask', richResponse + "<break time=\"0.5s\"/> Do you want to play again?");  
+                    this.emit(':ask', richResponse);  
                 }
             });     
         })    
