@@ -40,10 +40,10 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'WelcomeGame': function () {
         this.emit(':ask', 'Shall we start playing?');
     },
-    'AMAZON.YesIntent': function() {
+    'AMAZON.YesIntent': function () {
         this.emit('StartGame');
     },
-    'AMAZON.NoIntent': function() {
+    'AMAZON.NoIntent': function () {
         this.emit(':tell', 'Ok, see you next time!');
     },
     'StartGame': function() {
@@ -80,13 +80,10 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             });
             
             var question = responses.askQuestion(preparedData, data.questionNum).ssml;
-            console.log(question);
-
             // need to remove this for now as response.speak adds the speak tags
             question = question.replace("<speak>", "").replace("</speak>", "");
 
-            console.log(question);
-
+            this.handler.state = GAME_STATES.QUIZ;        
             this.response.speak(question);   
             this.emit(':responseReady');        
         })
@@ -96,6 +93,42 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         ;
     }
 });
+
+const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
+    'AnswerIntent': function () {
+        const sessionId = this.event.session.sessionId;        
+        let guess = this.event.request.intent.slots.Answer.value;
+
+        getExpectedAnswers(sessionId)
+        .then(data => {
+            const answers = data.answersReturned;
+            const seed = data.seedPerson;
+    
+            const expectedAnswers = Object.keys(answers).map(key => {
+                answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+                return answers[key];
+            });
+
+            if (guess) {
+                guess = expectedAnswers[guess].match;
+            }
+
+            this.response.speak(`You said the answer was ${guess}!`);           
+            this.emit(':responseReady');            
+        })    
+    }
+});
+
+function getExpectedAnswers(session) {
+	return games.check(session)
+	.then(gameIsInProgress => {
+		if(gameIsInProgress) {
+			return games.get(session).then(data => data);
+		} else {
+			return [];
+		}
+	});
+}
 
 router.post('/', (request, response) => {
 
@@ -111,7 +144,7 @@ router.post('/', (request, response) => {
     };
 
     const alexa = Alexa.handler(request.body, context);    
-    alexa.registerHandlers(newSessionHandlers, startStateHandlers);
+    alexa.registerHandlers(newSessionHandlers, startStateHandlers, quizStateHandlers);
     alexa.execute();
 });
 
