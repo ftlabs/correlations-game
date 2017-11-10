@@ -51,7 +51,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 
         getQuestion(sessionId, (question => {
             this.handler.state = GAME_STATES.QUIZ;        
-            this.response.speak(question);   
+            this.response.speak(question).listen(question);   
             this.emit(':responseReady');        
         }));
     }
