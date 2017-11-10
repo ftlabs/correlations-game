@@ -97,7 +97,8 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AnswerIntent': function () {
         const sessionId = this.event.session.sessionId;        
-        let guess = this.event.request.intent.slots.Answer.value;
+        const guessIndex = this.event.request.intent.slots.Answer.value;
+        let guess = guessIndex;
 
         getExpectedAnswers(sessionId)
         .then(data => {
@@ -109,12 +110,18 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 return answers[key];
             });
 
+            // Convert from number to answer
             if (guess) {
-                guess = expectedAnswers[guess].match;
+                guess = expectedAnswers[parseInt(guess) - 1].match;
             }
 
-            this.response.speak(`You said the answer was ${guess}!`);           
-            this.emit(':responseReady');            
+            checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
+                let richResponse = obj.ssml;
+                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
+            
+                this.response.speak(`You said the answer was ${guessIndex}, ${guess}! ` + richResponse);           
+                this.emit(':responseReady');       
+            });     
         })    
     }
 });
@@ -128,6 +135,20 @@ function getExpectedAnswers(session) {
 			return [];
 		}
 	});
+}
+
+function checkAnswer(session, answer, callback) {
+    games.answer(session, answer)
+        .then(result => {
+            if(result.correct === true){
+                getQuestion(session, obj => {
+                    callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
+                }, inputType);
+            } else {
+                callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
+            }
+        })
+    ;
 }
 
 router.post('/', (request, response) => {
