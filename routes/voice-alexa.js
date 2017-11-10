@@ -61,38 +61,51 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AnswerIntent': function () {
         const sessionId = this.event.session.sessionId;        
         const guessIndex = this.event.request.intent.slots.Answer.value;
-        let guess = guessIndex;
+        let guess = guessIndex;   
 
         getExpectedAnswers(sessionId)
-        .then(data => {
+        .then(data => {            
             const answers = data.answersReturned;
             const seed = data.seedPerson;
-    
-            const expectedAnswers = Object.keys(answers).map(key => {
-                answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ')}
-                return answers[key];
-            });
-
-            // Convert from number to answer
-            if (guess) {
-                guess = expectedAnswers[parseInt(guess) - 1].match;
+            
+            let expectedAnswers;
+            if (typeof answers[0] === 'string' || answers[0] instanceof String) {
+                expectedAnswers = Object.keys(answers).map(key => {
+                    answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ')}
+                    return answers[key];
+                });
+            } else {
+                expectedAnswers = answers;
             }
 
-            checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
-                let richResponse = obj.ssml;
-                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
+            if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
+                guess = expectedAnswers[parseInt(guess) - 1].match;
+                
+                checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
+                    let richResponse = obj.ssml;
+                    richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
+    
+                    if (obj.question) {
+                        this.handler.state = GAME_STATES.QUIZ; 
+                        this.response.speak(richResponse + obj.question).listen(obj.question);
+                        this.emit(':responseReady');                       
+                    } else {
+                        richResponse = richResponse + " " + obj.score;
+                        this.handler.state = GAME_STATES.START;                            
+                        this.emit(':ask', richResponse);  
+                    }
+                });   
+            } else {
+                console.log(expectedAnswers);
+                
+                let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
+                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");                
 
-                if (obj.question) {
-                    this.handler.state = GAME_STATES.QUIZ; 
-                    this.response.speak(richResponse + obj.question).listen(obj.question);
-                    this.emit(':responseReady');                       
-                } else {
-                    richResponse = richResponse + " " + obj.score;
-                    this.handler.state = GAME_STATES.START;                            
-                    this.emit(':ask', richResponse);  
-                }
-            });     
-        })    
+                this.handler.state = GAME_STATES.QUIZ;        
+                this.response.speak(richResponse).listen(richResponse);   
+                this.emit(':responseReady');                 
+            }  
+        });    
     }
 });
 
