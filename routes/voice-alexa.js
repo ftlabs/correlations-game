@@ -38,7 +38,7 @@ const newSessionHandlers = {
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'WelcomeGame': function () {
-        this.emit(':ask', 'Shall we start playing?');
+        this.emit(':ask', 'Are you ready to make connections?');
     },
     'AMAZON.YesIntent': function () {
         this.emit('StartGame');
@@ -49,48 +49,11 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'StartGame': function() {
         const sessionId = this.event.session.sessionId;
 
-        games.check(sessionId)
-        .then(gameIsInProgress => {
-            if (gameIsInProgress) {
-                return games.question(sessionId);
-            } else {
-                return games.new(sessionId)
-                .then(gameUUID => {
-                    return gameUUID;
-                })
-                .then(gameUUID => games.question(gameUUID))
-                ;
-            }
-        })
-        .then(data => {
-            const preparedData = {};
-            
-            preparedData.seed = {
-                value : data.seed,
-                printValue : data.seed.replace('people:', '').replace('.', '').replace('-', ' ')
-            };
-
-            preparedData.options = {};
-
-            Object.keys(data.options).forEach(key => {
-                preparedData.options[key] = {
-                    value : data.options[key],
-                    printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
-                };
-            });
-            
-            var question = responses.askQuestion(preparedData, data.questionNum).ssml;
-            // need to remove this for now as response.speak adds the speak tags
-            question = question.replace("<speak>", "").replace("</speak>", "");
-
+        getQuestion(sessionId, (question => {
             this.handler.state = GAME_STATES.QUIZ;        
             this.response.speak(question);   
             this.emit(':responseReady');        
-        })
-        .catch(err => {
-            console.log('HANDLED REJECTION', err);
-        })
-        ;
+        }));
     }
 });
 
@@ -106,7 +69,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             const seed = data.seedPerson;
     
             const expectedAnswers = Object.keys(answers).map(key => {
-                answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()}
+                answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ')}
                 return answers[key];
             });
 
@@ -115,16 +78,62 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 guess = expectedAnswers[parseInt(guess) - 1].match;
             }
 
+            console.log(guessIndex);
+            console.log(guess);
+
             checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                 let richResponse = obj.ssml;
                 richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
-            
-                this.response.speak(`You said the answer was ${guessIndex}, ${guess}! ` + richResponse);           
+                                
+                this.response.speak(`You said the answer was ${guessIndex} - ${guess}! ` + richResponse);           
                 this.emit(':responseReady');       
             });     
         })    
     }
 });
+
+function getQuestion(session, callback) {
+    games.check(session)
+    .then(gameIsInProgress => {
+        if (gameIsInProgress) {
+            return games.question(session);
+        } else {
+            return games.new(session)
+            .then(gameUUID => {
+                return gameUUID;
+            })
+            .then(gameUUID => games.question(gameUUID))
+            ;
+        }
+    })
+    .then(data => {
+        const preparedData = {};
+        
+        preparedData.seed = {
+            value : data.seed,
+            printValue : data.seed.replace('people:', '').replace('.', '').replace('-', ' ')
+        };
+
+        preparedData.options = {};
+
+        Object.keys(data.options).forEach(key => {
+            preparedData.options[key] = {
+                value : data.options[key],
+                printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
+            };
+        });
+        
+        var question = responses.askQuestion(preparedData, data.questionNum).ssml;
+        // need to remove this for now as response.speak adds the speak tags
+        question = question.replace("<speak>", "").replace("</speak>", "");
+
+        callback(question);
+    })
+    .catch(err => {
+        console.log('HANDLED REJECTION', err);
+    })
+    ;
+}
 
 function getExpectedAnswers(session) {
 	return games.check(session)
