@@ -133,8 +133,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emit(':responseReady');
     },
     'AMAZON.StartOverIntent': function () {
+        const sessionId = this.event.session.sessionId;        
+        
         this.handler.state = GAME_STATES.START;
-        this.emitWithState('StartGame', true);
+        games.interrupt(sessionId).then(data => {
+            this.emitWithState('StartGame', true);        
+        });
     },
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
