@@ -121,20 +121,44 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
     'AMAZON.HelpIntent': function () {
         this.handler.state = GAME_STATES.HELP;
-        this.emitWithState('helpTheUser', false);
+        this.emitWithState('helpTheUser', true);
+    },
+    'AMAZON.CancelIntent': function () {
+        const cancelSpeech = 'Thank you for playing. There are new connections everyday.'
+        this.response.speak(cancelSpeech).listen(cancelSpeech);
+        this.emit(':responseReady');
     },
     'Unhandled': function () {
         // Need to add unhandled text to remprompt and make it obvious you were not understood
-        this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);        
+        const unhandledSpeech = "Sorry, I'm not sure what you said. For instructions, use 'Help'.";
+        this.response.speak(unhandledSpeech).listen(unhandledSpeech);        
         this.emit(':responseReady');
     }
 });
 
 const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
     'helpTheUser': function () {
-        const helpBody = responses.help(gameExists);
-        this.response.speak(helpBody.ssml);
-        this.emit(':responseReady');        
+        const sessionId = this.event.session.sessionId;
+        
+        const helpBody = games.check(sessionId)
+        .then(gameIsInProgress => {
+            const helpBody = responses.help(gameIsInProgress);
+            this.response.speak(helpBody.ssml);
+            this.emit(':responseReady');  
+        });      
+    },
+    'AMAZON.YesIntent': function () {
+        // If already in a game, continue
+        if (this.attributes['speechOutput'] && this.attributes['repromptText']) {
+            this.handler.state = GAME_STATES.QUIZ;
+            this.emitWithState('AMAZON.RepeatIntent');
+        } else {
+            this.handler.state = GAME_STATES.START;        
+            this.emitWithState('StartGame', true);
+        }
+    },
+    'AMAZON.NoIntent': function () {
+        this.emit(':tell', 'Ok, see you next time!');
     }
 });
 
