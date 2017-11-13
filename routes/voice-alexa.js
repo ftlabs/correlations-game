@@ -114,10 +114,22 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
         this.emit(':responseReady');
     },
+    'AMAZON.HelpIntent': function () {
+        this.handler.state = GAME_STATES.HELP;
+        this.emitWithState('helpTheUser', false);
+    },
     'Unhandled': function () {
-        // Need to add unhandled text to remprompt and make it obvious you were no understand
+        // Need to add unhandled text to remprompt and make it obvious you were not understood
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);        
         this.emit(':responseReady');
+    }
+});
+
+const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
+    'helpTheUser': function () {
+        const helpBody = responses.help(gameExists);
+        this.response.speak(helpBody.ssml);
+        this.emit(':responseReady');        
     }
 });
 
@@ -203,7 +215,7 @@ router.post('/', (request, response) => {
     };
 
     const alexa = Alexa.handler(request.body, context);    
-    alexa.registerHandlers(newSessionHandlers, startStateHandlers, quizStateHandlers);
+    alexa.registerHandlers(newSessionHandlers, startStateHandlers, quizStateHandlers, helpStateHandlers);
     alexa.execute();
 });
 
