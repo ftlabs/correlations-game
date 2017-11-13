@@ -132,6 +132,16 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.response.speak(cancelSpeech).listen(cancelSpeech);
         this.emit(':responseReady');
     },
+    'AMAZON.StartOverIntent': function () {
+        this.handler.state = GAME_STATES.START;
+        this.emitWithState('StartGame', true);
+    },
+    'AMAZON.StopIntent': function () {
+        this.handler.state = GAME_STATES.HELP;
+        const speechOutput = 'Would you like to continue your game?';
+        this.response.speak(speechOutput).listen(speechOutput);
+        this.emit(':responseReady');
+    },
     'Unhandled': function () {
         // Need to add unhandled text to remprompt and make it obvious you were not understood
         const unhandledSpeech = "Sorry, I'm not sure what you said. For instructions, use 'Help'.";
