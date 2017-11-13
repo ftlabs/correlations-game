@@ -46,6 +46,10 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'AMAZON.NoIntent': function () {
         this.emit(':tell', 'Ok, see you next time!');
     },
+    'AMAZON.HelpIntent': function () {
+        this.handler.state = GAME_STATES.HELP;
+        this.emitWithState('helpTheUser', true);
+    },
     'StartGame': function() {
         const sessionId = this.event.session.sessionId;
 
@@ -142,8 +146,9 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         
         const helpBody = games.check(sessionId)
         .then(gameIsInProgress => {
-            const helpBody = responses.help(gameIsInProgress);
-            this.response.speak(helpBody.ssml);
+            let helpBody = responses.help(gameIsInProgress).ssml;
+            helpBody = helpBody.replace("<speak>", "").replace("</speak>", "");            
+            this.response.speak(helpBody);
             this.emit(':responseReady');  
         });      
     },
