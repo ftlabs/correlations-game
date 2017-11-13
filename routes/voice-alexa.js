@@ -55,7 +55,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 
         getQuestion(sessionId, (question => {
             this.handler.state = GAME_STATES.QUIZ;        
-            this.response.speak(question).listen(question);   
+            this.response.speak(question).listen(question); 
             Object.assign(this.attributes, {
                 'speechOutput': question,
             });
@@ -100,10 +100,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                     if (obj.question) {
                         this.handler.state = GAME_STATES.QUIZ; 
                         this.response.speak(richResponse + obj.question).listen(obj.question);
+                        this.response.cardRenderer(obj.article, obj.link, obj.image);              
                         this.emit(':responseReady');                       
                     } else {
                         richResponse = richResponse + " " + obj.score;
-                        this.handler.state = GAME_STATES.START;                            
+                        this.handler.state = GAME_STATES.START;         
+                        this.response.cardRenderer(obj.article, obj.link, obj.image);                                      
                         this.emit(':ask', richResponse);  
                     }
                 });   
