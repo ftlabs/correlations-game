@@ -57,7 +57,12 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             });
             this.emit(':responseReady');        
         }));
-    }
+    },
+    'Unhandled': function () {
+        const speechOutput = 'Say yes to start a new game.';
+        this.response.speak(speechOutput).listen(speechOutput);
+        this.emit(':responseReady');        
+    }        
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
