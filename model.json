@@ -1,0 +1,107 @@
+{
+    "languageModel": {
+      "types": [
+        {
+          "name": "QuizAnswer",
+          "values": [
+            {
+              "id": null,
+              "name": {
+                "value": "one",
+                "synonyms": []
+              }
+            },
+            {
+              "id": null,
+              "name": {
+                "value": "two",
+                "synonyms": []
+              }
+            },
+            {
+              "id": null,
+              "name": {
+                "value": "three",
+                "synonyms": []
+              }
+            },
+            {
+              "id": null,
+              "name": {
+                "value": "a",
+                "synonyms": []
+              }
+            },
+            {
+              "id": null,
+              "name": {
+                "value": "b",
+                "synonyms": []
+              }
+            },
+            {
+              "id": null,
+              "name": {
+                "value": "c",
+                "synonyms": []
+              }
+            }
+          ]
+        }
+      ],
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StartOverIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
+          "name": "AnswerIntent",
+          "samples": [
+            "the answer is {Answer}",
+            "my answer is {Answer}",
+            "is it {Answer}",
+            "{Answer} is my answer",
+            "{Answer}"
+          ],
+          "slots": [
+            {
+              "name": "Answer",
+              "type": "QuizAnswer"
+            }
+          ]
+        },
+        {
+          "name": "StartGame",
+          "samples": [
+            "start game"
+          ],
+          "slots": []
+        }
+      ],
+      "invocationName": "make connections"
+    }
+  }
