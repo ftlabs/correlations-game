@@ -148,8 +148,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         .then(gameIsInProgress => {
             let helpBody = responses.help(gameIsInProgress).ssml;
             helpBody = helpBody.replace("<speak>", "").replace("</speak>", "");            
-            this.response.speak(helpBody);
-            this.emit(':responseReady');  
+            this.emit(':ask', helpBody);  
         });      
     },
     'AMAZON.YesIntent': function () {
@@ -164,7 +163,12 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
     },
     'AMAZON.NoIntent': function () {
         this.emit(':tell', 'Ok, see you next time!');
-    }
+    },
+    'Unhandled': function () {
+        const speechOutput = 'Say yes to continue, or no to end the game.'
+        this.response.speak(speechOutput).listen(speechOutput);
+        this.emit(':responseReady');
+    },
 });
 
 function getQuestion(session, callback) {
