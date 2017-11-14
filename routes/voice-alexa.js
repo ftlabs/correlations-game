@@ -143,7 +143,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emitWithState('helpTheUser', true);
     },
     'AMAZON.CancelIntent': function () {
-        this.emit(':tell', speech['ENDGAME']);        
+        const sessionId = this.event.session.sessionId;
+        
+        games.interrupt(sessionId).then(data => {
+            const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
+            this.emit(':tell', response.speech);
+        });    
     },
     'AMAZON.StartOverIntent': function () {
         const sessionId = this.event.session.sessionId;        
@@ -188,7 +193,12 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         }
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', speech['ENDGAME']);
+        const sessionId = this.event.session.sessionId;
+        
+        games.interrupt(sessionId).then(data => {
+            const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
+            this.emit(':tell', response.speech);
+        }); 
     },
     'Unhandled': function () {
         const speechOutput = 'Say yes to continue, or no to end the game.'
