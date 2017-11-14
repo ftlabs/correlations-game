@@ -111,9 +111,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         this.response.speak(richResponse + obj.question).listen(obj.question);
                         this.emit(':responseReady');                       
                     } else {
-                        richResponse = richResponse + " " + obj.score;
-                        this.handler.state = GAME_STATES.START;         
-                        this.emit(':ask', richResponse);  
+                        const repromptText = 'Would you like to start a new game?';
+                        richResponse = richResponse + ' ' + obj.score;
+                        this.handler.state = GAME_STATES.START;      
+                        this.response.speak(richResponse).listen(repromptText);   
+                        this.emit(':responseReady');
                     }
                 });   
             } else {                
