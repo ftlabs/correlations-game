@@ -12,6 +12,11 @@ const GAME_STATES = {
     HELP: '_HELPMODE'
 };
 
+const speech = {
+    'ENDGAME': 'Thank you for playing. There are new connections everyday.',
+    'UNHANDLED': "Sorry, I'm not sure what you said. For instructions, say 'Help'."
+}
+
 const newSessionHandlers = {
     'LaunchRequest': function () {
         this.handler.state = GAME_STATES.START;
@@ -30,8 +35,7 @@ const newSessionHandlers = {
         this.emitWithState('helpTheUser', true);
     },
     'Unhandled': function () {
-        const speechOutput = 'Say start to start a new game.';
-        this.response.speak(speechOutput).listen(speechOutput);
+        this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
         this.emit(':responseReady');
     }
 };
@@ -44,7 +48,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emit('StartGame');
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', 'Thank you for playing. There are new connections everyday.');
+        this.emit(':tell', speech['ENDGAME']);
     },
     'AMAZON.HelpIntent': function () {
         this.handler.state = GAME_STATES.HELP;
@@ -64,7 +68,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         }));
     },
     'Unhandled': function () {
-        const speechOutput = 'Say yes to start a new game.';
+        const speechOutput = 'Say yes to start a new game, or no to exit the skill.';
         this.response.speak(speechOutput).listen(speechOutput);
         this.emit(':responseReady');        
     }        
@@ -139,9 +143,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emitWithState('helpTheUser', true);
     },
     'AMAZON.CancelIntent': function () {
-        const cancelSpeech = 'Thank you for playing. There are new connections everyday.'
-        this.response.speak(cancelSpeech).listen(cancelSpeech);
-        this.emit(':responseReady');
+        this.emit(':tell', speech['ENDGAME']);        
     },
     'AMAZON.StartOverIntent': function () {
         const sessionId = this.event.session.sessionId;        
@@ -159,8 +161,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
     'Unhandled': function () {
         // Need to add unhandled text to remprompt and make it obvious you were not understood
-        const unhandledSpeech = "Sorry, I'm not sure what you said. For instructions, use 'Help'.";
-        this.response.speak(unhandledSpeech).listen(unhandledSpeech);        
+        this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
         this.emit(':responseReady');
     }
 });
@@ -187,7 +188,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         }
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', 'Thank you for playing. There are new connections everyday.');
+        this.emit(':tell', speech['ENDGAME']);
     },
     'Unhandled': function () {
         const speechOutput = 'Say yes to continue, or no to end the game.'
