@@ -209,27 +209,31 @@ function getQuestion(session, callback) {
         }
     })
     .then(data => {
-        const preparedData = {};
-        
-        preparedData.seed = {
-            value : data.seed,
-            printValue : data.seed.replace('people:', '').replace('.', '').replace('-', ' ')
-        };
-
-        preparedData.options = {};
-
-        Object.keys(data.options).forEach(key => {
-            preparedData.options[key] = {
-                value : data.options[key],
-                printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
+        if (data.limitReached === true) {
+            callback(responses.win({score: data.score}));
+        } else {
+            const preparedData = {};
+            
+            preparedData.seed = {
+                value : data.seed,
+                printValue : data.seed.replace('people:', '').replace('.', '').replace('-', ' ')
             };
-        });
-        
-        var question = responses.askQuestion(preparedData, data.questionNum).ssml;
-        // need to remove this for now as response.speak adds the speak tags
-        question = question.replace("<speak>", "").replace("</speak>", "");
-
-        callback(question);
+    
+            preparedData.options = {};
+    
+            Object.keys(data.options).forEach(key => {
+                preparedData.options[key] = {
+                    value : data.options[key],
+                    printValue : data.options[key].replace('people:', '').replace('.', '').replace('-', ' ')
+                };
+            });
+            
+            var question = responses.askQuestion(preparedData, data.questionNum).ssml;
+            // need to remove this for now as response.speak adds the speak tags
+            question = question.replace("<speak>", "").replace("</speak>", "");
+    
+            callback(question);
+        }
     })
     .catch(err => {
         console.log('HANDLED REJECTION', err);
