@@ -44,7 +44,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emit('StartGame');
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', 'Ok, see you next time!');
+        this.emit(':tell', 'Thank you for playing. There are new connections everyday.');
     },
     'AMAZON.HelpIntent': function () {
         this.handler.state = GAME_STATES.HELP;
@@ -187,7 +187,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         }
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', 'Ok, see you next time!');
+        this.emit(':tell', 'Thank you for playing. There are new connections everyday.');
     },
     'Unhandled': function () {
         const speechOutput = 'Say yes to continue, or no to end the game.'
