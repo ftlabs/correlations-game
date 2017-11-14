@@ -99,6 +99,9 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     
                     if (obj.question) {
                         this.handler.state = GAME_STATES.QUIZ; 
+                        Object.assign(this.attributes, {
+                            'speechOutput': obj.question,
+                        });
                         this.response.speak(richResponse + obj.question).listen(obj.question);
                         this.response.cardRenderer(obj.article, obj.link, obj.image);              
                         this.emit(':responseReady');                       
