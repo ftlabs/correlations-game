@@ -20,7 +20,7 @@ Shall we start playing?
 [[Yes]]
 [[No]]
 
-[[Help]]</tw-passagedata><tw-passagedata pid="3" name="Yes" tags="" position="400,300">Question (print: $currentQuestion).
+[[Help]]</tw-passagedata><tw-passagedata pid="3" name="Yes" tags="" position="500,400">Question (print: $currentQuestion).
 
 Person X
 was mentioned in a recent article with which one of the following people? 
@@ -29,9 +29,14 @@ was mentioned in a recent article with which one of the following people?
 [[Person B (Correct)-&gt;Person B]]
 [[Person C (Incorrect)-&gt;Person C]]
 
-[[Help]]</tw-passagedata><tw-passagedata pid="4" name="No" tags="" position="100,300">Ok, see you next time!
+[[Repeat-&gt;Yes]]
+[[Cancel-&gt;No]]
+[[Stop]]
+[[Start Over-&gt;Alexa, Make Connections]]
+[[Help]]
+</tw-passagedata><tw-passagedata pid="4" name="No" tags="" position="100,600">Thank you for playing. There are new connections everyday.
 
-[[Start Over-&gt;Launch]] </tw-passagedata><tw-passagedata pid="5" name="Help" tags="" position="600,100">Make Connections&quot; is a quiz game that tests your knowledge of people in the news.
+[[Start Over-&gt;Launch]] </tw-passagedata><tw-passagedata pid="5" name="Help" tags="" position="900,100">Make Connections&quot; is a quiz game that tests your knowledge of people in the news.
 Once you&#x27;ve started a game, a question will be asked like the following.
 Who was recently mentioned in an article with Angela Merkel?
 1) Theresa May. 2) Sadiq Khan. 3) Richard Branson.
@@ -47,19 +52,22 @@ Would you like to start/continue your game?
 
 [[Yes]]
 [[No]]
-</tw-passagedata><tw-passagedata pid="6" name="Person A" tags="" position="475,500">That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game? 
+</tw-passagedata><tw-passagedata pid="6" name="Person A" tags="" position="500,800">That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game? 
 
 (set: $currentQuestion to 1)	
 
 [[Yes]]
-[[No]]</tw-passagedata><tw-passagedata pid="7" name="Person B" tags="" position="300,500">(set: $currentQuestion to it + 1)	
+[[No]]</tw-passagedata><tw-passagedata pid="7" name="Person B" tags="" position="300,800">(set: $currentQuestion to it + 1)	
 
-Correct! Person Zero was mentioned with Person Two in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant?
+Correct! Person Zero was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant?
 
 [[Next Question-&gt;Yes]]
-</tw-passagedata><tw-passagedata pid="8" name="Person C" tags="" position="600,500">That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game? 
+</tw-passagedata><tw-passagedata pid="8" name="Person C" tags="" position="700,800">That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game? 
 
 (set: $currentQuestion to 1)	
+
+[[Yes]]
+[[No]]</tw-passagedata><tw-passagedata pid="9" name="Stop" tags="" position="900,300">Would you like to continue your game?
 
 [[Yes]]
 [[No]]</tw-passagedata></tw-storydata>
