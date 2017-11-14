@@ -58,6 +58,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             this.response.speak(question).listen(question); 
             Object.assign(this.attributes, {
                 'speechOutput': question,
+                'currentQuestion': 1
             });
             this.emit(':responseReady');        
         }));
@@ -96,19 +97,22 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                     let richResponse = obj.ssml;
                     richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
-    
-                    if (obj.question) {
+                    
+                    const cardTitle = `Question ${this.attributes['currentQuestion']}`;
+                    const cardBody = obj.displayText + ' ' + obj.article;
+                    this.response.cardRenderer(cardTitle, cardBody, obj.image);                                                          
+                    
+                    if (obj.question) {                        
                         this.handler.state = GAME_STATES.QUIZ; 
                         Object.assign(this.attributes, {
                             'speechOutput': obj.question,
+                            'currentQuestion': this.attributes['currentQuestion'] + 1
                         });
                         this.response.speak(richResponse + obj.question).listen(obj.question);
-                        this.response.cardRenderer(obj.article, obj.link, obj.image);              
                         this.emit(':responseReady');                       
                     } else {
                         richResponse = richResponse + " " + obj.score;
                         this.handler.state = GAME_STATES.START;         
-                        this.response.cardRenderer(obj.article, obj.link, obj.image);                                      
                         this.emit(':ask', richResponse);  
                     }
                 });   
