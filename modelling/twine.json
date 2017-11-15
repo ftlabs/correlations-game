@@ -1,0 +1,153 @@
+
+Plain JSON output
+
+[
+    {
+        "pid": 1,
+        "position": {
+            "x": 100,
+            "y": 100
+        },
+        "name": "Launch",
+        "tags": [
+            ""
+        ],
+        "content": "An Echo device sits on the table in front of you.  [[Alexa, Make Connections]]",
+        "childrenNames": [
+            "[[Alexa, Make Connections]]"
+        ]
+    },
+    {
+        "pid": 2,
+        "position": {
+            "x": 300,
+            "y": 100
+        },
+        "name": "Alexa, Make Connections",
+        "tags": [
+            ""
+        ],
+        "content": "(set: $currentQuestion to 1)  Welcome to Make Connections, an FT Labs game. For instructions, say 'help'. Shall we start playing?  [[Yes]] [[No]]  [[Help]]",
+        "childrenNames": [
+            "[[Yes]]",
+            "[[No]]",
+            "[[Help]]"
+        ]
+    },
+    {
+        "pid": 3,
+        "position": {
+            "x": 600,
+            "y": 500
+        },
+        "name": "Yes",
+        "tags": [
+            ""
+        ],
+        "content": "Question (print: $currentQuestion).  Person X was mentioned in a recent article with which one of the following people?   [[Person A (Incorrect)->Person A]] [[Person B (Correct)->Person B]] [[Person C (Incorrect)->Person C]]  [[Repeat->Yes]] [[Cancel->No]] [[Stop]] [[Start Over->Alexa, Make Connections]] [[Help]] ",
+        "childrenNames": [
+            "[[Person A (Incorrect)->Person A]]",
+            "[[Person B (Correct)->Person B]]",
+            "[[Person C (Incorrect)->Person C]]",
+            "[[Repeat->Yes]]",
+            "[[Cancel->No]]",
+            "[[Stop]]",
+            "[[Start Over->Alexa, Make Connections]]",
+            "[[Help]]"
+        ]
+    },
+    {
+        "pid": 4,
+        "position": {
+            "x": 100,
+            "y": 600
+        },
+        "name": "No",
+        "tags": [
+            ""
+        ],
+        "content": "Thank you for playing. There are new connections everyday.  [[Start Over->Launch]] ",
+        "childrenNames": [
+            "[[Start Over->Launch]]"
+        ]
+    },
+    {
+        "pid": 5,
+        "position": {
+            "x": 900,
+            "y": 100
+        },
+        "name": "Help",
+        "tags": [
+            ""
+        ],
+        "content": "Make Connections' is a quiz game that tests your knowledge of people in the news. Once you've started a game, a question will be asked like the following. Who was recently mentioned in an article with Angela Merkel? 1) Theresa May. 2) Sadiq Khan. 3) Richard Branson. Only one of the options is correct. Once the question has been asked, you can answer by either giving the name, or the number that preceded it. If you are right, you'll be asked about another person. If you are wrong, it's game over - you can use 'Start' or 'Play' to begin a new game. At any point in the game, you can use 'Disconnect' or 'Stop' to quit playing. If you would like to hear the question again, use 'Repeat'. To get these instructions again at any point, use 'Help'.  Would you like to start/continue your game?  [[Yes]] [[No]] ",
+        "childrenNames": [
+            "[[Yes]]",
+            "[[No]]"
+        ]
+    },
+    {
+        "pid": 6,
+        "position": {
+            "x": 600,
+            "y": 800
+        },
+        "name": "Person A",
+        "tags": [
+            ""
+        ],
+        "content": "That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game?   (set: $currentQuestion to 1)\t  [[Yes]] [[No]]",
+        "childrenNames": [
+            "[[Yes]]",
+            "[[No]]"
+        ]
+    },
+    {
+        "pid": 7,
+        "position": {
+            "x": 400,
+            "y": 800
+        },
+        "name": "Person B",
+        "tags": [
+            ""
+        ],
+        "content": "(set: $currentQuestion to it + 1)\t  Correct! Person Zero was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant?  [[Next Question->Yes]] ",
+        "childrenNames": [
+            "[[Next Question->Yes]]"
+        ]
+    },
+    {
+        "pid": 8,
+        "position": {
+            "x": 800,
+            "y": 800
+        },
+        "name": "Person C",
+        "tags": [
+            ""
+        ],
+        "content": "That was not the correct answer. Person X was mentioned with Person B in the FT article titled: Will Artificial Intelligence Make Humans Irrelevant? You made (print: $currentQuestion - 1) connections. The record to beat today is TOP SCORE. Would you like to start a new game?   (set: $currentQuestion to 1)\t  [[Yes]] [[No]]",
+        "childrenNames": [
+            "[[Yes]]",
+            "[[No]]"
+        ]
+    },
+    {
+        "pid": 9,
+        "position": {
+            "x": 900,
+            "y": 300
+        },
+        "name": "Stop",
+        "tags": [
+            ""
+        ],
+        "content": "Would you like to continue your game?  [[Yes]] [[No]]",
+        "childrenNames": [
+            "[[Yes]]",
+            "[[No]]"
+        ]
+    }
+]
