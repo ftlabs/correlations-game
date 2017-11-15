@@ -79,7 +79,11 @@
       },
       {
         "name": "AMAZON.YesIntent",
-        "samples": []
+        "samples": [
+          "start",
+          "please",
+          "play"
+        ]
       },
       {
         "name": "AnswerIntent",
@@ -96,13 +100,6 @@
             "type": "QuizAnswer"
           }
         ]
-      },
-      {
-        "name": "StartGame",
-        "samples": [
-          "start game"
-        ],
-        "slots": []
       }
     ],
     "invocationName": "make connections"
