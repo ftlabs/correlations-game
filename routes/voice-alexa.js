@@ -13,6 +13,7 @@ const GAME_STATES = {
 };
 
 const speech = {
+    'WELCOME': 'Welcome to Make Connections, an FT Labs game. For instructions, say "help". Shall we start playing?',
     'ENDGAME': 'Thank you for playing. There are new connections everyday.',
     'UNHANDLED': "Sorry, I'm not sure what you said. For instructions, say 'Help'."
 }
@@ -42,7 +43,7 @@ const newSessionHandlers = {
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'WelcomeGame': function () {
-        this.emit(':ask', 'Shall we start playing?');
+        this.emit(':ask', speech['WELCOME']);
     },
     'AMAZON.YesIntent': function () {
         this.emit('StartGame');
