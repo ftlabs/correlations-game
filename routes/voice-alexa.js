@@ -15,7 +15,7 @@ const GAME_STATES = {
 const speech = {
     'WELCOME': 'Welcome to Make Connections, an FT Labs game. For instructions, say "help". Shall we start playing?',
     'ENDGAME': 'Thank you for playing. There are new connections everyday.',
-    'UNHANDLED': "Sorry, I'm not sure what you said. For instructions, say 'Help'."
+    'UNHANDLED': `Sorry, I'm not sure what you said. For instructions, say 'help'.`
 }
 
 const newSessionHandlers = {
@@ -166,7 +166,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emitWithState(':responseReady', true);
     },
     'Unhandled': function () {
-        // Need to add unhandled text to remprompt and make it obvious you were not understood
         this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
         this.emit(':responseReady');
     }
@@ -202,8 +201,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         }); 
     },
     'Unhandled': function () {
-        const speechOutput = 'Say yes to continue, or no to end the game.'
-        this.response.speak(speechOutput).listen(speechOutput);
+        this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
         this.emit(':responseReady');
     },
 });
