@@ -89,15 +89,24 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             let expectedAnswers;
             if (typeof answers[0] === 'string' || answers[0] instanceof String) {
                 expectedAnswers = Object.keys(answers).map(key => {
-                    answers[key] = {original: answers[key].replace('people:', ''), match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ')}
+                    answers[key] = {
+                        original: answers[key].replace('people:', ''), 
+                        match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()
+                    };
                     return answers[key];
                 });
             } else {
                 expectedAnswers = answers;
             }
 
-            if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
-                guess = expectedAnswers[parseInt(guess) - 1].match;
+            if ((parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) ||
+                guess.toLowerCase() === expectedAnswers[0].match ||
+                guess.toLowerCase() === expectedAnswers[1].match ||
+                guess.toLowerCase() === expectedAnswers[2].match
+            ) {
+                if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
+                    guess = expectedAnswers[parseInt(guess) - 1].match;                    
+                }
                 
                 checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                     let richResponse = obj.ssml;
@@ -122,12 +131,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         this.response.speak(richResponse).listen(repromptText);   
                         this.emit(':responseReady');
                     }
-                });   
-            } else {                  
+                });      
+            } else {
                 // Response misunderstood
-                // let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
-                // richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
-                let richResponse = `Sorry, you said ${guess} - I did not understand that.`;        
+                let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
+                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
 
                 this.handler.state = GAME_STATES.QUIZ;        
                 this.response.speak(richResponse).listen(richResponse);   
