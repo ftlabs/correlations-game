@@ -15,7 +15,10 @@ const GAME_STATES = {
 const speech = {
     'WELCOME': 'Welcome to Make Connections, an FT Labs game. For instructions, say "help". Shall we start playing?',
     'ENDGAME': 'Thank you for playing. There are new connections everyday.',
-    'UNHANDLED': `Sorry, I'm not sure what you said. For instructions, say 'help'.`
+    'UNHANDLED': `Sorry, I did not understand that. For instructions, use "Help".`,   
+    'START_UNHANDLED': `Sorry, I did not understand that. Say "yes" to start a new game. For instructions, use "Help".`,
+    'QUIZ_UNHANDLED': `Sorry, I did not understand that. Try selecting numbers instead of names. For instructions, use "Help".`,
+    'HELP_UNHANDLED': `Sorry, I did not understand that. Say "start" to return to an active game. For instructions, use "Help".`    
 }
 
 const newSessionHandlers = {
@@ -69,9 +72,8 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         }));
     },
     'Unhandled': function () {
-        const speechOutput = 'Say yes to start a new game, or no to exit the skill.';
-        this.response.speak(speechOutput).listen(speechOutput);
-        this.emit(':responseReady');        
+        this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);        
+        this.emit(':responseReady');      
     }        
 });
 
@@ -184,7 +186,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emitWithState(':responseReady', true);
     },
     'Unhandled': function () {
-        this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
+        this.response.speak(speech['QUIZ_UNHANDLED']).listen(speech['QUIZ_UNHANDLED']);        
         this.emit(':responseReady');
     }
 });
@@ -219,7 +221,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         }); 
     },
     'Unhandled': function () {
-        this.response.speak(speech['UNHANDLED']).listen(speech['UNHANDLED']);        
+        this.response.speak(speech['HELP_UNHANDLED']).listen(speech['HELP_UNHANDLED']);        
         this.emit(':responseReady');
     },
 });
