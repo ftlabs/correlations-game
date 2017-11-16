@@ -140,7 +140,6 @@ function askThePlayerAQuestion(data, idx){
 }
 
 function theGameHasBeenWon(scoreData){
-
 	const phrase = `You have exhausted the current set of connections, achieving ${scoreData.score} consecutive correct answers. Would you like to start a new game?`;
 
 	return {
