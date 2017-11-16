@@ -105,7 +105,16 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 guess.toLowerCase() === expectedAnswers[2].match
             ) {
                 if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
-                    guess = expectedAnswers[parseInt(guess) - 1].match;                    
+                    guess = expectedAnswers[parseInt(guess) - 1].original;                    
+                } else {
+                    // Look into a way that this code can be simplified
+                    if (guess.toLowerCase() === expectedAnswers[0].match) {
+                        guess = expectedAnswers[0].original;  
+                    } else if (guess.toLowerCase() === expectedAnswers[1].match) {
+                        guess = expectedAnswers[1].original; 
+                    } else {
+                        guess = expectedAnswers[2].original; 
+                    }
                 }
                 
                 checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
