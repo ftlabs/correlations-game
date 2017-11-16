@@ -26,6 +26,7 @@ app.use(userUUIDMiddleware);
 
 app.use('/', require('./routes/index'));
 app.use('/voice', basicAuth, require('./routes/voice'));
+app.use('/voice-logs', basicAuth, require('./routes/voice-logs'));
 app.use('/interface', require('./routes/interface'));
 
 // catch 404 and forward to error handler
