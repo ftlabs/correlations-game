@@ -78,81 +78,87 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
-    'AnswerIntent': function () {
-        const sessionId = this.event.session.sessionId;        
-        const guessIndex = this.event.request.intent.slots.Answer.value;
-        let guess = guessIndex;   
+    'AnswerIntent': function () {       
+        if (typeof this.event.request.intent.slots.Answer.value !== "undefined") {            
+            const sessionId = this.event.session.sessionId;        
+            const guessIndex = this.event.request.intent.slots.Answer.value;
 
-        getExpectedAnswers(sessionId)
-        .then(data => {            
-            const answers = data.answersReturned;
-            const seed = data.seedPerson;
-            
-            let expectedAnswers;
-            if (typeof answers[0] === 'string' || answers[0] instanceof String) {
-                expectedAnswers = Object.keys(answers).map(key => {
-                    answers[key] = {
-                        original: answers[key].replace('people:', ''), 
-                        match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()
-                    };
-                    return answers[key];
-                });
-            } else {
-                expectedAnswers = answers;
-            }
+            let guess = guessIndex;   
 
-            if ((parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) ||
-                guess.toLowerCase() === expectedAnswers[0].match ||
-                guess.toLowerCase() === expectedAnswers[1].match ||
-                guess.toLowerCase() === expectedAnswers[2].match
-            ) {
-                if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
-                    guess = expectedAnswers[parseInt(guess) - 1].original;                    
-                } else {
-                    // Look into a way that this code can be simplified
-                    if (guess.toLowerCase() === expectedAnswers[0].match) {
-                        guess = expectedAnswers[0].original;  
-                    } else if (guess.toLowerCase() === expectedAnswers[1].match) {
-                        guess = expectedAnswers[1].original; 
-                    } else {
-                        guess = expectedAnswers[2].original; 
-                    }
-                }
+            getExpectedAnswers(sessionId)
+            .then(data => {            
+                const answers = data.answersReturned;
+                const seed = data.seedPerson;
                 
-                checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
-                    let richResponse = obj.ssml;
-                    richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
-                    
-                    const cardTitle = `Question ${this.attributes['currentQuestion']}`;
-                    const cardBody = obj.displayText + ' ' + obj.article;
-                    this.response.cardRenderer(cardTitle, cardBody, obj.image);                                                          
-                    
-                    if (obj.question) {                        
-                        this.handler.state = GAME_STATES.QUIZ; 
-                        Object.assign(this.attributes, {
-                            'speechOutput': obj.question,
-                            'currentQuestion': this.attributes['currentQuestion'] + 1
-                        });
-                        this.response.speak(richResponse + obj.question).listen(obj.question);
-                        this.emit(':responseReady');                       
-                    } else {
-                        const repromptText = 'Would you like to start a new game?';
-                        richResponse = richResponse + ' ' + obj.score;
-                        this.handler.state = GAME_STATES.START;      
-                        this.response.speak(richResponse).listen(repromptText);   
-                        this.emit(':responseReady');
-                    }
-                });      
-            } else {
-                // Response misunderstood
-                let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
-                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
+                let expectedAnswers;
+                if (typeof answers[0] === 'string' || answers[0] instanceof String) {
+                    expectedAnswers = Object.keys(answers).map(key => {
+                        answers[key] = {
+                            original: answers[key].replace('people:', ''), 
+                            match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()
+                        };
+                        return answers[key];
+                    });
+                } else {
+                    expectedAnswers = answers;
+                }
 
-                this.handler.state = GAME_STATES.QUIZ;        
-                this.response.speak(richResponse).listen(richResponse);   
-                this.emit(':responseReady');                 
-            }  
-        });    
+                if ((parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) ||
+                    guess.toLowerCase() === expectedAnswers[0].match ||
+                    guess.toLowerCase() === expectedAnswers[1].match ||
+                    guess.toLowerCase() === expectedAnswers[2].match
+                ) {
+                    if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
+                        guess = expectedAnswers[parseInt(guess) - 1].original;                    
+                    } else {
+                        // Look into a way that this code can be simplified
+                        if (guess.toLowerCase() === expectedAnswers[0].match) {
+                            guess = expectedAnswers[0].original;  
+                        } else if (guess.toLowerCase() === expectedAnswers[1].match) {
+                            guess = expectedAnswers[1].original; 
+                        } else {
+                            guess = expectedAnswers[2].original; 
+                        }
+                    }
+                    
+                    checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
+                        let richResponse = obj.ssml;
+                        richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
+                        
+                        const cardTitle = `Question ${this.attributes['currentQuestion']}`;
+                        const cardBody = obj.displayText + ' ' + obj.article;
+                        this.response.cardRenderer(cardTitle, cardBody, obj.image);                                                          
+                        
+                        if (obj.question) {                        
+                            this.handler.state = GAME_STATES.QUIZ; 
+                            Object.assign(this.attributes, {
+                                'speechOutput': obj.question,
+                                'currentQuestion': this.attributes['currentQuestion'] + 1
+                            });
+                            this.response.speak(richResponse + obj.question).listen(obj.question);
+                            this.emit(':responseReady');                       
+                        } else {
+                            const repromptText = 'Would you like to start a new game?';
+                            richResponse = richResponse + ' ' + obj.score;
+                            this.handler.state = GAME_STATES.START;      
+                            this.response.speak(richResponse).listen(repromptText);   
+                            this.emit(':responseReady');
+                        }
+                    });      
+                } else {
+                    // Response misunderstood
+                    let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
+                    richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
+
+                    this.handler.state = GAME_STATES.QUIZ;        
+                    this.response.speak(richResponse).listen(richResponse);   
+                    this.emit(':responseReady');                 
+                }  
+            });
+        } else {
+            this.handler.state = GAME_STATES.QUIZ;
+            this.emitWithState('Unhandled', true);
+        }
     },   
     'AMAZON.RepeatIntent': function () {
         // Need to add a different reprompt text
