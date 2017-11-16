@@ -7,42 +7,35 @@
           {
             "id": null,
             "name": {
-              "value": "one",
+              "value": "jeremy corbyn",
               "synonyms": []
             }
           },
           {
             "id": null,
             "name": {
-              "value": "two",
+              "value": "boris johnson",
               "synonyms": []
             }
           },
           {
             "id": null,
             "name": {
-              "value": "three",
+              "value": "theresa may",
               "synonyms": []
             }
           },
           {
             "id": null,
             "name": {
-              "value": "a",
+              "value": "mohammed bin salman",
               "synonyms": []
             }
           },
           {
             "id": null,
             "name": {
-              "value": "b",
-              "synonyms": []
-            }
-          },
-          {
-            "id": null,
-            "name": {
-              "value": "c",
+              "value": "sherrod campbell brown",
               "synonyms": []
             }
           }
@@ -92,7 +85,9 @@
           "my answer is {Answer}",
           "is it {Answer}",
           "{Answer} is my answer",
-          "{Answer}"
+          "{Answer}",
+          "{Answer} {Answer}",
+          "{Answer} {Answer} {Answer}"
         ],
         "slots": [
           {
