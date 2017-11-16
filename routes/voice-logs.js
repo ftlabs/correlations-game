@@ -333,7 +333,7 @@ function getQuestion(session, callback, inputType) {
 				}
 			});
       		
-      		console.log(`INFO: route=voice; action=gamewon; sessionId=${session};`);
+      		console.log(`INFO: route=voice; action=gamewon; sessionId=${session}; score=${data.score}`);
 
 			callback(responses.win({score: data.score}));
 
