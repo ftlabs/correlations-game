@@ -123,10 +123,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         this.emit(':responseReady');
                     }
                 });   
-            } else {                
+            } else {                  
                 // Response misunderstood
-                let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
-                richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");                
+                // let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
+                // richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
+                let richResponse = `Sorry, you said ${guess} - I did not understand that.`;        
 
                 this.handler.state = GAME_STATES.QUIZ;        
                 this.response.speak(richResponse).listen(richResponse);   
