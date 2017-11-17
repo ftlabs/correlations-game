@@ -190,7 +190,7 @@ const matchAnswer = app => {
 				}
 			});
       		
-      		console.log(`INFO: route=voice; action=answermisunderstood; sessionId=${session};`);
+      		console.log(`INFO: route=voice; action=answermisunderstood; sessionId=${SESSION};`);
 
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers, seed);
 			let richResponse = app.buildRichResponse();
