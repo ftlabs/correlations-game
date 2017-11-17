@@ -57,7 +57,7 @@ const getHelp = app => {
 
 	games.check(session)
 		.then(gameExists => {
-			
+
 			const helpBody = responses.help(gameExists);
 			if(app.hasSurfaceCapability(app.SurfaceCapabilities.SCREEN_OUTPUT)) {
 				richResponse = app.buildRichResponse()
@@ -81,8 +81,9 @@ const getHelp = app => {
 			'product': 'ftlabs',
 			'sessionId': session
 		}
-	});	
-
+	});
+	
+	console.log(`INFO: route=voice; action=useraskedforhelp; sessionId=${session};`);
 };
 
 const returnQuestion = app => {
@@ -101,7 +102,7 @@ const returnQuestion = app => {
 			richResponse = app.buildRichResponse()
 				.addSimpleResponse(obj.ssml);
 		}
-		
+
 		app.ask(richResponse);
 	}, app.getInputType());
 };
@@ -188,6 +189,8 @@ const matchAnswer = app => {
 					'inputType' : INPUT_TYPE
 				}
 			});
+      		
+      		console.log(`INFO: route=voice; action=answermisunderstood; sessionId=${session};`);
 
 			let response = responses.misunderstood(true, USER_INPUT, expectedAnswers, seed);
 			let richResponse = app.buildRichResponse();
@@ -207,7 +210,7 @@ const matchAnswer = app => {
 				if(expectedAnswers.length === 0) {
 					app.setContext(Contexts.MISUNDERSTOOD, 1);
 				}
-				
+
 				response = responses.misunderstood(false);
 				return app.ask({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			}
@@ -237,9 +240,13 @@ const endGame = app => {
 						'product': 'ftlabs',
 						'sessionId': session,
 						'inputType': INPUT_TYPE,
-						'latestScore' : data.score
+						'latestScore' : data.score,
+            			'globalHighestScore' : data.globalHighestScore,
+            			'achievedHighestScoreFirst' : data.achievedHighestScoreFirst
 					}
 				});
+        		
+        		console.log(`INFO: route=voice; action=gameinterrupted; sessionId=${session}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);
 				app.tell({speech: response.speech, displayText: response.displayText, ssml: response.ssml});
 			});
 		} else {
@@ -257,6 +264,8 @@ const endGame = app => {
 					'inputType': INPUT_TYPE
 				}
 			});
+      		
+      		console.log(`INFO: route=voice; action=sessioninterrupted; sessionId=${session};`);
 		}
 	})
 	.catch(err => {
@@ -280,6 +289,8 @@ function getQuestion(session, callback, inputType) {
 					'inputType' : inputType
 				}
 			});
+      		
+      		console.log(`INFO: route=voice; action=questionasked; sessionId=${session};`);
 
 			return games.question(session);
 		} else {
@@ -295,13 +306,14 @@ function getQuestion(session, callback, inputType) {
 					'sessionId': session
 				}
 			});
+      		
+      		console.log(`INFO: route=voice; action=gamestarted; sessionId=${session};`);
 
 			return games.new(session)
-			.then(gameUUID => {
-				return gameUUID;
-			})
-			.then(gameUUID => games.question(gameUUID))
-			;
+				.then(gameUUID => {
+					return gameUUID;
+				})
+				.then(gameUUID => games.question(gameUUID));
 		}
 	})
 	.then(data => {
@@ -316,9 +328,13 @@ function getQuestion(session, callback, inputType) {
 				'context' : {
 					'product': 'ftlabs',
 					'sessionId': session,
-					'inputType' : inputType
+					'inputType' : inputType,
+					'score': data.score
 				}
 			});
+      		
+      		console.log(`INFO: route=voice; action=gamewon; sessionId=${session}; score=${data.score}`);
+
 			callback(responses.win({score: data.score}));
 
 		} else {
@@ -343,8 +359,7 @@ function getQuestion(session, callback, inputType) {
 	})
 	.catch(err => {
 		console.log('HANDLED REJECTION', err);
-	})
-	;
+	});
 }
 
 function getExpectedAnswers(session) {
@@ -376,10 +391,12 @@ function checkAnswer(session, answer, callback, inputType) {
 	games.answer(session, answer)
 		.then(result => {
 			if(result.correct === true){
+        		console.log(`INFO: route=voice; action=answergiven; sessionId=${session}; result=correct; score=${result.score};`);
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
 				}, inputType);
 			} else {
+        		console.log(`INFO: route=voice; action=answergiven; sessionId=${session}; result=incorrect; score=${result.score}; globalHighestScore=${result.globalHighestScore}; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`);
 				callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
 		})
