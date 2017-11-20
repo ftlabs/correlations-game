@@ -19,7 +19,8 @@ const speech = {
     'START_UNHANDLED': `Sorry, I did not understand that. Say "yes" to start a new game. For instructions, use "Help".`,
     'QUIZ_UNHANDLED': `Sorry, I did not understand that. Try selecting numbers instead of names. For instructions, use "Help".`,
     'HELP_UNHANDLED': `Sorry, I did not understand that. Say "start" to return to an active game. For instructions, use "Help".`,
-    'CONTINUE': 'Would you like to continue your game?'
+    'ASK_CONTINUE': 'Would you like to continue your game?',
+    'ASK_NEW_GAME': 'Would you like to start a new game?'
 }
 
 const newSessionHandlers = {
@@ -65,10 +66,12 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         getQuestion(sessionId, (question => {
             this.handler.state = GAME_STATES.QUIZ;        
             this.response.speak(question).listen(question); 
+
             Object.assign(this.attributes, {
                 'speechOutput': question,
                 'currentQuestion': 1
             });
+
             this.emit(':responseReady');        
         }));
     },
@@ -82,80 +85,24 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AnswerIntent': function () {       
         if (typeof this.event.request.intent.slots.Answer.value !== "undefined") {            
             const sessionId = this.event.session.sessionId;        
-            const guessIndex = this.event.request.intent.slots.Answer.value;
+            const guessValue = this.event.request.intent.slots.Answer.value;
+            const currentQuestion = this.attributes['currentQuestion'];
 
-            let guess = guessIndex;   
-
-            getExpectedAnswers(sessionId)
-            .then(data => {            
-                const answers = data.answersReturned;
-                const seed = data.seedPerson;
-                
-                let expectedAnswers;
-                if (typeof answers[0] === 'string' || answers[0] instanceof String) {
-                    expectedAnswers = Object.keys(answers).map(key => {
-                        answers[key] = {
-                            original: answers[key].replace('people:', ''), 
-                            match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()
-                        };
-                        return answers[key];
-                    });
-                } else {
-                    expectedAnswers = answers;
+            checkGuess(sessionId, guessValue, currentQuestion, 
+                ((response, reprompt, state, card, increment) => {
+                if (card) {
+                    this.response.cardRenderer(card.title, card.body, card.image);
                 }
-
-                if ((parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) ||
-                    guess.toLowerCase() === expectedAnswers[0].match ||
-                    guess.toLowerCase() === expectedAnswers[1].match ||
-                    guess.toLowerCase() === expectedAnswers[2].match
-                ) {
-                    if (parseInt(guessIndex) >= 0 && parseInt(guessIndex) <= 3) {
-                        guess = expectedAnswers[parseInt(guess) - 1].original;                    
-                    } else {
-                        // Look into a way that this code can be simplified
-                        if (guess.toLowerCase() === expectedAnswers[0].match) {
-                            guess = expectedAnswers[0].original;  
-                        } else if (guess.toLowerCase() === expectedAnswers[1].match) {
-                            guess = expectedAnswers[1].original; 
-                        } else {
-                            guess = expectedAnswers[2].original; 
-                        }
-                    }
-                    
-                    checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
-                        let richResponse = obj.ssml;
-                        richResponse = removeSpeakTags(richResponse);
-                        
-                        const cardTitle = `Question ${this.attributes['currentQuestion']}`;
-                        const cardBody = obj.displayText + ' ' + obj.article;
-                        this.response.cardRenderer(cardTitle, cardBody, obj.image);                                                          
-                        
-                        if (obj.question) {                        
-                            this.handler.state = GAME_STATES.QUIZ; 
-                            Object.assign(this.attributes, {
-                                'speechOutput': obj.question,
-                                'currentQuestion': this.attributes['currentQuestion'] + 1
-                            });
-                            this.response.speak(richResponse + obj.question).listen(obj.question);
-                            this.emit(':responseReady');                       
-                        } else {
-                            const repromptText = 'Would you like to start a new game?';
-                            richResponse = richResponse + ' ' + obj.score;
-                            this.handler.state = GAME_STATES.START;      
-                            this.response.speak(richResponse).listen(repromptText);   
-                            this.emit(':responseReady');
-                        }
-                    });      
-                } else {
-                    // Response misunderstood
-                    let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
-                    richResponse = removeSpeakTags(richResponse);       
-
-                    this.handler.state = GAME_STATES.QUIZ;        
-                    this.response.speak(richResponse).listen(richResponse);   
-                    this.emit(':responseReady');                 
-                }  
-            });
+                if (increment) {
+                    Object.assign(this.attributes, {
+                        'speechOutput': reprompt,
+                        'currentQuestion': this.attributes['currentQuestion'] + 1
+                    });
+                }
+                this.handler.state = state;
+                this.response.speak(response).listen(reprompt);   
+                this.emit(':responseReady');
+            }));
         } else {
             this.handler.state = GAME_STATES.QUIZ;
             this.emitWithState('Unhandled', true);
@@ -187,7 +134,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
-        this.response.speak(speech['CONTINUE']).listen(speech['CONTINUE']);
+        this.response.speak(speech['ASK_CONTINUE']).listen(speech['ASK_CONTINUE']);
         this.emitWithState(':responseReady', true);
     },
     'Unhandled': function () {
@@ -275,6 +222,88 @@ function getQuestion(session, callback) {
         console.log('HANDLED REJECTION', err);
     })
     ;
+}
+
+function checkGuess(sessionId, guessValue, currentQuestion, callback) {
+    let guess = guessValue;   
+
+    getExpectedAnswers(sessionId)
+    .then(data => {            
+        const answers = data.answersReturned;
+        const seed = data.seedPerson;
+        
+        let expectedAnswers;
+        if (typeof answers[0] === 'string' || answers[0] instanceof String) {
+            expectedAnswers = Object.keys(answers).map(key => {
+                answers[key] = {
+                    original: answers[key].replace('people:', ''), 
+                    match: answers[key].replace('people:', '').replace('.', '').replace('-', ' ').toLowerCase()
+                };
+                return answers[key];
+            });
+        } else {
+            expectedAnswers = answers;
+        }
+
+        if ((parseInt(guessValue) >= 0 && parseInt(guessValue) <= 3) ||
+            guess.toLowerCase() === expectedAnswers[0].match ||
+            guess.toLowerCase() === expectedAnswers[1].match ||
+            guess.toLowerCase() === expectedAnswers[2].match
+        ) {
+            // Answer recognised
+            if (parseInt(guessValue) >= 0 && parseInt(guessValue) <= 3) {
+                guess = expectedAnswers[parseInt(guess) - 1].original;                    
+            } else {
+                // Look into a way that this code can be simplified
+                if (guess.toLowerCase() === expectedAnswers[0].match) {
+                    guess = expectedAnswers[0].original;  
+                } else if (guess.toLowerCase() === expectedAnswers[1].match) {
+                    guess = expectedAnswers[1].original; 
+                } else {
+                    guess = expectedAnswers[2].original; 
+                }
+            }
+            
+            checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
+                let responseText = obj.ssml;
+                let rempromptText;
+                responseText = removeSpeakTags(responseText);
+        
+                let handlerState;
+                let increment = false;
+
+                const cardTitle = `Question ${currentQuestion}`;
+                const cardBody = obj.displayText + ' ' + obj.article;
+                const cardData = {
+                    title: cardTitle,
+                    body: cardBody,
+                    image: obj.image
+                };
+                
+                if (obj.question) {                        
+                    handlerState = GAME_STATES.QUIZ;                     
+                    responseText = responseText + obj.question;
+                    rempromptText = obj.question;
+                    increment = true;
+                } else {
+                    responseText = responseText + ' ' + obj.score;
+                    rempromptText = speech['ASK_NEW_GAME'];
+                    handlerState = GAME_STATES.START;      
+                }
+
+                callback(responseText, rempromptText, handlerState, cardData, increment);
+            });      
+        } else {
+            // Response misunderstood
+            let responseText = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
+            responseText = removeSpeakTags(responseText);       
+            let rempromptText = responseText;
+
+            handlerState = GAME_STATES.QUIZ;  
+            
+            callback(responseText, rempromptText, handlerState, cardData, false);
+        }  
+    });
 }
 
 function getExpectedAnswers(session) {
