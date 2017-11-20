@@ -98,7 +98,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         'speechOutput': reprompt,
                         'currentQuestion': this.attributes['currentQuestion'] + 1
                     });
-                }
+                } 
                 this.handler.state = state;
                 this.response.speak(response).listen(reprompt);   
                 this.emit(':responseReady');
@@ -150,7 +150,9 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         const helpBody = games.check(sessionId)
         .then(gameIsInProgress => {
             let helpResponse = responses.help(gameIsInProgress).ssml;
-            helpResponse = removeSpeakTags(helpResponse);         
+            helpResponse = removeSpeakTags(helpResponse);    
+
+            console.log(`INFO: route=alexa; action=useraskedforhelp; sessionId=${sessionId};`);            
             this.emit(':ask', helpResponse);  
         });      
     },
@@ -168,6 +170,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         
         games.interrupt(sessionId).then(data => {
             const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
+            console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
             this.emit(':tell', response.speech);
         }); 
     },
@@ -181,8 +184,10 @@ function getQuestion(session, callback) {
     games.check(session)
     .then(gameIsInProgress => {
         if (gameIsInProgress) {
+            console.log(`INFO: route=alexa; action=questionasked; sessionId=${session};`);                                
             return games.question(session);
         } else {
+            console.log(`INFO: route=alexa; action=gamestarted; sessionId=${session};`);            
             return games.new(session)
             .then(gameUUID => {
                 return gameUUID;
@@ -194,6 +199,7 @@ function getQuestion(session, callback) {
     .then(data => {
         if (data.limitReached === true) {
             // Connection limit met
+            console.log(`INFO: route=alexa; action=gamewon; sessionId=${session}; score=${data.score}`);            
             callback(responses.win({score: data.score}));
         } else {
             const preparedData = {};
@@ -292,6 +298,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 
             handlerState = GAME_STATES.QUIZ;  
             
+            console.log(`INFO: route=alexa; action=answermisunderstood; sessionId=${sessionId};`);                  
             callback(responseText, rempromptText, handlerState, cardData, false);
         }  
     });
@@ -312,10 +319,12 @@ function checkAnswer(session, answer, callback) {
     games.answer(session, answer)
         .then(result => {
             if(result.correct === true){
+                console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=correct; score=${result.score};`);                
                 getQuestion(session, obj => {
                     callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
                 });
             } else {
+                console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=incorrect; score=${result.score}; globalHighestScore=${result.globalHighestScore}; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`);                
                 callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
             }
         })
