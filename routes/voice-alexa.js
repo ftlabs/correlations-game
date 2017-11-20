@@ -6,6 +6,8 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const Alexa = require('alexa-sdk');
 
+const spoor = require('../bin/lib/log-to-spoor');
+
 const GAME_STATES = {
     START: '_STARTMODE',
     QUIZ: '_QUIZMODE',
@@ -151,7 +153,20 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         .then(gameIsInProgress => {
             let helpResponse = responses.help(gameIsInProgress).ssml;
             helpResponse = removeSpeakTags(helpResponse);    
-
+            
+            spoor({
+                'category': 'GAME',
+                'action': 'useraskedforhelp',
+                'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+                },
+                'context' : {
+                    'product': 'ftlabs',
+                    'sessionId': sessionId
+                }
+            });
+            
             console.log(`INFO: route=alexa; action=useraskedforhelp; sessionId=${sessionId};`);            
             this.emit(':ask', helpResponse);  
         });      
@@ -170,6 +185,23 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         
         games.interrupt(sessionId).then(data => {
             const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
+            
+            spoor({
+                'category': 'GAME',
+                'action': 'gameinterrupted',
+                'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+                },
+                'context' : {
+                    'product': 'ftlabs',
+                    'sessionId': sessionId,
+                    'latestScore' : data.score,
+                    'globalHighestScore' : data.globalHighestScore,
+                    'achievedHighestScoreFirst' : data.achievedHighestScoreFirst
+                }
+            });
+
             console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
             this.emit(':tell', response.speech);
         }); 
@@ -184,9 +216,35 @@ function getQuestion(session, callback) {
     games.check(session)
     .then(gameIsInProgress => {
         if (gameIsInProgress) {
+            spoor({
+				'category': 'GAME',
+				'action': 'questionasked',
+				'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session
+				}
+            });
+            
             console.log(`INFO: route=alexa; action=questionasked; sessionId=${session};`);                                
             return games.question(session);
         } else {
+            spoor({
+				'category': 'GAME',
+				'action': 'gamestarted',
+				'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+				},
+				'context': {
+					'product': 'ftlabs',
+					'sessionId': session
+				}
+            });
+            
             console.log(`INFO: route=alexa; action=gamestarted; sessionId=${session};`);            
             return games.new(session)
             .then(gameUUID => {
@@ -199,6 +257,20 @@ function getQuestion(session, callback) {
     .then(data => {
         if (data.limitReached === true) {
             // Connection limit met
+            spoor({
+				'category': 'GAME',
+				'action': 'gamewon',
+				'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': session,
+					'score': data.score
+				}
+            });
+            
             console.log(`INFO: route=alexa; action=gamewon; sessionId=${session}; score=${data.score}`);            
             callback(responses.win({score: data.score}));
         } else {
@@ -297,6 +369,21 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
             let rempromptText = responseText;
 
             handlerState = GAME_STATES.QUIZ;  
+
+            spoor({
+				'category': 'GAME',
+				'action': 'answermisunderstood',
+				'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+				},
+				'context' : {
+					'product': 'ftlabs',
+					'sessionId': sessionId,
+					'input' : guessValue,
+					'expectedInput': JSON.stringify(expectedAnswers)
+				}
+			});
             
             console.log(`INFO: route=alexa; action=answermisunderstood; sessionId=${sessionId};`);                  
             callback(responseText, rempromptText, handlerState, cardData, false);
@@ -318,6 +405,19 @@ function getExpectedAnswers(session) {
 function checkAnswer(session, answer, callback) {
     games.answer(session, answer)
         .then(result => {
+            spoor({
+                'category': 'GAME',
+                'action': 'answergiven',
+                'system' : {
+                    'source': 'ftlabs-correlations-game',
+                    'route': 'alexa'
+                },
+                'context' : {
+                    'product': 'ftlabs',
+                    'sessionId': session
+                }
+            });
+
             if(result.correct === true){
                 console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=correct; score=${result.score};`);                
                 getQuestion(session, obj => {
