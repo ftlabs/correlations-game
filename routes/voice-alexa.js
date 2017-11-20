@@ -155,7 +155,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         });      
     },
     'AMAZON.YesIntent': function () {
-        if (this.attributes['speechOutput'] && this.attributes['repromptText']) {
+        if (this.attributes['speechOutput']) {
             this.handler.state = GAME_STATES.QUIZ;
             this.emitWithState('AMAZON.RepeatIntent');
         } else {
