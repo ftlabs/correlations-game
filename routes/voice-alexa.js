@@ -245,23 +245,14 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
             expectedAnswers = answers;
         }
 
-        if ((parseInt(guessValue) >= 0 && parseInt(guessValue) <= 3) ||
-            guess.toLowerCase() === expectedAnswers[0].match ||
-            guess.toLowerCase() === expectedAnswers[1].match ||
-            guess.toLowerCase() === expectedAnswers[2].match
-        ) {
+        if ((parseInt(guessValue) >= 0 && parseInt(guessValue) <= 3) || 
+            guessIsInAnswerList(guess, expectedAnswers)) {
             // Answer recognised
             if (parseInt(guessValue) >= 0 && parseInt(guessValue) <= 3) {
+                // Get answer from index
                 guess = expectedAnswers[parseInt(guess) - 1].original;                    
             } else {
-                // Look into a way that this code can be simplified
-                if (guess.toLowerCase() === expectedAnswers[0].match) {
-                    guess = expectedAnswers[0].original;  
-                } else if (guess.toLowerCase() === expectedAnswers[1].match) {
-                    guess = expectedAnswers[1].original; 
-                } else {
-                    guess = expectedAnswers[2].original; 
-                }
+                guess = matchAndGetOriginalAnswer(guess, expectedAnswers);
             }
             
             checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
@@ -329,6 +320,24 @@ function checkAnswer(session, answer, callback) {
             }
         })
     ;
+}
+
+function guessIsInAnswerList(guess, expectedAnswers) {
+    return guess.toLowerCase() === expectedAnswers[0].match ||
+    guess.toLowerCase() === expectedAnswers[1].match ||
+    guess.toLowerCase() === expectedAnswers[2].match;
+}
+
+function matchAndGetOriginalAnswer(guess, expectedAnswers) {
+    let original;
+    if (guess.toLowerCase() === expectedAnswers[0].match) {
+        original = expectedAnswers[0].original;  
+    } else if (guess.toLowerCase() === expectedAnswers[1].match) {
+        original = expectedAnswers[1].original; 
+    } else {
+        original = expectedAnswers[2].original; 
+    }
+    return original;
 }
 
 function removeSpeakTags(ssml) {
