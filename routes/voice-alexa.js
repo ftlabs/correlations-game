@@ -18,7 +18,8 @@ const speech = {
     'UNHANDLED': `Sorry, I did not understand that. For instructions, use "Help".`,   
     'START_UNHANDLED': `Sorry, I did not understand that. Say "yes" to start a new game. For instructions, use "Help".`,
     'QUIZ_UNHANDLED': `Sorry, I did not understand that. Try selecting numbers instead of names. For instructions, use "Help".`,
-    'HELP_UNHANDLED': `Sorry, I did not understand that. Say "start" to return to an active game. For instructions, use "Help".`    
+    'HELP_UNHANDLED': `Sorry, I did not understand that. Say "start" to return to an active game. For instructions, use "Help".`,
+    'CONTINUE': 'Would you like to continue your game?'
 }
 
 const newSessionHandlers = {
@@ -123,7 +124,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                     
                     checkAnswer(sessionId, 'people:' + guess, (obj, addSuggestions) => {
                         let richResponse = obj.ssml;
-                        richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");
+                        richResponse = removeSpeakTags(richResponse);
                         
                         const cardTitle = `Question ${this.attributes['currentQuestion']}`;
                         const cardBody = obj.displayText + ' ' + obj.article;
@@ -148,7 +149,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 } else {
                     // Response misunderstood
                     let richResponse = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
-                    richResponse = richResponse.replace("<speak>", "").replace("</speak>", "");        
+                    richResponse = removeSpeakTags(richResponse);       
 
                     this.handler.state = GAME_STATES.QUIZ;        
                     this.response.speak(richResponse).listen(richResponse);   
@@ -161,7 +162,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         }
     },   
     'AMAZON.RepeatIntent': function () {
-        // Need to add a different reprompt text
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
         this.emit(':responseReady');
     },
@@ -187,8 +187,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
-        const speechOutput = 'Would you like to continue your game?';
-        this.response.speak(speechOutput).listen(speechOutput);
+        this.response.speak(speech['CONTINUE']).listen(speech['CONTINUE']);
         this.emitWithState(':responseReady', true);
     },
     'Unhandled': function () {
@@ -203,13 +202,12 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         
         const helpBody = games.check(sessionId)
         .then(gameIsInProgress => {
-            let helpBody = responses.help(gameIsInProgress).ssml;
-            helpBody = helpBody.replace("<speak>", "").replace("</speak>", "");            
-            this.emit(':ask', helpBody);  
+            let helpResponse = responses.help(gameIsInProgress).ssml;
+            helpResponse = removeSpeakTags(helpResponse);         
+            this.emit(':ask', helpResponse);  
         });      
     },
     'AMAZON.YesIntent': function () {
-        // If already in a game, continue
         if (this.attributes['speechOutput'] && this.attributes['repromptText']) {
             this.handler.state = GAME_STATES.QUIZ;
             this.emitWithState('AMAZON.RepeatIntent');
@@ -248,6 +246,7 @@ function getQuestion(session, callback) {
     })
     .then(data => {
         if (data.limitReached === true) {
+            // Connection limit met
             callback(responses.win({score: data.score}));
         } else {
             const preparedData = {};
@@ -266,11 +265,10 @@ function getQuestion(session, callback) {
                 };
             });
             
-            var question = responses.askQuestion(preparedData, data.questionNum).ssml;
-            // need to remove this for now as response.speak adds the speak tags
-            question = question.replace("<speak>", "").replace("</speak>", "");
+            let questionText = responses.askQuestion(preparedData, data.questionNum).ssml;
+            questionText = removeSpeakTags(questionText);
     
-            callback(question);
+            callback(questionText);
         }
     })
     .catch(err => {
@@ -302,6 +300,10 @@ function checkAnswer(session, answer, callback) {
             }
         })
     ;
+}
+
+function removeSpeakTags(ssml) {
+    return ssml.replace('<speak>', '').replace('</speak>', '');
 }
 
 router.post('/', (request, response) => {
