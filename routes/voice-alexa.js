@@ -368,7 +368,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
             responseText = removeSpeakTags(responseText);       
             let rempromptText = responseText;
 
-            handlerState = GAME_STATES.QUIZ;  
+            let handlerState = GAME_STATES.QUIZ;  
 
             spoor({
 				'category': 'GAME',
@@ -386,7 +386,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 			});
             
             console.log(`INFO: route=alexa; action=answermisunderstood; sessionId=${sessionId};`);                  
-            callback(responseText, rempromptText, handlerState, cardData, false);
+            callback(responseText, rempromptText, handlerState, false, false);
         }  
     });
 }
