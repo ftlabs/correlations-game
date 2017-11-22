@@ -97,27 +97,27 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 		article     : '',
 		link        : '',
 		image       : '',
-		score: scorePhrase
+		score       : scorePhrase
 	};
 
 	const basePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
 
 	if (articleData == null) {
 		const specificPhrase = `${basePhrase} in an FT article.`;
-		responseObj.displayPhrase = specificPhrase;
-		responseObj.voicePhrase   = specificPhrase;
-		responseObj.ssml          = `<speak>${specificPhrase}</speak>`
-		responseObj.article       = 'an FT article';
-		responseObj.link          = 'https://ft.com/';
-		responseObj.image         = process.env.FT_LOGO;
+		responseObj.displayText = specificPhrase;
+		responseObj.speech      = specificPhrase;
+		responseObj.ssml        = `<speak>${specificPhrase}</speak>`
+		responseObj.article     = 'an FT article';
+		responseObj.link        = 'https://ft.com/';
+		responseObj.image       = process.env.FT_LOGO;
 	} else {
 		const specificPhrase = `${basePhrase} in the FT article titled`;
-		responseObj.displayPhrase = `${specificPhrase}:`;
-		responseObj.voicePhrase   = `${specificPhrase}: ${articleData.title}.`;
-		responseObj.ssml          = `<speak>${specificPhrase}: ${articleData.title}.</speak>`
-		responseObj.article       = articleData.title;
-    responseObj.link          = `https://ft.com/${articleData.id}`;
-    responseObj.image         = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
+		responseObj.displayText = `${specificPhrase}:`;
+		responseObj.speech      = `${specificPhrase}: ${articleData.title}.`;
+		responseObj.ssml        = `<speak>${specificPhrase}: ${articleData.title}.</speak>`
+		responseObj.article     = articleData.title;
+    responseObj.link        = `https://ft.com/${articleData.id}`;
+    responseObj.image       = (articleData.mainImageUrl !== null)? articleData.mainImageUrl:process.env.FT_LOGO;
 	}
 
 	return responseObj;
