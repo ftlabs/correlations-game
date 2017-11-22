@@ -37,28 +37,47 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPe
 }
 
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
+	// it is possible (albeit bad) that articleData might be null, so handle that situation
 
-	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
-
-	return {
-		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
-		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
-		ssml : `<speak>Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}. <break time="1s"/></speak>`,
-		article: articleData.title,
-		link: `https://ft.com/${articleData.id}`,
-		image: illustration,
-		question: newQuestion,
-		chips: newQuestion.chips
+	let responseObj = {
+		displayText : '',
+		speech      : '',
+		ssml        : '',
+		article     : '',
+		link        : '',
+		image       : '',
+		question    : newQuestion,
+		chips       : newQuestion.chips
 	};
 
+	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
+
+	if (articleData == null) {
+		const specificPhrase = `${basePhrase} in an FT article.`;
+		responseObj.displayText = specificPhrase;
+		responseObj.speech      = specificPhrase;
+		responseObj.ssml        = `<speak>${specificPhrase} <break time="1s"/></speak>`;
+		responseObj.article     = 'an FT article';
+		responseObj.link        = `https://ft.com/`;
+		responseObj.image       = process.env.FT_LOGO;
+} else {
+		const specificPhrase = `${basePhrase} in the FT article`;
+
+		responseObj.displayText = `${specificPhrase}:`;
+		responseObj.speech      = `${specificPhrase} titled: ${articleData.title}.`;
+		responseObj.ssml        = `<speak>${specificPhrase} titled: ${articleData.title}. <break time="1s"/></speak>`;
+		responseObj.article     = articleData.title;
+		responseObj.link        = `https://ft.com/${articleData.id}`;
+		responseObj.image       = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
+	}
+
+	return responseObj;
 }
 
 function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
-	const displayPhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled:`;
-	const voicePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`;
-	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
-	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
+	// it is possible (albeit bad) that articleData might be null, so handle that situation
 
+	let scorePhrase = `You made ${scoreData.score} connection${ (parseInt(scoreData.score)!== 1)?'s':'' }.`;
 	if(parseInt(scoreData.score) >= parseInt(scoreData.scoreMax)) {
 		if(scoreData.first) {
 			scorePhrase += ' You are the first to achieve this high score today.';
@@ -69,19 +88,39 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 	} else {
 		scorePhrase += ` The record to beat today is ${scoreData.scoreMax}.`;
 	}
-
 	scorePhrase += ' Would you like to start a new game?'
 
-	return {
-		displayText : displayPhrase,
-		speech : voicePhrase,
-		ssml : `<speak>${voicePhrase}</speak>`,
-		article: articleData.title,
-		link: `https://ft.com/${articleData.id}`,
-		image: illustration,
+	let responseObj = {
+		displayText : '',
+		speech      : '',
+		ssml        : '',
+		article     : '',
+		link        : '',
+		image       : '',
 		score: scorePhrase
 	};
 
+	const basePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
+
+	if (articleData == null) {
+		const specificPhrase = `${basePhrase} in an FT article.`;
+		responseObj.displayPhrase = specificPhrase;
+		responseObj.voicePhrase   = specificPhrase;
+		responseObj.ssml          = `<speak>${specificPhrase}</speak>`
+		responseObj.article       = 'an FT article';
+		responseObj.link          = 'https://ft.com/';
+		responseObj.image         = process.env.FT_LOGO;
+	} else {
+		const specificPhrase = `${basePhrase} in the FT article titled`;
+		responseObj.displayPhrase = `${specificPhrase}:`;
+		responseObj.voicePhrase   = `${specificPhrase}: ${articleData.title}.`;
+		responseObj.ssml          = `<speak>${specificPhrase}: ${articleData.title}.</speak>`
+		responseObj.article       = articleData.title;
+    responseObj.link          = `https://ft.com/${articleData.id}`;
+    responseObj.image         = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
+	}
+
+	return responseObj;
 }
 
 function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
