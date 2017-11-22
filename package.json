@@ -25,5 +25,9 @@
   },
   "engines": {
     "node": "> 6.11.0 < 7.0.0"
+  },
+  "devDependencies": {
+    "alexa-conversation": "^0.2.0",
+    "mocha": "^4.0.1"
   }
 }

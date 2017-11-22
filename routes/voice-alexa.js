@@ -471,4 +471,11 @@ router.post('/', (request, response) => {
     alexa.execute();
 });
 
-module.exports = router;
+function handler(event, context, callback) {
+    const alexa = Alexa.handler(event, context, callback);    
+    alexa.registerHandlers(newSessionHandlers, startStateHandlers, quizStateHandlers, helpStateHandlers);
+    alexa.execute(); 
+}
+
+module.exports.router = router;
+module.exports.handler = handler;
