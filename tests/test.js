@@ -31,13 +31,15 @@ const requestBuilder = new RequestBuilder({
 });
 
 const launchRequest = requestBuilder.buildRequest();
-const yesRequest = requestBuilder.buildRequest('AMAZON.YesIntent', null, '_STARTMODE');
+const yesRequest = requestBuilder.buildRequest('AMAZON.YesIntent');
 
 helper.sendRequest(launchRequest, alexaSkill.handler)
     .then(response => {
+        requestBuilder.updateAttributes(response.sessionAttributes);
         return helper.sendRequest(yesRequest, alexaSkill.handler);
     })
     .then(response => {
+        requestBuilder.updateAttributes(response.sessionAttributes);        
         const question = helper.processSpeech(response.response.outputSpeech.ssml);
         const extractedPeople = helper.getPeopleFromQuestion(question);
         return helper.getCorrectAnswer(extractedPeople.personX, extractedPeople.people);
@@ -48,5 +50,6 @@ helper.sendRequest(launchRequest, alexaSkill.handler)
         return helper.sendRequest(answerRequest, alexaSkill.handler);
     })
     .then(response => {
+        requestBuilder.updateAttributes(response.sessionAttributes);        
         console.log(response);
     })

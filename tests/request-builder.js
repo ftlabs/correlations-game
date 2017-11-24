@@ -20,11 +20,15 @@ class RequestBuilder {
         this.locale = options.locale;
 
         this.requestType = 'LaunchRequest';
+        this.attributes = {};
+    }
+    updateAttributes(attributes) {
+        this.attributes = attributes;
     }
     buildRequest(intentName, slots, state) {
         const newRequest = {
             session: {
-                attributes: {},
+                attributes: this.attributes,
                 sessionId: this.sessionId,
                 application: {
                     applicationId: this.applicationId,
