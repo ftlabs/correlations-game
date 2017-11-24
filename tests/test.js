@@ -31,8 +31,17 @@ const requestBuilder = new RequestBuilder({
 });
 
 const launchRequest = requestBuilder.buildRequest();
+const yesRequest = requestBuilder.buildRequest('AMAZON.YesIntent', null, '_STARTMODE');
+const answerSlots = [{name: 'Answer', value: '1'}];
+const answerRequest = requestBuilder.buildRequest('AnswerIntent', answerSlots, '_QUIZMODE');
 
 helper.sendRequest(launchRequest, alexaSkill.handler)
     .then(response => {
-        console.log(response);
+        return helper.sendRequest(yesRequest, alexaSkill.handler);
     })
+    .then(response => {
+        return helper.sendRequest(answerRequest, alexaSkill.handler);
+    })
+    .then(response => {
+        console.log(response);
+    });
