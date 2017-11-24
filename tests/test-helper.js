@@ -1,6 +1,7 @@
 'use strict';
 const correlations_service = require('../bin/lib/correlations');
 const fs = require('fs');
+const striptags = require('striptags');
 
 function getCorrectAnswer(personX, people) {
     return correlations_service.calcChainLengthsFrom(`people:${personX}`)
@@ -48,6 +49,11 @@ function sendRequest(event, handler) {
     });
 }
 
+function processSpeech(speech) {
+    speech = striptags(speech);
+    return speech;
+}
+
 function getInteractionModelFromJSON(filename) {
     return new Promise(function(resolve, reject) {
         fs.readFile(filename, 'utf-8', function(err, data){
@@ -64,5 +70,6 @@ module.exports = {
     getCorrectAnswer,
     getPeopleFromQuestion,
     sendRequest,
-    getInteractionModelFromJSON
+    getInteractionModelFromJSON,
+    processSpeech
 }
