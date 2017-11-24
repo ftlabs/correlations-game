@@ -1,5 +1,16 @@
 'use strict';
 
+function formatSlots(slots) {
+    let formattedSlots = {};
+    for (let s of slots) {
+        formattedSlots[s.name] = {
+            name: s.name,
+            value: s.value
+        }
+    }
+    return formattedSlots;
+}
+
 class RequestBuilder {
     constructor(options) {
         this.applicationId = options.applicationId;
@@ -10,8 +21,8 @@ class RequestBuilder {
 
         this.requestType = 'LaunchRequest';
     }
-    buildRequest() {
-        const request = {
+    buildRequest(intentName, slots, state) {
+        const newRequest = {
             session: {
                 attributes: {},
                 sessionId: this.sessionId,
@@ -30,7 +41,20 @@ class RequestBuilder {
                 timestamp: + new Date()
             }
         }
-        return request;
+        if (intentName) {            
+            newRequest.request.type = 'IntentRequest';
+            newRequest.request.intent = {
+                name: intentName
+            }
+            if (slots) {
+                const slotsObject = formatSlots(slots);
+                newRequest.request.intent.slots = slotsObject;
+            }
+        }
+        if (state) {
+            newRequest.session.attributes.STATE = state;
+        }
+        return newRequest;
     }
 }
 
