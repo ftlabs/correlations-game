@@ -1,6 +1,6 @@
 require('dotenv').load();
-
 const helper = require('./test-helper');
+const RequestBuilder = require('./request-builder');
 
 const alexaSkill = require('../routes/voice-alexa.js');
 
@@ -22,25 +22,15 @@ const alexaSkill = require('../routes/voice-alexa.js');
         })
 */
 
-const launchRequest = {
-    "session": {
-      "attributes": {},
-      "sessionId": "1234",
-      "application": {
-        "applicationId": "amzn1.echo-sdk-ams.app.123"
-      },
-      "user": {
-        "userId": "test_user"
-      },
-      "new": true
-    },
-    "request": {
-      "type": "LaunchRequest",
-      "locale": "en-GB",
-      "requestId": "request_id_123",
-      "timestamp": 1449829632387
-    }
-  }
+const requestBuilder = new RequestBuilder({
+    applicationId: 'amzn1.echo-sdk-ams.app.123',
+    sessionId: '1234',
+    userId: 'test-user',
+    requestId: 'request-id-1234',
+    locale: 'en-GB'
+});
+
+const launchRequest = requestBuilder.buildRequest();
 
 helper.sendRequest(launchRequest, alexaSkill.handler)
     .then(response => {

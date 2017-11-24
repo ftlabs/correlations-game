@@ -1,3 +1,4 @@
+'use strict';
 const correlations_service = require('../bin/lib/correlations');
 
 function getCorrectAnswer(personX, people) {
