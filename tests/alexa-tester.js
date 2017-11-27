@@ -4,43 +4,64 @@ const RequestBuilder = require('./request-builder');
 
 const alexaSkill = require('../routes/voice-alexa.js');
 
-function randomNumber() {
-    return Math.floor(Math.random() * 9999);
-}
-
 async function testIntents(modelFilename, handler) {
-    let model = await helper.getInteractionModelFromJSON(modelFilename);
-    let parsed = JSON.parse(model);
-    const intents = parsed.languageModel.intents;
-    let promises = [];
-    for (let i of intents) {
-        // Need to have a different request builder for each intent
-        const requestBuilder = new RequestBuilder({
+    // Load model from json file
+    const model = await helper.getInteractionModelFromJSON(modelFilename);
+    // Parse model
+    const parsed = JSON.parse(model);
+    const intents = parsed.languageModel.intents;    
+    // Intialise tree
+    let responseTree = {
+        root: {
+            intentType: "LaunchRequest",
+            intentName: "N/A",
+            children: []
+        }
+    };
+    // Call testIntent with LaunchRequest and list of intents, requestBuilder, and the handler
+    const requestBuilder = new RequestBuilder({
             applicationId: 'amzn1.echo-sdk-ams.app.123',
-            sessionId: randomNumber(),
+            sessionId: ("0").repeat(4),
             userId: 'test-user',
             requestId: 'request-id-1234',
             locale: 'en-GB'
-        });
+    });
+    return testIntent(responseTree.root, "LaunchRequest", intents, requestBuilder, handler);
+}
+
+async function testIntent(treeNode, intentName, listOfIntents, requestBuilder, handler) {
+    if (intentName === "LaunchRequest") {
         const launchRequest = requestBuilder.buildRequest();
-        const request = requestBuilder.buildRequest(i.name);
-        const requestWithLaunch = helper.sendRequest(launchRequest, handler)
+        return helper.sendRequest(launchRequest, handler)
             .then(response => {
                 requestBuilder.updateAttributes(response.sessionAttributes);
-                return helper.sendRequest(request, handler);
+                return Promise.all(listOfIntents.map(intent => {
+                    return testIntent(treeNode, intent.name, listOfIntents, requestBuilder, handler);
+                }));
             })
-        promises.push(requestWithLaunch);
+            .then(responses => {
+                treeNode.children = responses;
+                return treeNode;
+            });
+    } else {
+        const intentRequest = requestBuilder.buildRequest(intentName);
+        return helper.sendRequest(intentRequest, handler)
+            .then(response => {
+                if (response.response.shouldEndSession) {
+                    return {
+                        intentType: "IntentRequest",
+                        intentName: intentName
+                    };
+                } else {
+                    return "Not Ended";
+                }
+            });
     }
-    return Promise.all(promises);
 }
 
 testIntents('./modelling/model.json', alexaSkill.handler)
-    .then(responses => {
-        for (let r of responses) {
-            const speech = r.response.outputSpeech.ssml;
-            const processedSpeech = helper.processSpeech(speech);
-            console.log(processedSpeech);
-        }
+    .then(result => {
+        console.log(result);
     });
 
 

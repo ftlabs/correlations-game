@@ -25,7 +25,7 @@ class RequestBuilder {
     updateAttributes(attributes) {
         this.attributes = attributes;
     }
-    buildRequest(intentName, slots, state) {
+    buildRequest(intentName, slots, attributes) {
         const newRequest = {
             session: {
                 attributes: this.attributes,
@@ -55,8 +55,8 @@ class RequestBuilder {
                 newRequest.request.intent.slots = slotsObject;
             }
         }
-        if (state) {
-            newRequest.session.attributes.STATE = state;
+        if (attributes) {
+            newRequest.session.attributes = attributes;
         }
         return newRequest;
     }
