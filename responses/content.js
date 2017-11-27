@@ -39,7 +39,7 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPe
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 	// it is possible (albeit bad) that articleData might be null, so handle that situation
 
-	let responseObj = {
+	const responseObj = {
 		displayText : '',
 		speech      : '',
 		ssml        : '',
@@ -52,12 +52,12 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
 
-	if (articleData == null) {
+	if (articleData === null) {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
 		responseObj.ssml        = `<speak>${specificPhrase} <break time="1s"/></speak>`;
-		responseObj.article     = 'an FT article';
+		responseObj.article     = 'FT.com';
 		responseObj.link        = `https://ft.com/`;
 		responseObj.image       = process.env.FT_LOGO;
 } else {
@@ -90,7 +90,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 	}
 	scorePhrase += ' Would you like to start a new game?'
 
-	let responseObj = {
+	const responseObj = {
 		displayText : '',
 		speech      : '',
 		ssml        : '',
@@ -102,12 +102,12 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 	const basePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
 
-	if (articleData == null) {
+	if (articleData === null) {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
 		responseObj.ssml        = `<speak>${specificPhrase}</speak>`
-		responseObj.article     = 'an FT article';
+		responseObj.article     = 'FT.com';
 		responseObj.link        = 'https://ft.com/';
 		responseObj.image       = process.env.FT_LOGO;
 	} else {
