@@ -66,10 +66,45 @@ function getInteractionModelFromJSON(filename) {
     });
 };
 
+function buildRequest(info, session, attributes, request) {
+    const newRequest = {
+        session: {
+            attributes: attributes,
+            sessionId: session.sessionId,
+            application: {
+                applicationId: info.applicationId,
+            },
+            user: {
+                userId: info.userId,
+            },
+            new: info.newSession
+        }, 
+        request: {
+            type: request.type,
+            locale: info.locale,
+            requestId: info.requestId,
+            timestamp: + new Date()
+        }
+    };
+
+    if (request.type === 'IntentRequest') {        
+        newRequest.request.type = 'IntentRequest';
+        newRequest.request.intent = {
+            name: intentName
+        }
+        if (request.slots) {
+            newRequest.request.intent.slots = request.slots;
+        }
+    }
+
+    return newRequest;
+}
+
 module.exports = {
     getCorrectAnswer,
     getPeopleFromQuestion,
     sendRequest,
     getInteractionModelFromJSON,
-    processSpeech
+    processSpeech,
+    buildRequest
 }

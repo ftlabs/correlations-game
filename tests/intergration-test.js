@@ -52,4 +52,4 @@ helper.sendRequest(launchRequest, alexaSkill.handler)
     .then(response => {
         requestBuilder.updateAttributes(response.sessionAttributes);      
         console.log(response);  
-    })
+    });
