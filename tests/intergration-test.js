@@ -31,11 +31,11 @@ const requestBuilder = new RequestBuilder({
 });
 
 const launchRequest = requestBuilder.buildRequest();
-const yesRequest = requestBuilder.buildRequest('AMAZON.YesIntent');
 
 helper.sendRequest(launchRequest, alexaSkill.handler)
     .then(response => {
         requestBuilder.updateAttributes(response.sessionAttributes);
+        const yesRequest = requestBuilder.buildRequest('AMAZON.YesIntent');
         return helper.sendRequest(yesRequest, alexaSkill.handler);
     })
     .then(response => {
@@ -46,10 +46,10 @@ helper.sendRequest(launchRequest, alexaSkill.handler)
     })
     .then(answer => {
         const answerSlots = [{name: 'Answer', value: answer}];
-        const answerRequest = requestBuilder.buildRequest('AnswerIntent', answerSlots, '_QUIZMODE');
+        const answerRequest = requestBuilder.buildRequest('AnswerIntent', answerSlots);
         return helper.sendRequest(answerRequest, alexaSkill.handler);
     })
     .then(response => {
-        requestBuilder.updateAttributes(response.sessionAttributes);        
-        console.log(response);
+        requestBuilder.updateAttributes(response.sessionAttributes);      
+        console.log(response);  
     })
