@@ -4,7 +4,15 @@ const RequestBuilder = require('./request-builder');
 
 const alexaSkill = require('../routes/voice-alexa.js');
 
-const maxDepth = 3;
+const maxDepth = 1;
+
+const requestBuilder = new RequestBuilder({
+    applicationId: 'amzn1.echo-sdk-ams.app.123',
+    sessionId: `0000`,    
+    userId: 'test-user',
+    requestId: 'request-id-1234',
+    locale: 'en-GB'
+});
 
 async function testIntents(modelFilename, handler) {
     // Load model from json file
@@ -20,49 +28,97 @@ async function testIntents(modelFilename, handler) {
             children: []
         }
     };
-    // Call testIntent with LaunchRequest and list of intents, requestBuilder, and the handler
-    const requestBuilder = new RequestBuilder({
-            applicationId: 'amzn1.echo-sdk-ams.app.123',
-            sessionId: ("0").repeat(4),
-            userId: 'test-user',
-            requestId: 'request-id-1234',
-            locale: 'en-GB'
-    });
-    return testIntent(responseTree.root, "LaunchRequest", intents, requestBuilder, 0, handler);
+
+    const requestMetaInfo = {
+        sessionId: `0000`
+    };
+
+    return testIntent(
+        responseTree.root, 
+        null, 
+        "LaunchRequest", 
+        intents, 
+        requestMetaInfo,
+        null,
+        0, 
+        handler
+    );
 }
 
-async function testIntent(treeNode, intentName, listOfIntents, requestBuilder, depth, handler) {
+async function testIntent(parentNode, previousResponse, intentName, listOfIntents, requestMetaInfo, sessionAttributes, depth, handler) {
     if (intentName === "LaunchRequest") {
         const launchRequest = requestBuilder.buildRequest();
         return helper.sendRequest(launchRequest, handler)
             .then(response => {
-                requestBuilder.updateAttributes(response.sessionAttributes);
-                return Promise.all(listOfIntents.map(intent => {
-                    return testIntent(treeNode, intent.name, listOfIntents, requestBuilder, depth + 1, handler);
+                const responseSpeech = helper.processSpeech(response.response.outputSpeech.ssml).trim();                
+                return Promise.all(listOfIntents.map((intent, index) => {
+                    const requestMetaInfo = {
+                        sessionId: `111${index}`
+                    };
+                    return testIntent(
+                        parentNode, 
+                        responseSpeech, 
+                        intent.name, 
+                        listOfIntents, 
+                        requestMetaInfo,
+                        response.sessionAttributes, 
+                        depth + 1, 
+                        handler
+                    );
                 }));
             })
             .then(responses => {
-                treeNode.children = responses;
-                return treeNode;
+                parentNode.children = responses;
+                return parentNode;
             });
     } else {
-        const intentRequest = requestBuilder.buildRequest(intentName);
+        let intentRequest;
+        if (intentName === "AnswerIntent" && previousResponse.includes('Question')) {
+            const extractedPeople = helper.getPeopleFromQuestion(previousResponse);
+            const correctAnswer = await helper.getCorrectAnswer(extractedPeople.personX, extractedPeople.people);
+            const slots = [{
+                name: 'Answer',
+                value: correctAnswer
+            }];
+            intentRequest = requestBuilder.buildRequest(intentName, slots, sessionAttributes, requestMetaInfo);                        
+        } else {
+            intentRequest = requestBuilder.buildRequest(intentName, null, sessionAttributes, requestMetaInfo);                        
+        }
         return helper.sendRequest(intentRequest, handler)
             .then(response => {
-                if (response.response.shouldEndSession || depth === maxDepth) {
-                    return {
-                        intentType: "IntentRequest",
-                        intentName: intentName
-                    };
-                } else {
-                    requestBuilder.updateAttributes(response.sessionAttributes);
+                const responseSpeech = helper.processSpeech(response.response.outputSpeech.ssml).trim();
+                // Check if the session should end or we have reached max depth
+                if (response.response.shouldEndSession || 
+                    depth === maxDepth ||
+                    responseSpeech.includes('Sorry')) 
+                {
+                    console.log(`Session Ended: ${intentName}, ${requestMetaInfo.sessionId}`);
                     return {
                         intentType: "IntentRequest",
                         intentName: intentName,
-                        children: Promise.all(listOfIntents.map(intent => {
-                            return testIntent(treeNode, intentName, listOfIntents, requestBuilder, depth + 1, handler);
-                        }))
-                    }
+                        responseSpeech: responseSpeech
+                    };
+                } else {
+                    return Promise.all(listOfIntents.map(intent => {
+                        return testIntent(
+                            parentNode, 
+                            responseSpeech, 
+                            intent.name, 
+                            listOfIntents, 
+                            requestMetaInfo,
+                            response.sessionAttributes,
+                            depth + 1,
+                            handler
+                        );
+                    }))
+                    .then(nodes => {
+                        return {
+                            intentType: "IntentRequest",
+                            intentName: intentName,
+                            responseSpeech: responseSpeech,
+                            children: nodes
+                        }
+                    });
                 }
             });
     }

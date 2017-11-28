@@ -25,7 +25,10 @@ class RequestBuilder {
     updateAttributes(attributes) {
         this.attributes = attributes;
     }
-    buildRequest(intentName, slots, attributes) {
+    setSessionId(sessionId) {
+        this.sessionId = sessionId;
+    }
+    buildRequest(intentName, slots, attributes, metaInfo) {
         const newRequest = {
             session: {
                 attributes: this.attributes,
@@ -57,6 +60,9 @@ class RequestBuilder {
         }
         if (attributes) {
             newRequest.session.attributes = attributes;
+        }
+        if (metaInfo) {
+            newRequest.session.sessionId = metaInfo.sessionId;
         }
         return newRequest;
     }
