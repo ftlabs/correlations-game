@@ -6,6 +6,8 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const Alexa = require('alexa-sdk');
 
+const APP_ID = process.env.APP_ID;
+
 const spoor = require('../bin/lib/log-to-spoor');
 
 const GAME_STATES = {
@@ -57,6 +59,9 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     },
     'AMAZON.NoIntent': function () {
         this.emit(':tell', speech['ENDGAME']);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', speech['ENDGAME']);        
     },
     'AMAZON.HelpIntent': function () {
         this.handler.state = GAME_STATES.HELP;
@@ -472,7 +477,8 @@ router.post('/', (request, response) => {
 });
 
 function handler(event, context, callback) {
-    const alexa = Alexa.handler(event, context, callback);    
+    const alexa = Alexa.handler(event, context, callback);  
+    alexa.appId = APP_ID;
     alexa.registerHandlers(newSessionHandlers, startStateHandlers, quizStateHandlers, helpStateHandlers);
     alexa.execute(); 
 }

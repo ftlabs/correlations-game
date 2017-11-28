@@ -4,6 +4,8 @@ const RequestBuilder = require('./request-builder');
 
 const alexaSkill = require('../routes/voice-alexa.js');
 
+const maxDepth = 3;
+
 async function testIntents(modelFilename, handler) {
     // Load model from json file
     const model = await helper.getInteractionModelFromJSON(modelFilename);
@@ -26,17 +28,17 @@ async function testIntents(modelFilename, handler) {
             requestId: 'request-id-1234',
             locale: 'en-GB'
     });
-    return testIntent(responseTree.root, "LaunchRequest", intents, requestBuilder, handler);
+    return testIntent(responseTree.root, "LaunchRequest", intents, requestBuilder, 0, handler);
 }
 
-async function testIntent(treeNode, intentName, listOfIntents, requestBuilder, handler) {
+async function testIntent(treeNode, intentName, listOfIntents, requestBuilder, depth, handler) {
     if (intentName === "LaunchRequest") {
         const launchRequest = requestBuilder.buildRequest();
         return helper.sendRequest(launchRequest, handler)
             .then(response => {
                 requestBuilder.updateAttributes(response.sessionAttributes);
                 return Promise.all(listOfIntents.map(intent => {
-                    return testIntent(treeNode, intent.name, listOfIntents, requestBuilder, handler);
+                    return testIntent(treeNode, intent.name, listOfIntents, requestBuilder, depth + 1, handler);
                 }));
             })
             .then(responses => {
@@ -47,13 +49,20 @@ async function testIntent(treeNode, intentName, listOfIntents, requestBuilder, h
         const intentRequest = requestBuilder.buildRequest(intentName);
         return helper.sendRequest(intentRequest, handler)
             .then(response => {
-                if (response.response.shouldEndSession) {
+                if (response.response.shouldEndSession || depth === maxDepth) {
                     return {
                         intentType: "IntentRequest",
                         intentName: intentName
                     };
                 } else {
-                    return "Not Ended";
+                    requestBuilder.updateAttributes(response.sessionAttributes);
+                    return {
+                        intentType: "IntentRequest",
+                        intentName: intentName,
+                        children: Promise.all(listOfIntents.map(intent => {
+                            return testIntent(treeNode, intentName, listOfIntents, requestBuilder, depth + 1, handler);
+                        }))
+                    }
                 }
             });
     }
