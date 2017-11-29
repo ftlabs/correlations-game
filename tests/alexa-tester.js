@@ -6,6 +6,33 @@ const alexaSkill = require('../routes/voice-alexa.js');
 
 const exampleModel = "tests/models/example.json";
 
+
+// Define functions and function mapping for skill tree
+
+const stringToFunction = {
+    "correctAnswer": correctAnswer,
+    "incorrectAnswer": incorrectAnswer,
+    "misunderstoodAnswer": misunderstoodAnswer
+};
+
+function correctAnswer(outputSpeech) {
+    const speech = helper.processSpeech(outputSpeech);
+    const possiblePeople = helper.getPeopleFromQuestion(speech);
+    return helper.getCorrectAnswer(possiblePeople.personX, possiblePeople.people);
+}
+
+function incorrectAnswer(outputSpeech) {
+    const speech = helper.processSpeech(outputSpeech);
+    const possiblePeople = helper.getPeopleFromQuestion(speech);
+    return helper.getIncorrectAnswer(possiblePeople.personX, possiblePeople.people);
+}
+
+function misunderstoodAnswer(outputSpeech) {
+    return "NOT AN ANSWER";
+}
+
+
+
 function getSimpleNode(node) {
     let simpleNode = {
         type: node.requestType
@@ -64,48 +91,22 @@ async function testPath(path, handler, info, session) {
     let attributes = {};
     
     for (let node of path) {
-        console.log(node.type, node.name);
         if (node.type !== "LaunchRequest") {
             info.newSession = false;
+        }
+        if (node.slots) {
+            const functionName = node.slots.Answer.value.function;
+            const answerValue = await stringToFunction[functionName](attributes.speechOutput);
+            node.slots.Answer.value = answerValue;
         }
         const newRequest = helper.buildRequest(info, session, attributes, node);
         const response = await helper.sendRequest(newRequest, handler);
         attributes = response.sessionAttributes;
     }
 
-    // return previousResponse;
+    // What do we actually want to return? A new object with the responses?
+    return true;
 }
-
-// async function testNode(node, handler, info, session, attributes) {    
-//     // Create request info object
-//     const request = {
-//         type: node.requestType
-//     };
-
-//     if (node.name) {
-//         request.name = node.name;
-//     }
-//     if (node.slots) {
-//         request.slots = {
-//             Answer: 0
-//         }
-//     }
-
-//     const newRequest = helper.buildRequest(info, session, attributes, request);
-    
-//     const response = await helper.sendRequest(newRequest, handler);
-//     const updatedAttributes = response.sessionAttributes;
-
-//     console.log(node.requestType, node.name);
-
-//     if (response.response.shouldEndSession) {
-//         return response;
-//     } else {
-//         return Promise.all(node.children.map(n => {
-//             return testNode(n, handler, info, session, updatedAttributes);
-//         }));
-//     }
-// };
 
 testSkillTree(exampleModel, alexaSkill.handler)
     .then(response => {

@@ -11,7 +11,9 @@
                     "slots": {
                       "Answer": {
                         "name": "Answer",
-                        "value": "1"
+                        "value": {
+                            "function": "correctAnswer"
+                        }
                       }
                     }
                 }
