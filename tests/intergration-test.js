@@ -1,6 +1,6 @@
 require('dotenv').load();
-const helper = require('./test-helper');
-const RequestBuilder = require('./request-builder');
+const helper = require('./helpers/test-helper');
+const RequestBuilder = require('./helpers/request-builder');
 
 const alexaSkill = require('../routes/voice-alexa.js');
 

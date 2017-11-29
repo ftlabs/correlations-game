@@ -1,0 +1,47 @@
+{
+    "requestType": "LaunchRequest",
+    "children": [
+        {
+            "requestType": "IntentRequest",
+            "name": "AMAZON.YesIntent",
+            "children": [
+                {
+                    "requestType": "IntentRequest",
+                    "name": "AnswerIntent",
+                    "slots": [
+                        {
+                            "Answer": [
+                                "correctAnswer",
+                                "incorrectAnswer"
+                            ]
+                        }
+                    ],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "requestType": "IntentRequest",
+            "name": "AMAZON.NoIntent"
+        },
+        {
+            "requestType": "IntentRequest",
+            "name": "AMAZON.CancelIntent"
+        },
+        {
+            "requestType": "IntentRequest",
+            "name": "AMAZON.HelpIntent",
+            "children": [
+                {
+                    "requestType": "IntentRequest",
+                    "name": "AMAZON.YesIntent",
+                    "children": []
+                },
+                {
+                    "requestType": "IntentRequest",
+                    "name": "AMAZON.NoIntent"
+                }
+            ]
+        }
+    ]
+}

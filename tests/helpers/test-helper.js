@@ -1,5 +1,5 @@
 'use strict';
-const correlations_service = require('../bin/lib/correlations');
+const correlations_service = require('../../bin/lib/correlations');
 const fs = require('fs');
 const striptags = require('striptags');
 
