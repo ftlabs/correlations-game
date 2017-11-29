@@ -188,28 +188,36 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
     'AMAZON.NoIntent': function () {
         const sessionId = this.event.session.sessionId;
         
-        games.interrupt(sessionId).then(data => {
-            const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
-            
-            spoor({
-                'category': 'GAME',
-                'action': 'gameinterrupted',
-                'system' : {
-                    'source': 'ftlabs-correlations-game',
-                    'route': 'alexa'
-                },
-                'context' : {
-                    'product': 'ftlabs',
-                    'sessionId': sessionId,
-                    'latestScore' : data.score,
-                    'globalHighestScore' : data.globalHighestScore,
-                    'achievedHighestScoreFirst' : data.achievedHighestScoreFirst
+        games.check(sessionId)
+            .then(gameIsInProgress => {
+                if (gameIsInProgress) {
+                    games.interrupt(sessionId).then(data => {
+                        const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
+                        
+                        spoor({
+                            'category': 'GAME',
+                            'action': 'gameinterrupted',
+                            'system' : {
+                                'source': 'ftlabs-correlations-game',
+                                'route': 'alexa'
+                            },
+                            'context' : {
+                                'product': 'ftlabs',
+                                'sessionId': sessionId,
+                                'latestScore' : data.score,
+                                'globalHighestScore' : data.globalHighestScore,
+                                'achievedHighestScoreFirst' : data.achievedHighestScoreFirst
+                            }
+                        });
+
+                        console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
+                        this.emit(':tell', response.speech);
+                    });
+                } else {
+                    console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}`);
+                    this.emit(':tell', speech['ENDGAME']);
                 }
             });
-
-            console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
-            this.emit(':tell', response.speech);
-        }); 
     },
     'Unhandled': function () {
         this.response.speak(speech['HELP_UNHANDLED']).listen(speech['HELP_UNHANDLED']);        

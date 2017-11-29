@@ -61,6 +61,7 @@ function sendRequest(event, handler) {
 
 function processSpeech(speech) {
     speech = striptags(speech);
+    speech = speech.trim();
     return speech;
 }
 

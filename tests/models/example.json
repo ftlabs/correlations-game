@@ -8,14 +8,12 @@
                 {
                     "requestType": "IntentRequest",
                     "name": "AnswerIntent",
-                    "slots": [
-                        {
-                            "Answer": [
-                                "correctAnswer",
-                                "incorrectAnswer"
-                            ]
-                        }
-                    ]
+                    "slots": {
+                      "Answer": {
+                        "name": "Answer",
+                        "value": "1"
+                      }
+                    }
                 }
             ]
         },
