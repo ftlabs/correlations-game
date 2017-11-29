@@ -1,7 +1,6 @@
 require('dotenv').load();
 const helper = require('./helpers/test-helper');
 const RequestBuilder = require('./helpers/request-builder');
-
 const alexaSkill = require('../routes/voice-alexa.js');
 
 /* 
@@ -19,7 +18,7 @@ const alexaSkill = require('../routes/voice-alexa.js');
     helper.sendRequest(request, alexaSkill.handler)
         .then(response => {
             console.log(response);
-        })
+        });
 */
 
 const requestBuilder = new RequestBuilder({

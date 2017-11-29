@@ -2,6 +2,7 @@
 const correlations_service = require('../../bin/lib/correlations');
 const fs = require('fs');
 const striptags = require('striptags');
+const path = require('path');
 
 function getCorrectAnswer(personX, people) {
     return correlations_service.calcChainLengthsFrom(`people:${personX}`)
@@ -14,6 +15,15 @@ function getCorrectAnswer(personX, people) {
             for (const p of people) {
                 if (directConnections.includes(p)) return p;
             }
+        });
+}
+
+function getIncorrectAnswer(personX, people) {
+    return getCorrectAnswer(personX, people)
+        .then(correctAnswer => {
+            const index = people.indexOf(correctAnswer);
+            const wrongAnswers = people.splice(index, 1);
+            return wrongAnswers[0];
         });
 }
 
@@ -56,7 +66,7 @@ function processSpeech(speech) {
 
 function getInteractionModelFromJSON(filename) {
     return new Promise(function(resolve, reject) {
-        fs.readFile(filename, 'utf-8', function(err, data){
+        fs.readFile(path.join(process.cwd(), filename), 'utf-8', function(err, data){
             if (err) {
                 reject(err); 
             } else {
@@ -90,7 +100,7 @@ function buildRequest(info, session, attributes, request) {
     if (request.type === 'IntentRequest') {        
         newRequest.request.type = 'IntentRequest';
         newRequest.request.intent = {
-            name: intentName
+            name: request.name
         }
         if (request.slots) {
             newRequest.request.intent.slots = request.slots;
