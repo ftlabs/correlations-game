@@ -15,8 +15,7 @@
                                 "incorrectAnswer"
                             ]
                         }
-                    ],
-                    "children": []
+                    ]
                 }
             ]
         },
@@ -34,8 +33,7 @@
             "children": [
                 {
                     "requestType": "IntentRequest",
-                    "name": "AMAZON.YesIntent",
-                    "children": []
+                    "name": "AMAZON.YesIntent"
                 },
                 {
                     "requestType": "IntentRequest",
