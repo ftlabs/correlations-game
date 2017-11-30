@@ -91,6 +91,7 @@ async function testSkillTree(skillTreeJson, handler) {
 }
 
 async function testPath(path, handler, info, session) {
+    let pathResponses = [];
     let attributes = {};
     
     for (let i = 0; i < path.length; i++) {
@@ -105,22 +106,39 @@ async function testPath(path, handler, info, session) {
         }
         const newRequest = helper.buildRequest(info, session, attributes, node);
         const response = await helper.sendRequest(newRequest, handler);
+
         attributes = response.sessionAttributes;
+
+        pathResponses[i] = {
+            node: node,
+            response: response
+        };
 
         if (node.shouldEndSession) {
             if (response.response.shouldEndSession) {
-                return "Session Ended As Expected"
+                return {
+                    responseTree: pathResponses,
+                    report: "Session Ended As Expected"
+                };
             } else {
-                return "Error: Session Did Not End As Expected"
+                return {
+                    responseTree: pathResponses,                    
+                    report: "Error: Session Did Not End As Expected"
+                };
             }
         }
         if (i === path.length - 1) {
-            return "Branch Ended";
+            return {
+                responseTree: pathResponses,                
+                report: "Branch Ended"
+            }
         }
     }
 }
 
 testSkillTree(exampleModel, alexaSkill.handler)
     .then(response => {
-        console.log(response);
+        for (let r of response) {
+            console.log(r.report);
+        }
     })
