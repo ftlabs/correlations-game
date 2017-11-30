@@ -22,8 +22,8 @@ function getIncorrectAnswer(personX, people) {
     return getCorrectAnswer(personX, people)
         .then(correctAnswer => {
             const index = people.indexOf(correctAnswer);
-            const wrongAnswers = people.splice(index, 1);
-            return wrongAnswers[0];
+            people.splice(index, 1);
+            return people[0];
         });
 }
 
@@ -113,6 +113,7 @@ function buildRequest(info, session, attributes, request) {
 
 module.exports = {
     getCorrectAnswer,
+    getIncorrectAnswer,
     getPeopleFromQuestion,
     sendRequest,
     getInteractionModelFromJSON,
