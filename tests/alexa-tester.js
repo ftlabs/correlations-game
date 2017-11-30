@@ -43,6 +43,9 @@ function getSimpleNode(node) {
     if (node.slots) {
         simpleNode.slots = node.slots;
     }
+    if (node.shouldEndSession) {
+        simpleNode.shouldEndSession = node.shouldEndSession;
+    }
     return simpleNode;
 }
 
@@ -90,7 +93,8 @@ async function testSkillTree(skillTreeJson, handler) {
 async function testPath(path, handler, info, session) {
     let attributes = {};
     
-    for (let node of path) {
+    for (let i = 0; i < path.length; i++) {
+        let node = path[i];
         if (node.type !== "LaunchRequest") {
             info.newSession = false;
         }
@@ -102,10 +106,18 @@ async function testPath(path, handler, info, session) {
         const newRequest = helper.buildRequest(info, session, attributes, node);
         const response = await helper.sendRequest(newRequest, handler);
         attributes = response.sessionAttributes;
-    }
 
-    // What do we actually want to return? A new object with the responses?
-    return true;
+        if (node.shouldEndSession) {
+            if (response.response.shouldEndSession) {
+                return "Session Ended As Expected"
+            } else {
+                return "Error: Session Did Not End As Expected"
+            }
+        }
+        if (i === path.length - 1) {
+            return "Branch Ended";
+        }
+    }
 }
 
 testSkillTree(exampleModel, alexaSkill.handler)
