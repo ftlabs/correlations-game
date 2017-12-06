@@ -392,10 +392,37 @@ function checkAnswer(session, answer, callback, inputType) {
 		.then(result => {
 			if(result.correct === true){
         		console.log(`INFO: route=voice; action=answergiven; sessionId=${session}; result=correct; score=${result.score};`);
+				spoor({
+					'category': 'GAME',
+					'action': 'answergiven_correct',
+					'system' : {
+						'source': 'ftlabs-correlations-game'
+					},
+					'context' : {
+						'product': 'ftlabs',
+						'sessionId': session,
+						'inputType' : inputType,
+						'score': result.score 
+					}
+				});
+
 				getQuestion(session, obj => {
 					callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
 				}, inputType);
 			} else {
+				spoor({
+					'category': 'GAME',
+					'action': 'answergiven_incorrect',
+					'system' : {
+						'source': 'ftlabs-correlations-game'
+					},
+					'context' : {
+						'product': 'ftlabs',
+						'sessionId': session,
+						'inputType' : inputType,
+						'score': result.score 
+					}
+				});
         		console.log(`INFO: route=voice; action=answergiven; sessionId=${session}; result=incorrect; score=${result.score}; globalHighestScore=${result.globalHighestScore}; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`);
 				callback(responses.incorrectAnswer({expected : result.expected, seed : result.seedPerson}, result.linkingArticles[0], {score: result.score, scoreMax: result.globalHighestScore, first: result.achievedHighestScoreFirst}), false);
 			}
