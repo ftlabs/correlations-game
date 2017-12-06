@@ -45,7 +45,10 @@
     "intents": [
       {
         "name": "AMAZON.CancelIntent",
-        "samples": []
+        "samples": [
+          "disconnect",
+          "i don't want to play"
+        ]
       },
       {
         "name": "AMAZON.HelpIntent",
@@ -65,10 +68,7 @@
       },
       {
         "name": "AMAZON.StopIntent",
-        "samples": [
-          "disconnect",
-          "i don't want to play"
-        ]
+        "samples": []
       },
       {
         "name": "AMAZON.YesIntent",

@@ -22,7 +22,7 @@ const speech = {
     'UNHANDLED': `Sorry, I did not understand that. For instructions, use "Help".`,   
     'START_UNHANDLED': `Sorry, I did not understand that. Say "yes" to start a new game. For instructions, use "Help".`,
     'QUIZ_UNHANDLED': `Sorry, I did not understand that. Try selecting numbers instead of names. For instructions, use "Help".`,
-    'HELP_UNHANDLED': `Sorry, I did not understand that. Say "start" to return to an active game. For instructions, use "Help".`,
+    'HELP_UNHANDLED': `Sorry, I did not understand that. Say "yes" to return to an active game. For instructions, use "Help".`,
     'ASK_CONTINUE': 'Would you like to continue your game?',
     'ASK_NEW_GAME': 'Would you like to start a new game?'
 }
@@ -142,7 +142,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
         this.response.speak(speech['ASK_CONTINUE']).listen(speech['ASK_CONTINUE']);
-        this.emitWithState(':responseReady', true);
+        this.emit(':responseReady');
     },
     'Unhandled': function () {
         this.response.speak(speech['QUIZ_UNHANDLED']).listen(speech['QUIZ_UNHANDLED']);        
@@ -185,6 +185,9 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
             this.emitWithState('StartGame', true);
         }
     },
+    'AMAZON.CancelIntent': function () {
+        this.emit('AMAZON.NoIntent');        
+    },
     'AMAZON.NoIntent': function () {
         const sessionId = this.event.session.sessionId;
         
@@ -222,7 +225,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
     'Unhandled': function () {
         this.response.speak(speech['HELP_UNHANDLED']).listen(speech['HELP_UNHANDLED']);        
         this.emit(':responseReady');
-    },
+    }
 });
 
 function getQuestion(session, callback) {
