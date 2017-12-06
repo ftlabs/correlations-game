@@ -24,6 +24,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(userUUIDMiddleware);
 
+app.use('/', require('./routes/index'));
+app.use('/voice', basicAuth, require('./routes/voice'));
+app.use('/interface', require('./routes/interface'));
 app.use('/alexa', require('./routes/voice-alexa').router);
 
 // catch 404 and forward to error handler
