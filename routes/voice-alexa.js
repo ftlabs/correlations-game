@@ -71,11 +71,18 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         const sessionId = this.event.session.sessionId;
 
         getQuestion(sessionId, (question => {
+            const questionSpeech = question.ssml;
+
             this.handler.state = GAME_STATES.QUIZ;        
-            this.response.speak(question).listen(question); 
+            this.response.speak(questionSpeech).listen(questionSpeech); 
+
+            const cardTitle = 'Question 1';
+            const cardBody = question.displayText;
+
+            this.response.cardRenderer(cardTitle, cardBody);            
 
             Object.assign(this.attributes, {
-                'speechOutput': question,
+                'speechOutput': questionSpeech,
                 'currentQuestion': 1
             });
 
@@ -306,10 +313,10 @@ function getQuestion(session, callback) {
                 };
             });
             
-            let questionText = responses.askQuestion(preparedData, data.questionNum).ssml;
-            questionText = removeSpeakTags(questionText);
+            let question = responses.askQuestion(preparedData, data.questionNum);
+            question.ssml = removeSpeakTags(question.ssml);
     
-            callback(questionText);
+            callback(question);
         }
     })
     .catch(err => {
@@ -437,7 +444,7 @@ function checkAnswer(session, answer, callback) {
             if(result.correct === true){
                 console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=correct; score=${result.score};`);                
                 getQuestion(session, obj => {
-                    callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
+                    callback(responses.correctAnswer(result.linkingArticles[0], obj.ssml, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
                 });
             } else {
                 console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=incorrect; score=${result.score}; globalHighestScore=${result.globalHighestScore}; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`);                
