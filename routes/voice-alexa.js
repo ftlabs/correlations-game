@@ -74,17 +74,17 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             const questionSpeech = question.ssml;
 
             this.handler.state = GAME_STATES.QUIZ;        
-            this.response.speak(questionSpeech).listen(questionSpeech); 
-
-            const cardTitle = 'Question 1';
-            const cardBody = question.displayText;
-
-            this.response.cardRenderer(cardTitle, cardBody);            
+            this.response.speak(questionSpeech).listen(questionSpeech);             
 
             Object.assign(this.attributes, {
                 'speechOutput': questionSpeech,
                 'currentQuestion': 1
             });
+                        
+            const cardTitle = `Question ${this.attributes['currentQuestion']}`;
+            const cardBody = question.displayText;
+
+            this.response.cardRenderer(cardTitle, cardBody);
 
             this.emit(':responseReady');        
         }));
@@ -105,7 +105,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             checkGuess(sessionId, guessValue, currentQuestion, 
                 ((response, reprompt, state, card, increment) => {
                 if (card) {
-                    this.response.cardRenderer(card.title, card.body, card.image);
+                    var imageObj = {
+                        smallImageUrl: card.image,
+                        largeImageUrl: card.image
+                    };
+                    this.response.cardRenderer(card.title, card.body, imageObj);
                 }
                 if (increment) {
                     Object.assign(this.attributes, {
@@ -368,9 +372,12 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                 const cardBody = obj.displayText + ' ' + obj.article;
                 const cardData = {
                     title: cardTitle,
-                    body: cardBody,
-                    image: obj.image
+                    body: cardBody
                 };
+
+                if (obj.image) {
+                    cardData.image = obj.image.replace('http', 'https');
+                }
                 
                 if (obj.question) {                        
                     handlerState = GAME_STATES.QUIZ;                     
