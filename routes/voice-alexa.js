@@ -5,6 +5,7 @@ const router = express.Router();
 const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const Alexa = require('alexa-sdk');
+const striptags = require('striptags');
 
 const APP_ID = process.env.APP_ID;
 
@@ -30,6 +31,7 @@ const speech = {
 const newSessionHandlers = {
     'LaunchRequest': function () {
         this.handler.state = GAME_STATES.START;
+        // CARD
         this.emitWithState('WelcomeGame', true);
     },
     'StartGame': function () {
@@ -58,7 +60,12 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emit('StartGame');
     },
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', speech['ENDGAME']);
+        // CARD - game ended
+        this.response.speak(speech['ENDGAME']);
+        const cardTitle = 'Goodbye';
+        const cardBody = speech['ENDGAME'];
+        this.response.cardRenderer(cardTitle, cardBody);        
+        this.emit(':responseReady');
     },
     'AMAZON.CancelIntent': function () {
         this.emit(':tell', speech['ENDGAME']);        
@@ -81,8 +88,13 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
                 'currentQuestion': 1
             });
                         
-            const cardTitle = `Question ${this.attributes['currentQuestion']}`;
-            const cardBody = question.displayText;
+            // CARD
+            const cardTitle = 'Welcome to Make Connections';
+            let cardBody = striptags(question.ssml).trim();
+            cardBody = cardBody.replace(/ +(?= )/g, '');
+            cardBody = cardBody.replace('one)', '1)');
+            cardBody = cardBody.replace('two)', '2)');
+            cardBody = cardBody.replace('three)', '3)');
 
             this.response.cardRenderer(cardTitle, cardBody);
 
@@ -104,19 +116,24 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
             checkGuess(sessionId, guessValue, currentQuestion, 
                 ((response, reprompt, state, card, increment) => {
+
                 if (card) {
+                    card.image = card.image.replace('http', 'https');
+                    // CARD
                     var imageObj = {
                         smallImageUrl: card.image,
                         largeImageUrl: card.image
                     };
                     this.response.cardRenderer(card.title, card.body, imageObj);
                 }
+
                 if (increment) {
                     Object.assign(this.attributes, {
                         'speechOutput': reprompt,
                         'currentQuestion': this.attributes['currentQuestion'] + 1
                     });
                 } 
+
                 this.handler.state = state;
                 this.response.speak(response).listen(reprompt);   
                 this.emit(':responseReady');
@@ -128,6 +145,15 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },   
     'AMAZON.RepeatIntent': function () {
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
+
+        const cardTitle = 'Question Repeated';
+        let cardBody = striptags(this.attributes['speechOutput']).trim();
+        cardBody = cardBody.replace(/ +(?= )/g, '');
+        cardBody = cardBody.replace('one)', '1)');
+        cardBody = cardBody.replace('two)', '2)');
+        cardBody = cardBody.replace('three)', '3)');
+
+        this.response.cardRenderer(cardTitle, cardBody);
         this.emit(':responseReady');
     },
     'AMAZON.HelpIntent': function () {
@@ -139,7 +165,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         
         games.interrupt(sessionId).then(data => {
             const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
-            this.emit(':tell', response.speech);
+            // CARD
+            this.response.speak(response.speech);
+            const cardTitle = 'Goodbye';
+            const cardBody = removeSpeakTags(response.speech);
+            this.response.cardRenderer(cardTitle, cardBody); 
+            this.emit(':responseReady');
         });    
     },
     'AMAZON.StartOverIntent': function () {
@@ -153,6 +184,9 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
         this.response.speak(speech['ASK_CONTINUE']).listen(speech['ASK_CONTINUE']);
+        // CARD
+        const cardTitle = 'Paused'
+        this.response.cardRenderer(cardTitle, speech['ASK_CONTINUE']);
         this.emit(':responseReady');
     },
     'Unhandled': function () {
@@ -168,7 +202,9 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         const helpBody = games.check(sessionId)
         .then(gameIsInProgress => {
             let helpResponse = responses.help(gameIsInProgress).ssml;
-            helpResponse = removeSpeakTags(helpResponse);    
+            helpResponse = removeSpeakTags(helpResponse);   
+            
+            // CARD
             
             spoor({
                 'category': 'GAME',
@@ -225,11 +261,21 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                         });
 
                         console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
-                        this.emit(':tell', response.speech);
+                        // CARD                        
+                        this.response.speak(response.speech);
+                        const cardTitle = 'Goodbye';
+                        const cardBody = removeSpeakTags(response.speech);
+                        this.response.cardRenderer(cardTitle, cardBody); 
+                        this.emit(':responseReady');
                     });
                 } else {
                     console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}`);
-                    this.emit(':tell', speech['ENDGAME']);
+                    // CARD
+                    this.response.speak(speech['ENDGAME']);
+                    const cardTitle = 'Goodbye';
+                    const cardBody = speech['ENDGAME'];
+                    this.response.cardRenderer(cardTitle, cardBody); 
+                    this.emit(':responseReady');
                 }
             });
     },
@@ -368,26 +414,35 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                 let handlerState;
                 let increment = false;
 
-                const cardTitle = `Question ${currentQuestion}`;
-                const cardBody = obj.displayText + ' ' + obj.article;
-                const cardData = {
-                    title: cardTitle,
-                    body: cardBody
-                };
+                const cardData = {};
 
-                if (obj.image) {
-                    cardData.image = obj.image.replace('http', 'https');
-                }
-                
                 if (obj.question) {                        
                     handlerState = GAME_STATES.QUIZ;                     
                     responseText = responseText + obj.question;
                     rempromptText = obj.question;
+
+                    let cardBody = striptags(obj.question).trim();
+                    cardBody = cardBody.replace(/ +(?= )/g, '');
+                    cardBody = cardBody.replace('one)', '1)');
+                    cardBody = cardBody.replace('two)', '2)');
+                    cardBody = cardBody.replace('three)', '3)');
+                    cardBody = cardBody.replace('Correct!', '');
+
+                    const cardBodyPre = obj.speech.replace('Correct! ', '');
+
+                    cardData.title = 'Correct';
+                    cardData.body = cardBodyPre + ' ' + cardBody; 
+                    cardData.image = obj.image;
+
                     increment = true;
                 } else {
                     responseText = responseText + ' ' + obj.score;
                     rempromptText = speech['ASK_NEW_GAME'];
-                    handlerState = GAME_STATES.START;      
+                    handlerState = GAME_STATES.START;    
+                    
+                    cardData.title = 'Incorrect';
+                    cardData.body = obj.speech;
+                    cardData.image = obj.image;
                 }
 
                 callback(responseText, rempromptText, handlerState, cardData, increment);
