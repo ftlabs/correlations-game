@@ -90,11 +90,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
                         
             // CARD
             const cardTitle = 'Welcome to Make Connections';
-            let cardBody = striptags(question.ssml).trim();
-            cardBody = cardBody.replace(/ +(?= )/g, '');
-            cardBody = cardBody.replace('one)', '1)');
-            cardBody = cardBody.replace('two)', '2)');
-            cardBody = cardBody.replace('three)', '3)');
+            const cardBody = convertQuestionSpeechToCardText(questionSpeech);
 
             this.response.cardRenderer(cardTitle, cardBody);
 
@@ -147,11 +143,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
 
         const cardTitle = 'Question Repeated';
-        let cardBody = striptags(this.attributes['speechOutput']).trim();
-        cardBody = cardBody.replace(/ +(?= )/g, '');
-        cardBody = cardBody.replace('one)', '1)');
-        cardBody = cardBody.replace('two)', '2)');
-        cardBody = cardBody.replace('three)', '3)');
+        const cardBody = convertQuestionSpeechToCardText(this.attributes['speechOutput']);
 
         this.response.cardRenderer(cardTitle, cardBody);
         this.emit(':responseReady');
@@ -421,13 +413,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                     responseText = responseText + obj.question;
                     rempromptText = obj.question;
 
-                    let cardBody = striptags(obj.question).trim();
-                    cardBody = cardBody.replace(/ +(?= )/g, '');
-                    cardBody = cardBody.replace('one)', '1)');
-                    cardBody = cardBody.replace('two)', '2)');
-                    cardBody = cardBody.replace('three)', '3)');
-                    cardBody = cardBody.replace('Correct!', '');
-
+                    const cardBody = convertQuestionSpeechToCardText(obj.question);
                     const cardBodyPre = obj.speech.replace('Correct! ', '');
 
                     cardData.title = 'Correct';
@@ -562,6 +548,15 @@ function matchAndGetOriginalAnswer(guess, expectedAnswers) {
 
 function removeSpeakTags(ssml) {
     return ssml.replace('<speak>', '').replace('</speak>', '');
+}
+
+function convertQuestionSpeechToCardText(questionSpeech) {
+    let cardText = striptags(questionSpeech).trim();
+    cardText = cardText.replace(/ +(?= )/g, '');
+    cardText = cardText.replace('one)', '1)');
+    cardText = cardText.replace('two)', '2)');
+    cardText = cardText.replace('three)', '3)');
+    return cardText;
 }
 
 router.post('/', (request, response) => {
