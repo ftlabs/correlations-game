@@ -31,7 +31,6 @@ const speech = {
 const newSessionHandlers = {
     'LaunchRequest': function () {
         this.handler.state = GAME_STATES.START;
-        // CARD
         this.emitWithState('WelcomeGame', true);
     },
     'StartGame': function () {
@@ -60,7 +59,6 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emit('StartGame');
     },
     'AMAZON.NoIntent': function () {
-        // CARD - game ended
         this.response.speak(speech['ENDGAME']);
         const cardTitle = 'Goodbye';
         const cardBody = speech['ENDGAME'];
@@ -87,8 +85,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
                 'speechOutput': questionSpeech,
                 'currentQuestion': 1
             });
-                        
-            // CARD
+            
             const cardTitle = 'Welcome to Make Connections';
             const cardBody = convertQuestionSpeechToCardText(questionSpeech);
 
@@ -115,7 +112,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
                 if (card) {
                     card.image = card.image.replace('http', 'https');
-                    // CARD
                     var imageObj = {
                         smallImageUrl: card.image,
                         largeImageUrl: card.image
@@ -157,7 +153,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         
         games.interrupt(sessionId).then(data => {
             const response = responses.stop(true, {score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst});
-            // CARD
             this.response.speak(response.speech);
             const cardTitle = 'Goodbye';
             const cardBody = removeSpeakTags(response.speech);
@@ -176,7 +171,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AMAZON.StopIntent': function () {
         this.handler.state = GAME_STATES.HELP;
         this.response.speak(speech['ASK_CONTINUE']).listen(speech['ASK_CONTINUE']);
-        // CARD
         const cardTitle = 'Paused'
         this.response.cardRenderer(cardTitle, speech['ASK_CONTINUE']);
         this.emit(':responseReady');
@@ -196,8 +190,17 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
             let helpResponse = responses.help(gameIsInProgress).ssml;
             helpResponse = removeSpeakTags(helpResponse);   
             
-            // CARD
+            const cardTitle = 'Help';
+            const cardBody = responses.help(gameIsInProgress).displayText;
             
+            this.response.cardRenderer(cardTitle, cardBody); 
+            
+            if (gameIsInProgress) {
+                this.response.speak(helpResponse).listen(speech['ASK_CONTINUE']);        
+            } else {
+                this.response.speak(helpResponse).listen(speech['ASK_NEW_GAME']);
+            }
+
             spoor({
                 'category': 'GAME',
                 'action': 'useraskedforhelp',
@@ -212,7 +215,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
             });
             
             console.log(`INFO: route=alexa; action=useraskedforhelp; sessionId=${sessionId};`);            
-            this.emit(':ask', helpResponse);  
+            this.emit(':responseReady');  
         });      
     },
     'AMAZON.YesIntent': function () {
@@ -253,7 +256,6 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                         });
 
                         console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${data.score}; globalHighestScore=${data.globalHighestScore}; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`);            
-                        // CARD                        
                         this.response.speak(response.speech);
                         const cardTitle = 'Goodbye';
                         const cardBody = removeSpeakTags(response.speech);
@@ -262,7 +264,6 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                     });
                 } else {
                     console.log(`INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}`);
-                    // CARD
                     this.response.speak(speech['ENDGAME']);
                     const cardTitle = 'Goodbye';
                     const cardBody = speech['ENDGAME'];
