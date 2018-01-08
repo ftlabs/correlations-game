@@ -131,6 +131,7 @@ function askThePlayerAQuestion(data, idx){
 	ssml += '</speak>';
 
 	return {
+		questionText: phrase,
 		displayText: displayText,
 		speech : displayText,
 		ssml: ssml,

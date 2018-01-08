@@ -6,6 +6,7 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const Alexa = require('alexa-sdk');
 const striptags = require('striptags');
+const alexaTemplates = require('../alexa/render-template');
 
 const APP_ID = process.env.APP_ID;
 
@@ -77,20 +78,45 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 
         getQuestion(sessionId, (question => {
             const questionSpeech = question.ssml;
+            const questionItems = question.chips;
+            const questionText = question.questionText;
 
             this.handler.state = GAME_STATES.QUIZ;        
-            this.response.speak(questionSpeech).listen(questionSpeech);             
 
             Object.assign(this.attributes, {
                 'speechOutput': questionSpeech,
                 'currentQuestion': 1
             });
-            
+
+            //Simple Card content
             const cardTitle = 'Welcome to Make Connections';
             const cardBody = convertQuestionSpeechToCardText(questionSpeech);
+            //End Simple Card
 
-            this.response.cardRenderer(cardTitle, cardBody);
-
+            //Template Content (Echo show)
+            console.log("THE CHIPS ARE:")
+            console.log(questionItems);
+            const listItems = alexaTemplates.renderListItems(questionItems);
+        
+            if(supportsDisplay.call(this)||isSimulator.call(this)) {
+                let content = {
+                    "hasDisplaySpeechOutput" : questionSpeech,
+                    "noDisplaySpeechOutput" : questionSpeech,
+                    "simpleCardTitle" : cardTitle,
+                    "simpleCardContent" : cardBody,
+                    "listTemplateTitle" : questionText,
+                    "templateToken" : "MultipleChoiceListView",
+                    "listItems" : listItems,
+                    "sessionAttributes" : this.attributes
+                };
+                renderListTemplate.call(this, content);
+              } else {
+              // Use simple card if not
+                this.response.cardRenderer(cardTitle, cardBody);
+                this.response.speak(questionSpeech).listen(questionSpeech);                
+                this.emit(':responseReady');
+              }
+            
             this.emit(':responseReady');        
         }));
     },
@@ -559,6 +585,73 @@ function convertQuestionSpeechToCardText(questionSpeech) {
     cardText = cardText.replace('three)', '3)');
     return cardText;
 }
+
+
+/**
+ * Check if the Alexa suports render templates (Has Display)
+ */
+function supportsDisplay() {
+    const hasDisplay =
+      this.event.context &&
+      this.event.context.System &&
+      this.event.context.System.device &&
+      this.event.context.System.device.supportedInterfaces &&
+      this.event.context.System.device.supportedInterfaces.Display
+  
+    return hasDisplay;
+}
+  
+function isSimulator() {
+     const isSimulator = !this.event.context; //simulator doesn't send context
+    return isSimulator;
+}
+
+function renderListTemplate(content) {
+    let response = {
+        "version": "1.0",
+        "response": {
+            "directives": [
+                {
+                    "type": "Display.RenderTemplate",
+                    "template": {
+                        "type": "ListTemplate1",
+                        "title": content.listTemplateTitle,
+                        "token": content.templateToken,
+                        "listItems": content.listItems,
+                        "backButton": "HIDDEN"
+                    }
+                }
+            ],
+            "outputSpeech": {
+                "type": "SSML",
+                "ssml": "<speak>" + content.hasDisplaySpeechOutput + "</speak>"
+            },
+            "reprompt": {
+                "outputSpeech": {
+                    "type": "SSML",
+                    "ssml": "<speak>" + content.hasDisplayRepromptText + "</speak>"
+                }
+            },
+            "card": {
+                "type": "Simple",
+                "title": content.simpleCardTitle,
+                "content": content.simpleCardContent
+            }
+        },
+        "sessionAttributes": content.sessionAttributes
+
+    }
+    this.context.succeed(response);    
+}
+
+
+
+
+
+
+
+
+
 
 router.post('/', (request, response) => {
 
