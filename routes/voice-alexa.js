@@ -80,7 +80,8 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emitWithState("AnswerIntent");
     },
     'StartGame': function() {
-        this.emitWithState("QuestionIntent");        
+        console.log("Start game called");
+        this.emit("QuestionIntent");        
     },
     'Unhandled': function () {
         this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);        
