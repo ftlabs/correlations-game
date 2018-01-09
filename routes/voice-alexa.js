@@ -80,8 +80,18 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.emitWithState("AnswerIntent");
     },
     'StartGame': function() {
-        const sessionId = this.event.session.sessionId;
+        this.emitWithState("QuestionIntent");        
+    },
+    'Unhandled': function () {
+        this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);        
+        this.emit(':responseReady');      
+    }        
+});
 
+const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
+
+    'QuestionIntent': function() {
+        const sessionId = this.event.session.sessionId;
         getQuestion(sessionId, (question => {
             const questionSpeech = question.ssml;
             const questionItems = question.chips;
@@ -95,11 +105,11 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             });
 
             //Simple Card content
-            const cardTitle = 'Welcome to Make Connections';
+            const cardTitle = `Question ${this.attributes.currentQuestion}:`;
             const cardBody = convertQuestionSpeechToCardText(questionSpeech);
             //End Simple Card
 
-            //Template Content (Echo show)        
+            //Template Content (Echo show)
             if(supportsDisplay.call(this)||isSimulator.call(this)) {
                 const listItemBuilder = new Alexa.templateBuilders.ListItemBuilder();
                 const listTemplateBuilder = new Alexa.templateBuilders.ListTemplate1Builder();
@@ -124,13 +134,7 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
               }     
         }));
     },
-    'Unhandled': function () {
-        this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);        
-        this.emit(':responseReady');      
-    }        
-});
 
-const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     'AnswerIntent': function () {
         if (typeof this.event.request.intent.slots.Answer.value !== "undefined") {            
             const sessionId = this.event.session.sessionId;        
@@ -154,7 +158,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         'speechOutput': reprompt,
                         'currentQuestion': this.attributes['currentQuestion'] + 1
                     });
-                } 
+                }
+                 
                 this.handler.state = state;
 
                 if((supportsDisplay.call(this)||isSimulator.call(this))
