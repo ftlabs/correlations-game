@@ -114,6 +114,7 @@ function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
 
 function askThePlayerAQuestion(data, idx){
 	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
+	const shortPhrase = `${idx}. ${data.seed.printValue} was mentioned in a recent article with...`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
@@ -131,7 +132,7 @@ function askThePlayerAQuestion(data, idx){
 	ssml += '</speak>';
 
 	return {
-		questionText: phrase,
+		questionText: shortPhrase,
 		displayText: displayText,
 		speech : displayText,
 		ssml: ssml,

@@ -6,7 +6,8 @@ const games = require('../bin/lib/game');
 const responses = require('../responses/content');
 const Alexa = require('alexa-sdk');
 const striptags = require('striptags');
-const alexaTemplates = require('../alexa/render-template');
+const TextUtils = Alexa.utils.TextUtils;
+const ImageUtils = Alexa.utils.ImageUtils;
 
 const APP_ID = process.env.APP_ID;
 
@@ -73,6 +74,11 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.handler.state = GAME_STATES.HELP;
         this.emitWithState('helpTheUser', true);
     },
+    "ElementSelected" : function() {
+        // We will look for the value in this.event.request.token in the AnswerIntent call to compareSlots
+        console.log("in ElementSelected QUIZ state");
+        this.emitWithState("AnswerIntent");
+    },
     'StartGame': function() {
         const sessionId = this.event.session.sessionId;
 
@@ -93,31 +99,29 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
             const cardBody = convertQuestionSpeechToCardText(questionSpeech);
             //End Simple Card
 
-            //Template Content (Echo show)
-            console.log("THE CHIPS ARE:")
-            console.log(questionItems);
-            const listItems = alexaTemplates.renderListItems(questionItems);
-        
+            //Template Content (Echo show)        
             if(supportsDisplay.call(this)||isSimulator.call(this)) {
-                let content = {
-                    "hasDisplaySpeechOutput" : questionSpeech,
-                    "noDisplaySpeechOutput" : questionSpeech,
-                    "simpleCardTitle" : cardTitle,
-                    "simpleCardContent" : cardBody,
-                    "listTemplateTitle" : questionText,
-                    "templateToken" : "MultipleChoiceListView",
-                    "listItems" : listItems,
-                    "sessionAttributes" : this.attributes
-                };
-                renderListTemplate.call(this, content);
+                const listItemBuilder = new Alexa.templateBuilders.ListItemBuilder();
+                const listTemplateBuilder = new Alexa.templateBuilders.ListTemplate1Builder();
+                for (let item of questionItems) {
+                    listItemBuilder.addItem(null, item, TextUtils.makeRichText(`<font size = '5'>${item}</font>`));
+                }
+                const listItems = listItemBuilder.build();
+                const listTemplate = listTemplateBuilder.setToken('MultipleChoiceListView')
+                                                        .setTitle(questionText)
+                                                        .setListItems(listItems)
+                                                        .build();
+                this.response.speak(questionSpeech)
+                                        .cardRenderer(cardTitle, cardBody)
+                                        .renderTemplate(listTemplate)
+                                        .listen(questionSpeech)
+                this.emit(':responseReady');                
               } else {
-              // Use simple card if not
+                // Only render simple card
                 this.response.cardRenderer(cardTitle, cardBody);
                 this.response.speak(questionSpeech).listen(questionSpeech);                
                 this.emit(':responseReady');
-              }
-            
-            this.emit(':responseReady');        
+              }     
         }));
     },
     'Unhandled': function () {
@@ -127,14 +131,14 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
-    'AnswerIntent': function () {       
+    'AnswerIntent': function () {
         if (typeof this.event.request.intent.slots.Answer.value !== "undefined") {            
             const sessionId = this.event.session.sessionId;        
             const guessValue = this.event.request.intent.slots.Answer.value;
             const currentQuestion = this.attributes['currentQuestion'];
 
             checkGuess(sessionId, guessValue, currentQuestion, 
-                ((response, reprompt, state, card, increment) => {
+                ((response, reprompt, state, card, increment, responseTemplate) => {
 
                 if (card) {
                     card.image = card.image.replace('http', 'https');
@@ -151,8 +155,13 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         'currentQuestion': this.attributes['currentQuestion'] + 1
                     });
                 } 
-
                 this.handler.state = state;
+
+                if((supportsDisplay.call(this)||isSimulator.call(this))
+                 && responseTemplate) {
+                    this.response.renderTemplate(responseTemplate);
+                }
+
                 this.response.speak(response).listen(reprompt);   
                 this.emit(':responseReady');
             }));
@@ -432,8 +441,8 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
         
                 let handlerState;
                 let increment = false;
-
                 const cardData = {};
+                let responseTemplate = null;
 
                 if (obj.question) {                        
                     handlerState = GAME_STATES.QUIZ;                     
@@ -446,19 +455,30 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                     cardData.title = 'Correct';
                     cardData.body = cardBodyPre + ' ' + cardBody; 
                     cardData.image = obj.image;
-
+                        
                     increment = true;
                 } else {
+                    const richTextResponse = 
+                    `<font size = '3'>${responseText}</font>
+                    <br/><br/><font size = '2'>${obj.score}</font>`;                    
                     responseText = responseText + ' ' + obj.score;
+                
                     rempromptText = speech['ASK_NEW_GAME'];
                     handlerState = GAME_STATES.START;    
-                    
-                    cardData.title = 'Incorrect';
+
+                    const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder;
+                    responseTemplate = templateBuilder.setToken('IncorrectAnswerView')
+                                            .setTitle('Incorrect Answer')
+                                            .setTextContent(TextUtils.makeRichText(richTextResponse))
+                                            .setImage(ImageUtils.makeImage(obj.image))
+                                            .build();    
+
+                    cardData.title = 'Incorrect'
                     cardData.body = obj.speech;
                     cardData.image = obj.image;
                 }
 
-                callback(responseText, rempromptText, handlerState, cardData, increment);
+                callback(responseText, rempromptText, handlerState, cardData, increment, responseTemplate);
             });      
         } else {
             // Response misunderstood
@@ -608,11 +628,6 @@ function isSimulator() {
 
 function renderListTemplate(content) {
     let response = {
-        "version": "1.0",
-        "response": {
-            "directives": [
-                {
-                    "type": "Display.RenderTemplate",
                     "template": {
                         "type": "ListTemplate1",
                         "title": content.listTemplateTitle,
@@ -620,28 +635,8 @@ function renderListTemplate(content) {
                         "listItems": content.listItems,
                         "backButton": "HIDDEN"
                     }
-                }
-            ],
-            "outputSpeech": {
-                "type": "SSML",
-                "ssml": "<speak>" + content.hasDisplaySpeechOutput + "</speak>"
-            },
-            "reprompt": {
-                "outputSpeech": {
-                    "type": "SSML",
-                    "ssml": "<speak>" + content.hasDisplayRepromptText + "</speak>"
-                }
-            },
-            "card": {
-                "type": "Simple",
-                "title": content.simpleCardTitle,
-                "content": content.simpleCardContent
-            }
-        },
-        "sessionAttributes": content.sessionAttributes
-
     }
-    this.context.succeed(response);    
+    return response 
 }
 
 
