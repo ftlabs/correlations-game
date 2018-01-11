@@ -9,6 +9,7 @@
     "@financial-times/s3o-middleware": "^2.0.4",
     "actions-on-google": "^1.2.0",
     "alexa-sdk": "^1.0.18",
+    "alexa-verifier": "^1.0.0",
     "aws-sdk": "^2.88.0",
     "basic-auth": "^1.1.0",
     "bluebird": "^3.5.0",

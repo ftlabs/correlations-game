@@ -1,22 +1,35 @@
 const debug = require('debug')('bin:middleware:basic-auth');
 const basicAuth = require('basic-auth');
+const verifier = require('alexa-verifier')
 
 module.exports = (req, res, next) => {
-
+	const errResponse = {
+		status : 'err',
+		message : 'Invalid basic authorisation credentials passed'
+	}
 	const creds = basicAuth(req);
 	debug(creds);
-	if (!creds) {
+	if(req.get('signaturecertchainurl') && req.get('signature')) {
+		verifier(req.get('signaturecertchainurl'), req.get('signature'), req.rawBody.toString(), (err) => {
+			if(err) {
+				res.status = 400;
+				res.json(errResponse);
+			}
+			else {
+				next();
+			}
+		})
+	}
+	else if (!creds) {
 		res.statusCode = 401
 		res.setHeader('WWW-Authenticate', 'Basic realm="example"');
 		res.end();
-	} else if(creds.name === process.env.BASIC_AUTH_USERNAME && creds.pass === process.env.BASIC_AUTH_PASSWORD){
+	} 
+	else if(creds.name === process.env.BASIC_AUTH_USERNAME && creds.pass === process.env.BASIC_AUTH_PASSWORD) {
 		next();
-	} else {
-		res.status = 400;
-		res.json({
-			status : 'err',
-			message : 'Invalid basic authorisation credentials passed'
-		});
 	}
-
+	else {
+		res.status = 400;
+		res.json(errResponse);
+	}
 };

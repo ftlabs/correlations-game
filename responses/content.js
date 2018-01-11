@@ -39,7 +39,9 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPe
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
-
+	console.log("NEW QUESTION LOG");
+	console.log(newQuestion.chips);
+	console.log(newQuestion);
 	return {
 		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
 		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`,
@@ -114,7 +116,7 @@ function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
 
 function askThePlayerAQuestion(data, idx){
 	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
-	const shortPhrase = `${idx}. ${data.seed.printValue} was mentioned in a recent article with...`;
+	const shortPhrase = `${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];

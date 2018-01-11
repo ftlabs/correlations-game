@@ -74,14 +74,9 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         this.handler.state = GAME_STATES.HELP;
         this.emitWithState('helpTheUser', true);
     },
-    "ElementSelected" : function() {
-        // We will look for the value in this.event.request.token in the AnswerIntent call to compareSlots
-        console.log("in ElementSelected QUIZ state");
-        this.emitWithState("AnswerIntent");
-    },
     'StartGame': function() {
-        console.log("Start game called");
-        this.emit("QuestionIntent");        
+        this.handler.state = GAME_STATES.QUIZ;
+        this.emitWithState("QuestionIntent");        
     },
     'Unhandled': function () {
         this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);        
@@ -90,6 +85,10 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
+
+    'ElementSelected': function() {
+        this.emitWithState("AnswerIntent");
+    },
 
     'QuestionIntent': function() {
         const sessionId = this.event.session.sessionId;
@@ -112,16 +111,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
             //Template Content (Echo show)
             if(supportsDisplay.call(this)||isSimulator.call(this)) {
-                const listItemBuilder = new Alexa.templateBuilders.ListItemBuilder();
-                const listTemplateBuilder = new Alexa.templateBuilders.ListTemplate1Builder();
-                for (let item of questionItems) {
-                    listItemBuilder.addItem(null, item, TextUtils.makeRichText(`<font size = '5'>${item}</font>`));
-                }
-                const listItems = listItemBuilder.build();
-                const listTemplate = listTemplateBuilder.setToken('MultipleChoiceListView')
-                                                        .setTitle(questionText)
-                                                        .setListItems(listItems)
-                                                        .build();
+                const listTemplate = createQuestionTemplate(cardTitle, questionText, questionItems);
                 this.response.speak(questionSpeech)
                                         .cardRenderer(cardTitle, cardBody)
                                         .renderTemplate(listTemplate)
@@ -137,17 +127,33 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
 
     'AnswerIntent': function () {
-        if (typeof this.event.request.intent.slots.Answer.value !== "undefined") {            
+        const isSlot = 
+        this.event.request &&
+        this.event.request.intent &&
+        this.event.request.intent.slots;
+
+        const isToken = 
+        this.event.request &&
+        this.event.request.token;
+
+        let answerValue;
+        if(isSlot) {
+            answerValue = this.event.request.intent.slots.Answer.value
+        }
+        if(isToken) {
+            answerValue = this.event.request.token;
+        }
+        if (typeof answerValue !== "undefined") {            
             const sessionId = this.event.session.sessionId;        
-            const guessValue = this.event.request.intent.slots.Answer.value;
+            const guessValue = answerValue;
             const currentQuestion = this.attributes['currentQuestion'];
 
-            checkGuess(sessionId, guessValue, currentQuestion, 
+            checkGuess.call(this, sessionId, guessValue, currentQuestion, 
                 ((response, reprompt, state, card, increment, responseTemplate) => {
 
                 if (card) {
                     card.image = card.image.replace('http', 'https');
-                    var imageObj = {
+                    var imageObj = {    
                         smallImageUrl: card.image,
                         largeImageUrl: card.image
                     };
@@ -157,7 +163,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 if (increment) {
                     Object.assign(this.attributes, {
                         'speechOutput': reprompt,
-                        'currentQuestion': this.attributes['currentQuestion'] + 1
+                        'currentQuestion': this.attributes['currentQuestion'] + 1,
+                        'responseTemplate': responseTemplate
                     });
                 }
                  
@@ -165,7 +172,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
                 if((supportsDisplay.call(this)||isSimulator.call(this))
                  && responseTemplate) {
-                    this.response.renderTemplate(responseTemplate);
+                    this.response.renderTemplate(responseTemplate)                    
                 }
 
                 this.response.speak(response).listen(reprompt);   
@@ -178,9 +185,14 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },   
     'AMAZON.RepeatIntent': function () {
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
-
-        const cardTitle = 'Question Repeated';
+        const responseTemplate = this.attributes.responseTemplate;
+        const cardTitle = `Question ${this.attributes.currentQuestion} Repeated`;
         const cardBody = convertQuestionSpeechToCardText(this.attributes['speechOutput']);
+
+        if((supportsDisplay.call(this)||isSimulator.call(this))
+        && responseTemplate) {
+           this.response.renderTemplate(responseTemplate)                    
+       }
 
         this.response.cardRenderer(cardTitle, cardBody);
         this.emit(':responseReady');
@@ -217,7 +229,10 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emit(':responseReady');
     },
     'Unhandled': function () {
-        this.response.speak(speech['QUIZ_UNHANDLED']).listen(speech['QUIZ_UNHANDLED']);        
+        console.log("UNHANDLED IS CALLED HERE");
+        this.response.speak(speech['QUIZ_UNHANDLED'])
+                     .listen(speech['QUIZ_UNHANDLED'])        
+                     .renderTemplate(this.attributes.responseTemplate);
         this.emit(':responseReady');
     }
 });
@@ -233,7 +248,6 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
             
             const cardTitle = 'Help';
             const cardBody = responses.help(gameIsInProgress).displayText;
-            
             this.response.cardRenderer(cardTitle, cardBody); 
             
             if (gameIsInProgress) {
@@ -301,6 +315,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                         const cardTitle = 'Goodbye';
                         const cardBody = removeSpeakTags(response.speech);
                         this.response.cardRenderer(cardTitle, cardBody); 
+                        
                         this.emit(':responseReady');
                     });
                 } else {
@@ -444,6 +459,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                 let responseText = obj.ssml;
                 let rempromptText;
                 responseText = removeSpeakTags(responseText);
+                let questionText = obj.displayText
         
                 let handlerState;
                 let increment = false;
@@ -452,16 +468,21 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 
                 if (obj.question) {                        
                     handlerState = GAME_STATES.QUIZ;                     
-                    responseText = responseText + obj.question;
-                    rempromptText = obj.question;
-
-                    const cardBody = convertQuestionSpeechToCardText(obj.question);
+                    responseText = responseText + obj.question.ssml;
+                    rempromptText = obj.question.ssml;
+                    const questionItems = obj.question.chips;
+                    const cardDisplayText = `${obj.speech}<br/><br/>${obj.question.questionText}`;
+                    
+                    let questionTitle = `Question ${this.attributes.currentQuestion + 1}`;
+                    responseTemplate = createQuestionTemplate(questionTitle, cardDisplayText, questionItems, obj.image);
+                
+                    const cardBody = convertQuestionSpeechToCardText(obj.question.ssml);
                     const cardBodyPre = obj.speech.replace('Correct! ', '');
 
                     cardData.title = 'Correct';
                     cardData.body = cardBodyPre + ' ' + cardBody; 
                     cardData.image = obj.image;
-                        
+                    
                     increment = true;
                 } else {
                     const richTextResponse = 
@@ -477,6 +498,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                                             .setTitle('Incorrect Answer')
                                             .setTextContent(TextUtils.makeRichText(richTextResponse))
                                             .setImage(ImageUtils.makeImage(obj.image))
+                                            .setBackButtonBehavior('HIDDEN')                                            
                                             .build();    
 
                     cardData.title = 'Incorrect'
@@ -491,7 +513,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
             let responseText = responses.misunderstood(true, guess, expectedAnswers, seed).ssml;
             responseText = removeSpeakTags(responseText);       
             let rempromptText = responseText;
-
+            
             let handlerState = GAME_STATES.QUIZ;  
 
             spoor({
@@ -558,7 +580,9 @@ function checkAnswer(session, answer, callback) {
 					}
 				});                
                 getQuestion(session, obj => {
-                    callback(responses.correctAnswer(result.linkingArticles[0], obj.ssml, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
+                    console.log("GET QUESTION LOG IS");
+                    console.log(obj)
+                    callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
                 });
             } else {
                 console.log(`INFO: route=alexa; action=answergiven; sessionId=${session}; result=incorrect; score=${result.score}; globalHighestScore=${result.globalHighestScore}; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`); 
@@ -612,7 +636,6 @@ function convertQuestionSpeechToCardText(questionSpeech) {
     return cardText;
 }
 
-
 /**
  * Check if the Alexa suports render templates (Has Display)
  */
@@ -623,33 +646,62 @@ function supportsDisplay() {
       this.event.context.System.device &&
       this.event.context.System.device.supportedInterfaces &&
       this.event.context.System.device.supportedInterfaces.Display
-  
     return hasDisplay;
 }
   
+/**
+ * Check if the simulator is making the request.
+ */
 function isSimulator() {
      const isSimulator = !this.event.context; //simulator doesn't send context
     return isSimulator;
 }
 
-function renderListTemplate(content) {
-    let response = {
-                    "template": {
-                        "type": "ListTemplate1",
-                        "title": content.listTemplateTitle,
-                        "token": content.templateToken,
-                        "listItems": content.listItems,
-                        "backButton": "HIDDEN"
-                    }
+
+/**
+ * Creates the question template for the echo show
+ * @param {*} headerText - Title text
+ * @param {*} listItems - Array of strings to display
+ * TODO: Refactor to one for loop.
+ */
+function createQuestionTemplate(headerText, bodyText, answerOptions, backgroundImage=null) {
+    bodyText = bodyText.replace("Correct!", "<b>Correct!</b>");
+    let templateText = `${bodyText}<br/>`;
+    let builder;
+    let fontSize = 2;
+    if(backgroundImage) {
+        builder = new Alexa.templateBuilders.BodyTemplate2Builder();
+        builder.setImage(ImageUtils.makeImage(backgroundImage))
+        for(let i in answerOptions) {
+            let questionNum = parseInt(i) + 1;
+            templateText += `
+            <action value='${questionNum}'>
+            <b>${questionNum}).</b> ${answerOptions[i]}
+            </action><br/>
+            `;
+        }
     }
-    return response 
+    else {
+        builder = new Alexa.templateBuilders.BodyTemplate1Builder();
+        fontSize = 4;
+        templateText += '<br/>';  
+        for(let i in answerOptions) {
+            let questionNum = parseInt(i) + 1;
+            templateText += `
+            <action value='${questionNum}'>
+            <b>${questionNum}).</b> ${answerOptions[i]}
+            </action><br/><br/>
+            `;
+        }     
+    }
+    
+    templateText = `<font size = '${fontSize}'>${templateText}</font>`
+    builder.setTitle(headerText)
+                    .setToken('QuestionTemplate')
+                    .setTextContent(TextUtils.makeRichText(templateText))
+                    .setBackButtonBehavior('HIDDEN')
+    return builder.build();
 }
-
-
-
-
-
-
 
 
 
