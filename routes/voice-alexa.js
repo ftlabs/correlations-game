@@ -96,7 +96,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             const questionSpeech = question.ssml;
             const questionItems = question.chips;
             const questionText = question.questionText;
-
             this.handler.state = GAME_STATES.QUIZ;        
 
             Object.assign(this.attributes, {
@@ -107,22 +106,16 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             //Simple Card content
             const cardTitle = `Question ${this.attributes.currentQuestion}:`;
             const cardBody = convertQuestionSpeechToCardText(questionSpeech);
+            this.response.cardRenderer(cardTitle, cardBody);            
             //End Simple Card
-
+            
             //Template Content (Echo show)
             if(supportsDisplay.call(this)||isSimulator.call(this)) {
                 const listTemplate = createQuestionTemplate(cardTitle, questionText, questionItems);
-                this.response.speak(questionSpeech)
-                                        .cardRenderer(cardTitle, cardBody)
-                                        .renderTemplate(listTemplate)
-                                        .listen(questionSpeech)
-                this.emit(':responseReady');                
-              } else {
-                // Only render simple card
-                this.response.cardRenderer(cardTitle, cardBody);
-                this.response.speak(questionSpeech).listen(questionSpeech);                
-                this.emit(':responseReady');
-              }     
+                this.response.renderTemplate(listTemplate)
+            }
+            this.response.speak(questionSpeech).listen(questionSpeech);                
+            this.emit(':responseReady');              
         }));
     },
 
@@ -169,7 +162,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 }
                  
                 this.handler.state = state;
-
                 if(supportsDisplay.call(this)||isSimulator.call(this)) {
                     if(responseTemplate) {
                         this.response.renderTemplate(responseTemplate)                                            
@@ -195,7 +187,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 this.response.renderTemplate(responseTemplate)                                            
             }
         }
-
         this.response.cardRenderer(cardTitle, cardBody);
         this.emit(':responseReady');
     },
@@ -506,7 +497,6 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                     cardData.body = obj.speech;
                     cardData.image = obj.image;
                 }
-
                 callback(responseText, rempromptText, handlerState, cardData, increment, responseTemplate);
             });      
         } else {
@@ -630,7 +620,7 @@ function convertQuestionSpeechToCardText(questionSpeech) {
     let cardText = striptags(questionSpeech).trim();
     cardText = cardText.replace(/ +(?= )/g, '');
     cardText = cardText.replace('one)', '1)');
-    cardText = cardText.replace('two)', '2)');
+    cardText = cardText.replace('two)', '2)');  
     cardText = cardText.replace('three)', '3)');
     return cardText;
 }
@@ -649,13 +639,11 @@ function supportsDisplay() {
 }
   
 /**
- * Check if the simulator is making the request.
+ * Check if the simulator is making the request.                                                                  
  */
 function isSimulator() {
-     const isSimulator = !this.event.context; //simulator doesn't send context
-    return isSimulator;
+     return !this.event.context; //simulator doesn't send context
 }
-
 
 /**
  * Creates the question template for the echo show
@@ -668,6 +656,7 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, backgroundI
     let templateText = `${bodyText}<br/>`;
     let builder;
     let fontSize = 2;
+
     if(backgroundImage) {
         builder = new Alexa.templateBuilders.BodyTemplate2Builder();
         builder.setImage(ImageUtils.makeImage(backgroundImage))
@@ -693,7 +682,6 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, backgroundI
             `;
         }     
     }
-    
     templateText = `<font size = '${fontSize}'>${templateText}</font>`
     builder.setTitle(headerText)
                     .setToken('QuestionTemplate')
