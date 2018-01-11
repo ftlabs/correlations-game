@@ -39,9 +39,6 @@ function inputWasNotUnderstood(isRepeating, input = null, options = null, seedPe
 function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const illustration = (articleData.mainImageUrl !== null)?articleData.mainImageUrl:process.env.FT_LOGO;
-	console.log("NEW QUESTION LOG");
-	console.log(newQuestion.chips);
-	console.log(newQuestion);
 	return {
 		displayText : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article:`,
 		speech : `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')} in the FT article titled: ${articleData.title}.`,

@@ -229,7 +229,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         this.emit(':responseReady');
     },
     'Unhandled': function () {
-        console.log("UNHANDLED IS CALLED HERE");
         this.response.speak(speech['QUIZ_UNHANDLED'])
                      .listen(speech['QUIZ_UNHANDLED'])        
                      .renderTemplate(this.attributes.responseTemplate);
@@ -580,8 +579,6 @@ function checkAnswer(session, answer, callback) {
 					}
 				});                
                 getQuestion(session, obj => {
-                    console.log("GET QUESTION LOG IS");
-                    console.log(obj)
                     callback(responses.correctAnswer(result.linkingArticles[0], obj, {submitted : result.submittedAnswer, seed : result.seedPerson}), true);
                 });
             } else {
@@ -702,9 +699,6 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, backgroundI
                     .setBackButtonBehavior('HIDDEN')
     return builder.build();
 }
-
-
-
 
 router.post('/', (request, response) => {
 
