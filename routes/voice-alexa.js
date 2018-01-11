@@ -170,9 +170,10 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                  
                 this.handler.state = state;
 
-                if((supportsDisplay.call(this)||isSimulator.call(this))
-                 && responseTemplate) {
-                    this.response.renderTemplate(responseTemplate)                    
+                if(supportsDisplay.call(this)||isSimulator.call(this)) {
+                    if(responseTemplate) {
+                        this.response.renderTemplate(responseTemplate)                                            
+                    }
                 }
 
                 this.response.speak(response).listen(reprompt);   
@@ -188,11 +189,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
         const responseTemplate = this.attributes.responseTemplate;
         const cardTitle = `Question ${this.attributes.currentQuestion} Repeated`;
         const cardBody = convertQuestionSpeechToCardText(this.attributes['speechOutput']);
-
-        if((supportsDisplay.call(this)||isSimulator.call(this))
-        && responseTemplate) {
-           this.response.renderTemplate(responseTemplate)                    
-       }
+        
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+            if(responseTemplate) {
+                this.response.renderTemplate(responseTemplate)                                            
+            }
+        }
 
         this.response.cardRenderer(cardTitle, cardBody);
         this.emit(':responseReady');
@@ -491,7 +493,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                 
                     rempromptText = speech['ASK_NEW_GAME'];
                     handlerState = GAME_STATES.START;    
-
+                    
                     const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder;
                     responseTemplate = templateBuilder.setToken('IncorrectAnswerView')
                                             .setTitle('Incorrect Answer')
