@@ -60,6 +60,9 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'AMAZON.YesIntent': function () {
         this.emit('StartGame');
     },
+    'AMAZON.StartOverIntent': function () {
+        this.emit('StartGame');        
+    },
     'AMAZON.NoIntent': function () {
         this.response.speak(speech['ENDGAME']);
         const cardTitle = 'Goodbye';
@@ -81,16 +84,22 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     'Unhandled': function () {
         this.response.speak(speech['START_UNHANDLED']).listen(speech['START_UNHANDLED']);
         this.emit(':responseReady');
-    }
+    },
+    'ElementSelected': function () {
+        if (this.event.request.token == 'new_game') {
+            this.emitWithState('StartGame');
+            return;
+        }
+        else if(this.event.request.token == 'exit_game') {
+            this.handler.state = GAME_STATES.QUIZ;
+            this.emitWithState('AMAZON.CancelIntent');
+        }
+    },
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
     'ElementSelected': function () {
-        if (this.event.request.token == 'new_game') {
-            this.emit('AMAZON.StartOverIntent');
-            return;
-        }
         this.emitWithState("AnswerIntent");
     },
 
@@ -121,10 +130,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                 'responseTemplate': responseTemplate
             });
 
-          
-
             //Template Content (Echo show)
-
             this.response.speak(questionSpeech).listen(questionSpeech);
             this.emit(':responseReady');
         }));
@@ -164,11 +170,13 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                         this.response.cardRenderer(card.title, card.body, imageObj);
                     }
 
+                    Object.assign(this.attributes, {
+                        'speechOutput': reprompt,
+                        'responseTemplate': responseTemplate
+                    });
                     if (increment) {
                         Object.assign(this.attributes, {
-                            'speechOutput': reprompt,
                             'currentQuestion': this.attributes['currentQuestion'] + 1,
-                            'responseTemplate': responseTemplate
                         });
                     }
 
@@ -189,7 +197,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     },
     'AMAZON.RepeatIntent': function () {
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['speechOutput']);
-        const responseTemplate = this.attributes.responseTemplate;
+        const responseTemplate = this.attributes['responseTemplate']
         const cardTitle = `Question ${this.attributes.currentQuestion} Repeated`;
         const cardBody = convertQuestionSpeechToCardText(this.attributes['speechOutput']);
         if (supportsDisplay.call(this) || isSimulator.call(this)) {
@@ -240,6 +248,17 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 });
 
 const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
+
+    'ElementSelected': function () {
+        if (this.event.request.token == 'exit_help') {
+            this.emitWithState('AMAZON.YesIntent')
+        }
+    },
+
+    'AMAZON.RepeatIntent': function () {
+        this.emitWithState('helpTheUser', true);
+    },
+
     'helpTheUser': function () {
         const sessionId = this.event.session.sessionId;
 
@@ -249,20 +268,22 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                 helpResponse = removeSpeakTags(helpResponse);
 
                 const cardTitle = 'Help';
-                const cardBody = responses.help(gameIsInProgress).displayText;
+                let cardBody = responses.help(gameIsInProgress).displayText;
                 this.response.cardRenderer(cardTitle, cardBody);
+
+               
+                if (gameIsInProgress) {
+                    cardBody = cardBody.replace('continue your game?', "<action value='exit_help'>continue your game?</action>");
+                    this.response.speak(helpResponse).listen(speech['ASK_CONTINUE']);
+                } else {
+                    cardBody = cardBody.replace('play now?', "<action value='exit_help'>play now?</action>");                    
+                    this.response.speak(helpResponse).listen(speech['ASK_NEW_GAME']);
+                }
 
                 if (supportsDisplay.call(this) || isSimulator.call(this)) {
                     const template = createHelpTemplate(cardTitle, cardBody);
                     this.response.renderTemplate(template);
                 }
-
-                if (gameIsInProgress) {
-                    this.response.speak(helpResponse).listen(speech['ASK_CONTINUE']);
-                } else {
-                    this.response.speak(helpResponse).listen(speech['ASK_NEW_GAME']);
-                }
-
 
                 spoor({
                     'category': 'GAME',
@@ -503,7 +524,9 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                         responseText = responseText + ' ' + obj.score;
                         rempromptText = speech['ASK_NEW_GAME'];
                         handlerState = GAME_STATES.START;
-                        richTextResponse = richTextResponse.replace("new game?", "<action value='new_game'>new game?</action>");
+                        richTextResponse = richTextResponse.replace(" start a new game?", 
+                        ":<br/><action value='new_game'> • Start a New game</action><br/><action value='exit_game'> • Exit</action>");
+                        console.log(richTextResponse);
                         const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder;
                         responseTemplate = templateBuilder.setToken('IncorrectAnswerView')
                                                           .setTitle('Incorrect Answer')
@@ -673,7 +696,7 @@ function createHelpTemplate(title, text) {
     builder.setTitle(title)
         .setToken('HelpTemplate')
         .setTextContent(TextUtils.makeRichText(text))
-        .setBackButtonBehavior('VISIBLE')
+        .setBackButtonBehavior('HIDDEN')
     return builder.build();
 }
 
