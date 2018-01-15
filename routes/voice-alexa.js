@@ -275,6 +275,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
                 } else {
                     cardBody = cardBody.replace('play now?', "<action value='exit_help'>play now?</action>");                    
                     this.response.speak(helpResponse).listen(speech['ASK_NEW_GAME']);
+                    this.attributes['speechOutput'] = null;
                 }
 
                 if (supportsDisplay.call(this) || isSimulator.call(this)) {
@@ -736,14 +737,12 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, articleImag
 }
 
 router.post('/', (request, response) => {
-
+    
     let requestAppId = request.body.session.application.applicationId;
     if(requestAppId != APP_ID) {
-        console.log("APP ID DOES NOT MATCH")
         response.sendStatus(401);
         return;
     }
-    console.log("APP ID MATCHED");
     // Dummy context for Alexa handler
     const context = {
         fail: () => {
