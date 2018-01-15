@@ -9,6 +9,8 @@ module.exports = (req, res, next) => {
 	}
 	const creds = basicAuth(req);
 	debug(creds);
+
+	//First check for amazon header params, if they exists, check the certificate and verify the request.
 	if(req.get('signaturecertchainurl') && req.get('signature')) {
 		verifier(req.get('signaturecertchainurl'), req.get('signature'), req.rawBody.toString(), (err) => {
 			if(err) {
@@ -20,6 +22,7 @@ module.exports = (req, res, next) => {
 			}
 		})
 	}
+	//Else check for Basic Auth
 	else if (!creds) {
 		res.statusCode = 401
 		res.setHeader('WWW-Authenticate', 'Basic realm="example"');

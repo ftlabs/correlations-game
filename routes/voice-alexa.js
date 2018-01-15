@@ -141,12 +141,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             this.event.request &&
             this.event.request.intent &&
             this.event.request.intent.slots;
-
         const isToken =
             this.event.request &&
             this.event.request.token;
-
         let answerValue;
+
         if (isSlot) {
             answerValue = this.event.request.intent.slots.Answer.value
         }
@@ -179,14 +178,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
                             'currentQuestion': this.attributes['currentQuestion'] + 1,
                         });
                     }
-
                     this.handler.state = state;
                     if (supportsDisplay.call(this) || isSimulator.call(this)) {
                         if (responseTemplate) {
                             this.response.renderTemplate(responseTemplate)
                         }
                     }
-
                     this.response.speak(response).listen(reprompt);
                     this.emit(':responseReady');
                 }));
@@ -534,7 +531,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                                                           .setImage(ImageUtils.makeImage(obj.image))
                                                           .setBackButtonBehavior('HIDDEN')
                                                           .build();
-                        cardData.title = 'Incorrect'
+                        cardData.title = 'Incorrect';
                         cardData.body = obj.speech;
                         cardData.image = obj.image;
                     }
@@ -644,7 +641,7 @@ function guessIsInAnswerList(guess, expectedAnswers) {
 function matchAndGetOriginalAnswer(guess, expectedAnswers) {
     let original;
     if (guess.toLowerCase() === expectedAnswers[0].match) {
-        original = expectedAnswers[0].original;
+        original = expectedAnswers[0].original; 
     } else if (guess.toLowerCase() === expectedAnswers[1].match) {
         original = expectedAnswers[1].original;
     } else {
@@ -740,6 +737,13 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, articleImag
 
 router.post('/', (request, response) => {
 
+    let requestAppId = request.body.session.application.applicationId;
+    if(requestAppId != APP_ID) {
+        console.log("APP ID DOES NOT MATCH")
+        response.sendStatus(401);
+        return;
+    }
+    console.log("APP ID MATCHED");
     // Dummy context for Alexa handler
     const context = {
         fail: () => {
