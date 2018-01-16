@@ -100,6 +100,7 @@ The following env params may be set:
    * seed_from_answer_or_any # pick initial any candidate then from answer or any, blacklist candidate
 * GAME_DISTANCE_OF_WRONG1=2 # how many chainLengths away to start looking for the first wrong answer - the further away, the 'easier' the question becomes because the wrong answers are 'wronger'
 * GAME_DISTANCE_OF_WRONG2=3 # ditto the 2nd wrong answer. Too far is bad because the number of candidates per link drops drastically after 3.
+* TEST_MODE # Bypasses verification processes for use with Alexa tester (or other general purpose test tools)
 
 ### routes
 

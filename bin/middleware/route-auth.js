@@ -1,6 +1,7 @@
 const debug = require('debug')('bin:middleware:basic-auth');
 const basicAuth = require('basic-auth');
 const verifier = require('alexa-verifier')
+const IS_TEST_MODE = process.env.hasOwnProperty("TEST_MODE") ? (process.env.TEST_MODE == 'true' ? true : false) : false;
 
 module.exports = (req, res, next) => {
 	const errResponse = {
@@ -9,6 +10,10 @@ module.exports = (req, res, next) => {
 	}
 	const creds = basicAuth(req);
 	debug(creds);
+
+	if(IS_TEST_MODE) {
+		return next();
+	}
 
 	//First check for amazon header params, if they exists, check the certificate and verify the request.
 	if(req.get('signaturecertchainurl') && req.get('signature')) {

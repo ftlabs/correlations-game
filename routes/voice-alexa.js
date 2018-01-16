@@ -8,6 +8,7 @@ const Alexa = require('alexa-sdk');
 const striptags = require('striptags');
 const TextUtils = Alexa.utils.TextUtils;
 const ImageUtils = Alexa.utils.ImageUtils;
+const IS_TEST_MODE = process.env.hasOwnProperty("TEST_MODE") ? (process.env.TEST_MODE == 'true' ? true : false) : false;
 
 //Must be set to the App ID of the Alexa skills within the AWS dashboard
 const APP_ID = process.env.APP_ID;
@@ -741,7 +742,7 @@ router.post('/', (request, response) => {
     
     //Compare app ID with env app ID (Part of alexa specification)
     let requestAppId = request.body.session.application.applicationId;
-    if(requestAppId != APP_ID) {
+    if(requestAppId != APP_ID && !IS_TEST_MODE) {
         response.sendStatus(401);
         return;
     }
