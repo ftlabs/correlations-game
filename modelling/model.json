@@ -55,7 +55,31 @@
         "samples": []
       },
       {
+        "name": "AMAZON.MoreIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NavigateSettingsIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NextIntent",
+        "samples": []
+      },
+      {
         "name": "AMAZON.NoIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PageDownIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PageUpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PreviousIntent",
         "samples": []
       },
       {
@@ -63,8 +87,29 @@
         "samples": []
       },
       {
-        "name": "AMAZON.StartOverIntent",
+        "name": "AMAZON.ScrollDownIntent",
         "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollLeftIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollRightIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollUpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StartOverIntent",
+        "samples": [
+          "start a new game",
+          "new game",
+          "start again",
+          "replay"
+        ]
       },
       {
         "name": "AMAZON.StopIntent",
@@ -75,7 +120,8 @@
         "samples": [
           "start",
           "please",
-          "play"
+          "play",
+          "continue"
         ]
       },
       {

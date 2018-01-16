@@ -9,6 +9,7 @@ const striptags = require('striptags');
 const TextUtils = Alexa.utils.TextUtils;
 const ImageUtils = Alexa.utils.ImageUtils;
 
+//Must be set to the App ID of the Alexa skills within the AWS dashboard
 const APP_ID = process.env.APP_ID;
 
 const spoor = require('../bin/lib/log-to-spoor');
@@ -141,6 +142,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             this.event.request &&
             this.event.request.intent &&
             this.event.request.intent.slots;
+            
         const isToken =
             this.event.request &&
             this.event.request.token;
@@ -685,7 +687,6 @@ function isSimulator() {
 }
 
 
-
 /**
  * Creates the Help Template
  */
@@ -738,6 +739,7 @@ function createQuestionTemplate(headerText, bodyText, answerOptions, articleImag
 
 router.post('/', (request, response) => {
     
+    //Compare app ID with env app ID (Part of alexa specification)
     let requestAppId = request.body.session.application.applicationId;
     if(requestAppId != APP_ID) {
         response.sendStatus(401);
