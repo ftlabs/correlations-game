@@ -52,7 +52,7 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 
 	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
 
-	if (articleData === null) {
+	if (articleData === null || articleData == undefined) {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
