@@ -51,8 +51,9 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 	};
 
 	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
-
-	if (articleData === null) {
+	console.log(articleData);
+	
+	if (articleData === null || articleData == undefined) {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
@@ -62,7 +63,6 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 		responseObj.image       = process.env.FT_LOGO;
 } else {
 		const specificPhrase = `${basePhrase} in the FT article`;
-
 		responseObj.displayText = `${specificPhrase}:`;
 		responseObj.speech      = `${specificPhrase} titled: ${articleData.title}.`;
 		responseObj.ssml        = `<speak>${specificPhrase} titled: ${articleData.title}. <break time="1s"/></speak>`;

@@ -163,7 +163,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             checkGuess.call(this, sessionId, guessValue, currentQuestion,
                 ((response, reprompt, state, card, increment, responseTemplate) => {
 
-                    if (card) {
+                    if (card && card.image) {
                         card.image = card.image.replace('http', 'https');
                         var imageObj = {
                             smallImageUrl: card.image,
