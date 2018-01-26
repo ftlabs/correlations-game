@@ -527,7 +527,6 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                         handlerState = GAME_STATES.START;
                         richTextResponse = richTextResponse.replace(" start a new game?", 
                         ":<br/><action value='new_game'> • Start a New game</action><br/><action value='exit_game'> • Exit</action>");
-                        console.log(richTextResponse);
                         const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder;
                         responseTemplate = templateBuilder.setToken('IncorrectAnswerView')
                                                           .setTitle('Incorrect Answer')

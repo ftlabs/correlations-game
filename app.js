@@ -16,7 +16,8 @@ app.set('view engine', 'hbs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
+app.use(logger('dev'));	
+
 //Use verify to append rawbody attribute to request before parse. 
 //(Used by alexa route guard)
 app.use(
