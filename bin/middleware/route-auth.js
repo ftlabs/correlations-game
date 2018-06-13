@@ -52,16 +52,17 @@ module.exports = (req, res, next) => {
   }
 
   //Else check for Basic Auth
-  else if (!creds) {
-    res.statusCode = 401;
-    res.setHeader("WWW-Authenticate", 'Basic realm="example"');
-    res.end();
-  } else if (
-    creds.name === process.env.BASIC_AUTH_USERNAME &&
-    creds.pass === process.env.BASIC_AUTH_PASSWORD
-  ) {
-    next();
-  } else {
+  //   else if (!creds) {
+  //     res.statusCode = 401;
+  //     res.setHeader("WWW-Authenticate", 'Basic realm="example"');
+  //     res.end();
+  //   } else if (
+  //     creds.name === process.env.BASIC_AUTH_USERNAME &&
+  //     creds.pass === process.env.BASIC_AUTH_PASSWORD
+  //   ) {
+  //     next();
+  //   }
+  else {
     res.status = 400;
     res.json(errResponse);
   }
