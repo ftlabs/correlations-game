@@ -51,7 +51,6 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 	};
 
 	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
-	console.log(articleData);
 	
 	if (articleData === null || typeof articleData == 'undefined') {
 		const specificPhrase = `${basePhrase} in an FT article.`;
