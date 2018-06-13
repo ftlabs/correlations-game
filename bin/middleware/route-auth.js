@@ -63,7 +63,6 @@ module.exports = (req, res, next) => {
   //     next();
   //   }
   else {
-    res.status = 400;
-    res.json(errResponse);
+    res.status(400).json(errResponse);
   }
 };
