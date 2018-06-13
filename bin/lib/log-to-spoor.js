@@ -1,7 +1,10 @@
 const debug = require('debug')('bin:middleware:log-requests');
 const fetch = require('node-fetch');
+const IS_TEST_MODE = process.env.hasOwnProperty("TEST_MODE") ? (process.env.TEST_MODE == 'true' ? true : false) : false;
 
 module.exports = function(data){
+
+	if(IS_TEST_MODE) return Promise.resolve({'status' : 'Test Mode: Skipping spore submission'})
 
 	if(!data){
 		return Promise.resolve({'status' : 'Failed. Invalid data passed.'});

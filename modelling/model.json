@@ -1,0 +1,148 @@
+{
+  "languageModel": {
+    "types": [
+      {
+        "name": "QuizAnswer",
+        "values": [
+          {
+            "id": null,
+            "name": {
+              "value": "jeremy corbyn",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "boris johnson",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "theresa may",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "mohammed bin salman",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "sherrod campbell brown",
+              "synonyms": []
+            }
+          }
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "AMAZON.CancelIntent",
+        "samples": [
+          "disconnect",
+          "i don't want to play"
+        ]
+      },
+      {
+        "name": "AMAZON.HelpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.MoreIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NavigateSettingsIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NextIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NoIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PageDownIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PageUpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.PreviousIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.RepeatIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollDownIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollLeftIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollRightIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.ScrollUpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StartOverIntent",
+        "samples": [
+          "start a new game",
+          "new game",
+          "start again",
+          "replay"
+        ]
+      },
+      {
+        "name": "AMAZON.StopIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.YesIntent",
+        "samples": [
+          "start",
+          "please",
+          "play",
+          "continue"
+        ]
+      },
+      {
+        "name": "AnswerIntent",
+        "samples": [
+          "the answer is {Answer}",
+          "my answer is {Answer}",
+          "is it {Answer}",
+          "{Answer} is my answer",
+          "{Answer}",
+          "{Answer} {Answer}",
+          "{Answer} {Answer} {Answer}"
+        ],
+        "slots": [
+          {
+            "name": "Answer",
+            "type": "QuizAnswer"
+          }
+        ]
+      }
+    ],
+    "invocationName": "make connections"
+  }
+}

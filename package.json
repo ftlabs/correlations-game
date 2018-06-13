@@ -8,10 +8,12 @@
   "dependencies": {
     "@financial-times/s3o-middleware": "^2.0.4",
     "actions-on-google": "^1.2.0",
+    "alexa-sdk": "^1.0.18",
+    "alexa-verifier": "^1.0.0",
     "aws-sdk": "^2.88.0",
     "basic-auth": "^1.1.0",
     "bluebird": "^3.5.0",
-    "body-parser": "~1.17.1",
+    "body-parser": "^1.17.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.3",
     "dotenv": "^4.0.0",
@@ -20,9 +22,11 @@
     "morgan": "~1.8.1",
     "node-fetch": "^1.7.1",
     "serve-favicon": "~2.4.2",
+    "striptags": "^3.1.1",
     "uuid": "^3.1.0"
   },
   "engines": {
     "node": "> 6.11.0 < 7.0.0"
-  }
+  },
+  "devDependencies": {}
 }

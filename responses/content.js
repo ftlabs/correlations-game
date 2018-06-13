@@ -51,8 +51,8 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 	};
 
 	const basePhrase = `Correct! ${people.submitted.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
-
-	if (articleData === null) {
+	
+	if (articleData === null || typeof articleData == 'undefined') {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
@@ -62,7 +62,6 @@ function theAnswerGivenWasCorrect(articleData, newQuestion, people){
 		responseObj.image       = process.env.FT_LOGO;
 } else {
 		const specificPhrase = `${basePhrase} in the FT article`;
-
 		responseObj.displayText = `${specificPhrase}:`;
 		responseObj.speech      = `${specificPhrase} titled: ${articleData.title}.`;
 		responseObj.ssml        = `<speak>${specificPhrase} titled: ${articleData.title}. <break time="1s"/></speak>`;
@@ -102,7 +101,7 @@ function theAnswerGivenWasNotCorrect(people, articleData, scoreData){
 
 	const basePhrase = `That was not the correct answer. ${people.expected.replace('people:', '')} was mentioned with ${people.seed.replace('people:', '')}`;
 
-	if (articleData === null) {
+	if (articleData === null || typeof articleData == 'undefined') {
 		const specificPhrase = `${basePhrase} in an FT article.`;
 		responseObj.displayText = specificPhrase;
 		responseObj.speech      = specificPhrase;
@@ -153,6 +152,7 @@ function theGameWasInterrupted(gameProgress = false, scoreData = 0) {
 
 function askThePlayerAQuestion(data, idx){
 	const phrase = `Question ${idx}. ${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
+	const shortPhrase = `${data.seed.printValue} was mentioned in a recent article with which one of the following people?`;
 	let displayText = phrase + ' ';
 	let ssml = `<speak>${phrase}`;
 	let chips = [];
@@ -170,6 +170,7 @@ function askThePlayerAQuestion(data, idx){
 	ssml += '</speak>';
 
 	return {
+		questionText: shortPhrase,
 		displayText: displayText,
 		speech : displayText,
 		ssml: ssml,
