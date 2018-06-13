@@ -28,6 +28,9 @@ module.exports = (req, res, next) => {
     req.get("signature")
   );
 
+  console.log("+++++++++++++++++++creds", creds);
+  console.log("+++++++++++++++++++!creds", !creds);
+
   //First check for amazon header params, if they exists, check the certificate and verify the request.
   if (req.get("signaturecertchainurl") && req.get("signature")) {
     console.log("+++++++++++++++++++++++++++++++++++++Got INSIDE THE IF BLOCK");
@@ -37,14 +40,17 @@ module.exports = (req, res, next) => {
       req.rawBody.toString(),
       err => {
         if (err) {
+          console.log("+++++++++++++++++ERROR");
           res.status = 400;
           res.json(errResponse);
         } else {
+          console.log("+++++++++++++++++SUCCESS");
           next();
         }
       }
     );
   }
+
   //Else check for Basic Auth
   else if (!creds) {
     res.statusCode = 401;
