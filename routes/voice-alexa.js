@@ -33,7 +33,7 @@ const speech = {
   START_UNHANDLED: `Sorry, I did not understand that. Say "yes" to start a new game. For instructions, say "Help".`,
   QUIZ_UNHANDLED: `Sorry, I did not understand that. Try selecting numbers instead of names. For instructions, say "Help".`,
   HELP_UNHANDLED: `Sorry, I did not understand that. Say "yes" to return to an active game. For instructions, say "Help".`,
-  ASK_CONTINUE: "I have paused the game, would you like to continue?",
+  ASK_CONTINUE: "I have paused the game, would you like to continue playing?",
   ASK_NEW_GAME: "Would you like to start a new game?"
 };
 
