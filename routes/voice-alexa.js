@@ -224,6 +224,18 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
             this.emit(':responseReady');
         });
     },
+    'AMAZON.NoIntent': function () {
+        const sessionId = this.event.session.sessionId;
+
+        games.interrupt(sessionId).then(data => {
+            const response = responses.stop(true, { score: data.score, scoreMax: data.globalHighestScore, first: data.achievedHighestScoreFirst });
+            this.response.speak(response.speech);
+            const cardTitle = 'Goodbye';
+            const cardBody = removeSpeakTags(response.speech);
+            this.response.cardRenderer(cardTitle, cardBody);
+            this.emit(':responseReady');
+        });
+    },
     'AMAZON.StartOverIntent': function () {
         const sessionId = this.event.session.sessionId;
 
