@@ -873,6 +873,7 @@ router.post("/", (request, response) => {
   };
 
   const alexa = Alexa.handler(request.body, context);
+  alexa.APP_ID = process.env.APP_ID;
   alexa.registerHandlers(
     newSessionHandlers,
     startStateHandlers,
