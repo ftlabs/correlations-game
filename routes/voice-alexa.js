@@ -8,11 +8,16 @@ const Alexa = require('alexa-sdk');
 const striptags = require('striptags');
 const TextUtils = Alexa.utils.TextUtils;
 const ImageUtils = Alexa.utils.ImageUtils;
-const IS_TEST_MODE = process.env.hasOwnProperty('TEST_MODE')
-	? process.env.TEST_MODE == 'true'
-		? true
-		: false
-	: false;
+const IS_TEST_MODE = checkTestMode();
+
+function checkTestMode() {
+	if (process.env.hasOwnProperty('TEST_MODE')) {
+		if (process.env.TEST_MODE == 'true') {
+			return true;
+		}
+	}
+	return false;
+}
 
 //Must be set to the App ID of the Alexa skills within the AWS dashboard
 const APP_ID = process.env.APP_ID;
