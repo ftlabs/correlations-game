@@ -608,7 +608,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 						":<br/><action value='new_game'> • Start a New game</action><br/><action value='exit_game'> • Exit</action>"
 					);
 					const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder();
-					obj.image = process.env.FT_LOGO;
+					obj.image = obj.image ? obj.image : process.env.FT_LOGO;
 					responseTemplate = templateBuilder
 						.setToken('IncorrectAnswerView')
 						.setTitle('Incorrect Answer')
@@ -833,7 +833,7 @@ function createQuestionTemplate(
 	headerText,
 	bodyText,
 	answerOptions,
-	articleImage = process.env.FT_LOGO
+	articleImage = null
 ) {
 	bodyText = bodyText.replace('Correct!', '<b>Correct!</b>');
 	let templateText = `${bodyText}<br/>`;
@@ -841,6 +841,7 @@ function createQuestionTemplate(
 	const includesAnswerContent = articleImage != null;
 
 	if (includesAnswerContent) {
+		articleImage = articleImage ? articleImage : process.env.FT_LOGO;
 		builder = new Alexa.templateBuilders.BodyTemplate2Builder();
 		builder.setImage(ImageUtils.makeImage(articleImage));
 		fontSize = 2;
