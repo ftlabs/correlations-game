@@ -608,6 +608,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 						":<br/><action value='new_game'> • Start a New game</action><br/><action value='exit_game'> • Exit</action>"
 					);
 					const templateBuilder = new Alexa.templateBuilders.BodyTemplate2Builder();
+					obj.image = process.env.FT_LOGO;
 					responseTemplate = templateBuilder
 						.setToken('IncorrectAnswerView')
 						.setTitle('Incorrect Answer')
@@ -617,7 +618,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 						.build();
 					cardData.title = 'Incorrect';
 					cardData.body = obj.speech;
-					cardData.image = process.env.FT_LOGO;
+					cardData.image = obj.image;
 				}
 				callback(
 					responseText,
