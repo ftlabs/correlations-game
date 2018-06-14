@@ -38,63 +38,63 @@ const speech = {
 };
 
 const newSessionHandlers = {
-  LaunchRequest: function() {
+  LaunchRequest: function () {
     this.handler.state = GAME_STATES.START;
     this.emitWithState("WelcomeGame", true);
   },
-  StartGame: function() {
+  StartGame: function () {
     this.handler.state = GAME_STATES.START;
     this.emitWithState("StartGame", true);
   },
-  "AMAZON.StartOverIntent": function() {
+  "AMAZON.StartOverIntent": function () {
     this.handler.state = GAME_STATES.START;
     this.emitWithState("WelcomeGame", true);
   },
-  "AMAZON.HelpIntent": function() {
+  "AMAZON.HelpIntent": function () {
     this.handler.state = GAME_STATES.HELP;
     this.emitWithState("helpTheUser", true);
   },
-  Unhandled: function() {
+  Unhandled: function () {
     this.response.speak(speech["UNHANDLED"]).listen(speech["UNHANDLED"]);
     this.emit(":responseReady");
   }
 };
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
-  WelcomeGame: function() {
+  WelcomeGame: function () {
     this.emit(":ask", speech["WELCOME"]);
   },
-  "AMAZON.YesIntent": function() {
+  "AMAZON.YesIntent": function () {
     this.emit("StartGame");
   },
-  "AMAZON.StartOverIntent": function() {
+  "AMAZON.StartOverIntent": function () {
     this.emit("StartGame");
   },
-  "AMAZON.NoIntent": function() {
+  "AMAZON.NoIntent": function () {
     this.response.speak(speech["ENDGAME"]);
     const cardTitle = "Goodbye";
     const cardBody = speech["ENDGAME"];
     this.response.cardRenderer(cardTitle, cardBody);
     this.emit(":responseReady");
   },
-  "AMAZON.CancelIntent": function() {
+  "AMAZON.CancelIntent": function () {
     this.emit(":tell", speech["ENDGAME"]);
   },
-  "AMAZON.HelpIntent": function() {
+  "AMAZON.HelpIntent": function () {
     this.handler.state = GAME_STATES.HELP;
     this.emitWithState("helpTheUser", true);
   },
-  StartGame: function() {
+  StartGame: function () {
     this.handler.state = GAME_STATES.QUIZ;
     this.emitWithState("QuestionIntent");
   },
-  Unhandled: function() {
+  Unhandled: function () {
     this.response
       .speak(speech["START_UNHANDLED"])
       .listen(speech["START_UNHANDLED"]);
     this.emit(":responseReady");
   },
-  ElementSelected: function() {
+  ElementSelected: function () {
     if (this.event.request.token == "new_game") {
       this.emitWithState("StartGame");
       return;
@@ -106,11 +106,11 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 });
 
 const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
-  ElementSelected: function() {
+  ElementSelected: function () {
     this.emitWithState("AnswerIntent");
   },
 
-  QuestionIntent: function() {
+  QuestionIntent: function () {
     const sessionId = this.event.session.sessionId;
     getQuestion(sessionId, question => {
       const questionSpeech = question.ssml;
@@ -147,7 +147,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     });
   },
 
-  AnswerIntent: function() {
+  AnswerIntent: function () {
     const isSlot =
       this.event.request &&
       this.event.request.intent &&
@@ -206,7 +206,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
       this.emitWithState("Unhandled", true);
     }
   },
-  "AMAZON.RepeatIntent": function() {
+  "AMAZON.RepeatIntent": function () {
     this.response
       .speak(this.attributes["speechOutput"])
       .listen(this.attributes["speechOutput"]);
@@ -223,13 +223,13 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
     this.response.cardRenderer(cardTitle, cardBody);
     this.emit(":responseReady");
   },
-  "AMAZON.HelpIntent": function() {
+  "AMAZON.HelpIntent": function () {
     this.handler.state = GAME_STATES.HELP;
     this.emitWithState("helpTheUser", true);
   },
   "AMAZON.CancelIntent": closeTheApp,
   "AMAZON.NoIntent": closeTheApp,
-  "AMAZON.StartOverIntent": function() {
+  "AMAZON.StartOverIntent": function () {
     const sessionId = this.event.session.sessionId;
 
     this.handler.state = GAME_STATES.START;
@@ -237,34 +237,36 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
       this.emitWithState("StartGame", true);
     });
   },
-  "AMAZON.StopIntent": function() {
+  "AMAZON.StopIntent": function () {
     this.handler.state = GAME_STATES.HELP;
     this.response.speak(speech["ASK_CONTINUE"]).listen(speech["ASK_CONTINUE"]);
     const cardTitle = "Paused";
     this.response.cardRenderer(cardTitle, speech["ASK_CONTINUE"]);
     this.emit(":responseReady");
   },
-  Unhandled: function() {
+  Unhandled: function () {
     this.response
       .speak(speech["QUIZ_UNHANDLED"])
       .listen(speech["QUIZ_UNHANDLED"])
-      .renderTemplate(this.attributes.responseTemplate);
+    if (supportsDisplay.call(this) || isSimulator.call(this)) {
+      this.response.renderTemplate(this.attributes.responseTemplate);
+    }
     this.emit(":responseReady");
   }
 });
 
 const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
-  ElementSelected: function() {
+  ElementSelected: function () {
     if (this.event.request.token == "exit_help") {
       this.emitWithState("AMAZON.YesIntent");
     }
   },
 
-  "AMAZON.RepeatIntent": function() {
+  "AMAZON.RepeatIntent": function () {
     this.emitWithState("helpTheUser", true);
   },
 
-  helpTheUser: function() {
+  helpTheUser: function () {
     const sessionId = this.event.session.sessionId;
 
     const helpBody = games.check(sessionId).then(gameIsInProgress => {
@@ -314,7 +316,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
       this.emit(":responseReady");
     });
   },
-  "AMAZON.YesIntent": function() {
+  "AMAZON.YesIntent": function () {
     if (this.attributes["speechOutput"]) {
       this.handler.state = GAME_STATES.QUIZ;
       this.emitWithState("AMAZON.RepeatIntent");
@@ -323,10 +325,10 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
       this.emitWithState("StartGame", true);
     }
   },
-  "AMAZON.CancelIntent": function() {
+  "AMAZON.CancelIntent": function () {
     this.emit("AMAZON.NoIntent");
   },
-  "AMAZON.NoIntent": function() {
+  "AMAZON.NoIntent": function () {
     const sessionId = this.event.session.sessionId;
 
     games.check(sessionId).then(gameIsInProgress => {
@@ -356,9 +358,9 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
 
           console.log(
             `INFO: route=alexa; action=gameinterrupted; sessionId=${sessionId}; latestScore=${
-              data.score
+            data.score
             }; globalHighestScore=${
-              data.globalHighestScore
+            data.globalHighestScore
             }; achievedHighestScoreFirst=${data.achievedHighestScoreFirst}`
           );
           this.response.speak(response.speech);
@@ -380,7 +382,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
       }
     });
   },
-  Unhandled: function() {
+  Unhandled: function () {
     this.response
       .speak(speech["HELP_UNHANDLED"])
       .listen(speech["HELP_UNHANDLED"]);
@@ -471,7 +473,7 @@ function getQuestion(session, callback) {
 
         console.log(
           `INFO: route=alexa; action=gamewon; sessionId=${session}; score=${
-            data.score
+          data.score
           }`
         );
         callback(responses.win({ score: data.score }));
@@ -568,7 +570,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
                             <br/>
                             Q${currentQuestion + 1}. ${
             obj.question.questionText
-          }
+            }
                         `;
           let questionTitle = `Question ${currentQuestion + 1}`;
           responseTemplate = createQuestionTemplate.call(
@@ -590,7 +592,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
         } else {
           let richTextResponse = `<font size = '3'>${responseText}</font><br/><br/><font size = '2'>${
             obj.score
-          }</font>`;
+            }</font>`;
           responseText = responseText + " " + obj.score;
           rempromptText = speech["ASK_NEW_GAME"];
           handlerState = GAME_STATES.START;
@@ -683,7 +685,7 @@ function checkAnswer(session, answer, callback) {
     if (result.correct === true) {
       console.log(
         `INFO: route=alexa; action=answergiven; sessionId=${session}; result=correct; score=${
-          result.score
+        result.score
         };`
       );
       spoor({
@@ -711,9 +713,9 @@ function checkAnswer(session, answer, callback) {
     } else {
       console.log(
         `INFO: route=alexa; action=answergiven; sessionId=${session}; result=incorrect; score=${
-          result.score
+        result.score
         }; globalHighestScore=${
-          result.globalHighestScore
+        result.globalHighestScore
         }; achievedHighestScoreFirst=${result.achievedHighestScoreFirst};`
       );
       spoor({
