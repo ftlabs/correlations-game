@@ -593,7 +593,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 
 					cardData.title = 'Correct';
 					cardData.body = cardBodyPre + ' ' + cardBody;
-					cardData.image = process.env.FT_LOGO;
+					cardData.image = obj.image;
 
 					increment = true;
 				} else {
@@ -832,8 +832,9 @@ function createQuestionTemplate(
 	headerText,
 	bodyText,
 	answerOptions,
-	articleImage = null
+	articleImage = process.env.FT_LOGO
 ) {
+	articleImage = process.env.FT_LOGO;
 	bodyText = bodyText.replace('Correct!', '<b>Correct!</b>');
 	let templateText = `${bodyText}<br/>`;
 	let builder, fontSize;
