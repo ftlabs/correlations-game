@@ -84,7 +84,13 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 		this.handler.state = GAME_STATES.HELP;
 		this.emitWithState('helpTheUser', true);
 	},
-	'AMAZON.StopIntent': closeTheApp,
+	'AMAZON.StopIntent': function() {
+		this.response.speak(speech['ENDGAME']);
+		const cardTitle = 'Goodbye';
+		const cardBody = speech['ENDGAME'];
+		this.response.cardRenderer(cardTitle, cardBody);
+		this.emit(':responseReady');
+	},
 	StartGame: function() {
 		this.handler.state = GAME_STATES.QUIZ;
 		this.emitWithState('QuestionIntent');
