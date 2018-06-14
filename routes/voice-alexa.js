@@ -593,7 +593,7 @@ function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 
 					cardData.title = 'Correct';
 					cardData.body = cardBodyPre + ' ' + cardBody;
-					cardData.image = obj.image;
+					cardData.image = process.env.FT_LOGO;
 
 					increment = true;
 				} else {
