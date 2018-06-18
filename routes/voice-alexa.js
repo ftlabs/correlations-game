@@ -168,6 +168,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 		const isToken = this.event.request && this.event.request.token;
 		let answerValue;
 
+		console.log(JSON.stringify(this.event.request));
+
 		if (isSlot) {
 			answerValue = this.event.request.intent.slots.Answer.value;
 			console.log('+++++++++++isSlot answerValue', answerValue);
@@ -192,7 +194,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 						const imgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
 							card.image
 						)}?source=ftlabs`;
-						var imageObj = {
+						let imageObj = {
 							smallImageUrl: imgUrl + '&width=720',
 							largeImageUrl: imgUrl + '&width=1200'
 						};
