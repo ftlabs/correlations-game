@@ -847,10 +847,12 @@ function createQuestionTemplate(
 	console.log('includesAnswerContent', includesAnswerContent);
 	console.log('articleImage', articleImage);
 	if (includesAnswerContent) {
+		console.log('got into includes image article');
 		builder = new Alexa.templateBuilders.BodyTemplate2Builder();
 		builder.setImage(ImageUtils.makeImage(articleImage));
 		fontSize = 2;
 	} else {
+		console.log('got into the else');
 		builder = new Alexa.templateBuilders.BodyTemplate1Builder();
 		fontSize = 4;
 		templateText += '<br/>';
