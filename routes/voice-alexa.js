@@ -187,9 +187,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 				(response, reprompt, state, card, increment, responseTemplate) => {
 					if (card && card.image) {
 						card.image = card.image.replace('http', 'https');
+						const imgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
+							card.image
+						)}?source=ftlabs`;
 						var imageObj = {
-							smallImageUrl: card.image,
-							largeImageUrl: card.image
+							smallImageUrl: imgUrl + '&width=720',
+							largeImageUrl: imgUrl + '&width=1200'
 						};
 						this.response.cardRenderer(card.title, card.body, imageObj);
 					}
@@ -844,9 +847,7 @@ function createQuestionTemplate(
 	let templateText = `${bodyText}<br/>`;
 	let builder, fontSize;
 	const includesAnswerContent = articleImage != null;
-
 	if (includesAnswerContent) {
-		articleImage = articleImage ? articleImage : process.env.FT_LOGO;
 		builder = new Alexa.templateBuilders.BodyTemplate2Builder();
 		builder.setImage(ImageUtils.makeImage(articleImage));
 		fontSize = 2;
