@@ -189,9 +189,12 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 						console.log('GOT INTO CARD.IMAGE', card.image);
 						console.log('card', card);
 						card.image = card.image.replace('http', 'https');
+						const smallImgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
+							card.image
+						)}?source=ftlabs&width=720`;
 						var imageObj = {
-							smallImageUrl: card.image,
-							largeImageUrl: card.image
+							smallImageUrl: smallImgUrl,
+							largeImageUrl: smallImgUrl
 						};
 						this.response.cardRenderer(card.title, card.body, imageObj);
 					}
