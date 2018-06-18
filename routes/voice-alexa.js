@@ -170,9 +170,11 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 
 		if (isSlot) {
 			answerValue = this.event.request.intent.slots.Answer.value;
+			console.log('+++++++++++isSlot answerValue', answerValue);
 		}
 		if (isToken) {
 			answerValue = this.event.request.token;
+			console.log('+++++++++++isToken answerValue', answerValue);
 		}
 		if (typeof answerValue !== 'undefined') {
 			const sessionId = this.event.session.sessionId;
@@ -528,7 +530,7 @@ function getQuestion(session, callback) {
 
 function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 	let guess = guessValue;
-
+	console.log('++++++++++++++++++guess', guess);
 	getExpectedAnswers(sessionId).then(data => {
 		const answers = data.answersReturned;
 		const seed = data.seedPerson;
