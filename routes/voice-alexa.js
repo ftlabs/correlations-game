@@ -844,9 +844,9 @@ function createQuestionTemplate(
 	let templateText = `${bodyText}<br/>`;
 	let builder, fontSize;
 	const includesAnswerContent = articleImage != null;
-
+	console.log('includesAnswerContent', includesAnswerContent);
+	console.log('articleImage', articleImage);
 	if (includesAnswerContent) {
-		articleImage = articleImage ? articleImage : process.env.FT_LOGO;
 		builder = new Alexa.templateBuilders.BodyTemplate2Builder();
 		builder.setImage(ImageUtils.makeImage(articleImage));
 		fontSize = 2;
