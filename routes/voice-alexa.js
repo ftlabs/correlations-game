@@ -186,6 +186,8 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 				currentQuestion,
 				(response, reprompt, state, card, increment, responseTemplate) => {
 					if (card && card.image) {
+						console.log('GOT INTO CARD.IMAGE', card.image);
+						console.log('card', card);
 						card.image = card.image.replace('http', 'https');
 						var imageObj = {
 							smallImageUrl: card.image,
