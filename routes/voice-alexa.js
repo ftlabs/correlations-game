@@ -186,15 +186,13 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 				currentQuestion,
 				(response, reprompt, state, card, increment, responseTemplate) => {
 					if (card && card.image) {
-						console.log('GOT INTO CARD.IMAGE', card.image);
-						console.log('card', card);
 						card.image = card.image.replace('http', 'https');
-						const smallImgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
+						const imgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
 							card.image
-						)}?source=ftlabs&width=720`;
+						)}?source=ftlabs`;
 						var imageObj = {
-							smallImageUrl: smallImgUrl,
-							largeImageUrl: smallImgUrl
+							smallImageUrl: imgUrl + '&width=720',
+							largeImageUrl: imgUrl + '&width=1200'
 						};
 						this.response.cardRenderer(card.title, card.body, imageObj);
 					}
@@ -849,15 +847,11 @@ function createQuestionTemplate(
 	let templateText = `${bodyText}<br/>`;
 	let builder, fontSize;
 	const includesAnswerContent = articleImage != null;
-	console.log('includesAnswerContent', includesAnswerContent);
-	console.log('articleImage', articleImage);
 	if (includesAnswerContent) {
-		console.log('got into includes image article');
 		builder = new Alexa.templateBuilders.BodyTemplate2Builder();
 		builder.setImage(ImageUtils.makeImage(articleImage));
 		fontSize = 2;
 	} else {
-		console.log('got into the else');
 		builder = new Alexa.templateBuilders.BodyTemplate1Builder();
 		fontSize = 4;
 		templateText += '<br/>';
