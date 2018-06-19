@@ -168,8 +168,6 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 		const isToken = this.event.request && this.event.request.token;
 		let answerValue;
 
-		console.log(JSON.stringify(this.event.request));
-
 		if (isSlot) {
 			answerValue = this.event.request.intent.slots.Answer.value;
 		}
