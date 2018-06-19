@@ -190,7 +190,7 @@ const quizStateHandlers = Alexa.CreateStateHandler(GAME_STATES.QUIZ, {
 						const imgUrl = `https://www.ft.com/__origami/service/image/v2/images/raw/${encodeURIComponent(
 							card.image
 						)}?source=ftlabs`;
-						var imageObj = {
+						const imageObj = {
 							smallImageUrl: imgUrl + '&width=720',
 							largeImageUrl: imgUrl + '&width=1200'
 						};
@@ -528,7 +528,6 @@ function getQuestion(session, callback) {
 
 function checkGuess(sessionId, guessValue, currentQuestion, callback) {
 	let guess = guessValue;
-
 	getExpectedAnswers(sessionId).then(data => {
 		const answers = data.answersReturned;
 		const seed = data.seedPerson;
