@@ -4,7 +4,6 @@ const debug = require('debug')('bin:lib:game');
 const database = (process.env.DATABASE === 'PRETEND')? require('./database_pretend') : require('./database');
 const correlations_service = require('./correlations');
 const barnier = require('./barnier-filter'); // Filter names from the game that we know to not work - like Michel Barnier
-
 /*
 Game class
 UUID = uuid for this game
@@ -17,8 +16,8 @@ distance - the furthest distance achieved from the original (seed) person on the
 seedPerson - the person to start the game with. Initially undefined, but should be set on creation on game start.
 nextAnswer - the correct answer for the seed person given. Also the next seed person is question is answered correctly
 answersReturned - if the question has been requested more than once, the original set of answers (stored in this variable) will be returned instead of generating new ones for the seed person
-blacklist - each seed person is added to this list so they cannot be the seed person in future questions
-remainingCandidatesWithConnections - a whitelist of people who could be chosen as seeds
+denylist - each seed person is added to this list so they cannot be the seed person in future questions
+remainingCandidatesWithConnections - an allowlist of people who could be chosen as seeds
 intervalDays - how many days of articles are covered by the current correlations_service
 history - record the sequence of questionData items for a summary at the end of a game
 achievedHighestScore, achievedHighestScoreFirst - set when finishing a question, based on current best score
@@ -78,11 +77,12 @@ class Game{
 	constructor(userUUID, config=undefined) {
 		this.uuid     = userUUID;
 		this.player   = userUUID;
+		console.log('::new Game');
 
 		// context of current game
 		this.state     = 'new';
 		this.score     = 0; // was called 'distance'
-		this.blacklist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
+		this.denylist = []; // will hold all non-available candidates, including chosen seeds, barnier, dead-ends, etc, also populated in createAnNewGame
 		this.remainingCandidatesWithConnections = []; // to be populated in createANewGame
 		this.remainingCandidatesByName = {}; // to be populated in createANewGame
 		this.history   = [];
@@ -101,9 +101,11 @@ class Game{
 		this.achievedHighestScore      = undefined;
 		this.achievedHighestScoreFirst = undefined;
 		this.isQuestionSet       = false;
+		console.log('::new Game this far');
+		// pre-pop the denylist with the barnier list
+		barnier.list().forEach(uuid => { this.addToDenylist(uuid);});
+		console.log('::denylistSetfromBarnier', this.denylist);
 
-		// pre-pop the blacklist with the barnier list
-		barnier.list().forEach(uuid => {this.addToBlacklist(uuid);});
 
 		const missing_fields = [];
 
@@ -118,7 +120,7 @@ class Game{
 			}
 
 			[
-				'uuid', 'player', 'state', 'score', 'blacklist',
+				'uuid', 'player', 'state', 'score', 'denylist',
 				'remainingCandidatesWithConnections', 'remainingCandidatesByName',
 				'history', 'isQuestionSet',
 				'variant', 'max_candidates', 'firstFewMax'
@@ -146,18 +148,20 @@ class Game{
 		}
 	}
 
-	addToBlacklist(name) {
+	addToDenylist(name) {
+		console.log('::addDeny', name);
 		if(name !== undefined){
-			debug(`addToBlacklist: name=${name}`);
-			return this.blacklist.push( name.toLowerCase() );
+			debug(`addToDenylist: name=${name}`);
+			return this.denylist.push( name.toLowerCase() );
 		}
 	};
-	isBlacklisted(name) { return this.blacklist.indexOf( name.toLowerCase() ) > -1; };
-	filterOutBlacklisted(names) { return names.filter( name => {return !this.isBlacklisted(name);}) };
+	isDenylisted(name) { return this.denylist.indexOf( name.toLowerCase() ) > -1; };
+	filterOutDenylisted(names) { return names.filter( name => {return !this.isDenylisted(name);}) };
 	isCandidate(name) { return this.remainingCandidatesByName.hasOwnProperty( name ); };
 	filterCandidates(names) { return names.filter( name => {return this.isCandidate(name);}) };
 
 	addCandidates( candidates ) {
+		console.log('::addCandidates::')
 		let count = 0;
 		candidates.forEach( cand => {
 			if (this.max_candidates >= 0 && this.max_candidates === count) {
@@ -166,10 +170,10 @@ class Game{
 			const candName = cand[0];
 
 			if (candName.match(/[^:a-zA-Z ]/) !== null ) { // just ignore any names containing non-letters (apart from colon and spaces)
-				this.addToBlacklist(candName);
+				this.addToDenylist(candName);
 			}
 
-			if (! this.isBlacklisted(candName)) {
+			if (! this.isDenylisted(candName)) {
 				this.remainingCandidatesWithConnections.push(cand);
 				this.remainingCandidatesByName[candName] = cand;
 				count = count + 1;
@@ -178,7 +182,7 @@ class Game{
 		debug(`Game.addCandidates: added ${count}, all candidates=${Object.keys(this.remainingCandidatesByName)}`);
 	}
 
-	blacklistCandidate(name){
+	denylistCandidate(name){
 		let candIndex = -1; // locate candidate in list
 		this.remainingCandidatesWithConnections.some( (cand, i) => {
 			if (cand[0] === name) {
@@ -194,8 +198,8 @@ class Game{
 			delete this.remainingCandidatesByName[name];
 		}
 
-		this.addToBlacklist( name );
-		debug(`Game.blacklistCandidate: name=${name}`);
+		this.addToDenylist( name );
+		debug(`Game.denylistCandidate: name=${name}`);
 	}
 
 	pickFromFirstFew(items, max=this.firstFewMax){
@@ -252,7 +256,7 @@ class Game{
 	//   - get the linkingArticles between seedPerson and the nextAnswer
 	//   - construct and return the question data structure
 	// - if any of the steps after picking a potential seedPerson fails
-	//   - blacklist the seedPerson
+	//   - denylist the seedPerson
 	//   - recursively call this fn again (to try another seedPerson)
 	// - if we run out of candidates, return undefined
 
@@ -272,7 +276,7 @@ class Game{
 		} else if(this.variant === GAME_VARIANT.seed_from_answer || this.variant === GAME_VARIANT.seed_from_answer_or_any) {
 			if (this.history.length > 0) {
 				seedPerson = this.history[this.history.length-1].nextAnswer;
-				if (this.isBlacklisted(seedPerson)) {
+				if (this.isDenylisted(seedPerson)) {
 					if (this.variant === GAME_VARIANT.seed_from_answer_or_any) {
 						seedPerson = this.pickNameFromTopFewCandidates();
 					} else {
@@ -295,7 +299,7 @@ class Game{
 
 		// Attempt to construct all the bits for a full valid question.
 		// If we can't find any of the bits, we bail.
-		// We bail by blacklisting the current seedPerson,
+		// We bail by denylisting the current seedPerson,
 		// and starting again with a recursive call to promiseNextCandidateQuestion
 
 		return correlations_service.calcChainLengthsFrom(seedPerson)
@@ -306,7 +310,7 @@ class Game{
 				// bail if there are not enough links in the chainlengths to construct a full question
 				if (chainLengths.length < 4) {
 					debug(`promiseNextCandidateQuestion: reject seedPerson=${seedPerson}: chainLengths.length(${chainLengths.length}) < 4`);
-					this.blacklistCandidate(seedPerson);
+					this.denylistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 
@@ -314,7 +318,7 @@ class Game{
 				const nextAnswers = this.filterCandidates( chainLengths[1].entities );
 				if (nextAnswers.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: nextAnswers.length === 0`);
-					this.blacklistCandidate(seedPerson);
+					this.denylistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				question.nextAnswer = this.pickFromFirstFew( nextAnswers );
@@ -330,7 +334,7 @@ class Game{
 				}
 				if (wrongAnswers1 === undefined || wrongAnswers1.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: wrongAnswers1.length === 0`);
-					this.blacklistCandidate(seedPerson);
+					this.denylistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				const firstWrongAnswer = this.pickFromFirstFew( wrongAnswers1 );
@@ -346,7 +350,7 @@ class Game{
 				}
 				if (wrongAnswers2 === undefined || wrongAnswers2.length === 0) {
 					debug(`promiseNextCandidateQuestion: reject name=${seedPerson}: wrongAnswers2.length === 0`);
-					this.blacklistCandidate(seedPerson);
+					this.denylistCandidate(seedPerson);
 					return this.promiseNextCandidateQuestion();
 				}
 				const secondWrongAnswer = this.pickFromFirstFew( wrongAnswers2 )
@@ -382,10 +386,10 @@ class Game{
 		this.nextAnswer      = qd.nextAnswer;
 		this.linkingArticles = qd.linkingArticles;
 
-		this.blacklistCandidate(this.seedPerson);
+		this.denylistCandidate(this.seedPerson);
 
 		if (this.variant === GAME_VARIANT.any_seed_kill_answer) {
-			this.blacklistCandidate(this.nextAnswer);
+			this.denylistCandidate(this.nextAnswer);
 		}
 
 		this.isQuestionSet   = true;
@@ -454,6 +458,8 @@ class Game{
 	}
 
 	static readFromDB( uuid ){
+		console.log('::uid', uuid);
+		console.log('::gameStats', GAMES_STATS_ID);
 		return database.read({ uuid : uuid }, process.env.GAME_TABLE)
 		.then( data => {
 			if (data.Item === undefined) {
@@ -462,6 +468,7 @@ class Game{
 				return data.Item;
 			} else {
 				let clonedGame = undefined;
+				console.log('dataItem::', data.Item);
 				try {
 					clonedGame = new Game(data.Item.uuid, data.Item);
 				} catch( err ) {
@@ -517,14 +524,15 @@ class Game{
 
 
 function createANewGame(userUUID){
-
+	console.log('::createANewGame', userUUID);
 	if(userUUID === undefined){
 		return Promise.reject('No user UUID was passed to the function');
 	}
+	console.log('::userUUID is defined')
 
 	const newGame = new Game(userUUID);
 	debug(`createANewGame: newGame=${JSON.stringify(newGame)}`);
-
+	console.log('::new Game created');
 	return newGame.updateCreatedCount()
 		.then( () => { return correlations_service.biggestIsland(); } )
 		.then(island => {	newGame.addCandidates(island) })
