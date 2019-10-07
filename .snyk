@@ -6,8 +6,6 @@ patch:
   SNYK-JS-LODASH-450202:
     - hbs > handlebars > async > lodash:
         patched: '2019-07-04T12:56:45.780Z'
-      snyk > lodash:
-        patched: '2019-07-04T13:01:08.615Z'
     - snyk > snyk-nuget-plugin > lodash:
         patched: '2019-07-04T13:01:08.615Z'
     - snyk > snyk-nodejs-lockfile-parser > lodash:
@@ -28,3 +26,8 @@ patch:
         patched: '2019-07-04T13:01:08.615Z'
     - snyk > inquirer > lodash:
         patched: '2019-07-04T13:01:08.615Z'
+    - snyk > lodash:
+        patched: '2019-07-04T13:01:08.615Z'
+  SNYK-JS-HTTPSPROXYAGENT-469131:
+    - actions-on-google > google-auth-library > gtoken > gaxios > https-proxy-agent:
+        patched: '2019-10-07T11:03:54.968Z'
